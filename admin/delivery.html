@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delivery Zones — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <script src="../assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="../assets/js/appwrite-init.js"></script>
+    <script src="assets/js/admin-common.js?v=3"></script>
+    <link rel="stylesheet" href="../assets/css/premium-icons.css">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="spinner"></div></div>
+<main class="admin-main" id="adminMain" style="display:none;">
+    <header class="admin-header">
+        <div class="header-left">
+            <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+            <div><div class="page-title">Delivery Zones</div><div class="page-subtitle">Shipping areas & charges</div></div>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-primary" onclick="openModal()">+ Add Zone</button>
+        </div>
+    </header>
+    <div class="admin-content">
+        <div class="card" style="margin-bottom:16px;background:rgba(0,122,255,0.06);border-color:rgba(0,122,255,0.2);">
+            <div style="font-size:13px;color:#8E8E93;line-height:1.7;">
+                <b style="color:#007AFF;">How it works:</b> প্রতিটি zone এ specific Districts enter করো।
+                Checkout এ user যে district select করবে, সেই district এর zone এর charge apply হবে।
+                <br>District ছাড়া zone = default (fallback) হিসেবে কাজ করে।
+            </div>
+        </div>
+        <div class="card" style="padding:0;">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Zone Name</th><th>Charge (৳)</th><th>Districts</th><th>Actions</th></tr></thead>
+                    <tbody id="zonesBody"><tr><td colspan="4" style="text-align:center;padding:40px;color:#8E8E93;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="zoneModal">
+    <div class="modal-box" style="max-width:600px;">
+        <div class="modal-header">
+            <div class="modal-title" id="zoneModalTitle">Add Delivery Zone</div>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Zone Name *</label>
+                <input class="form-input" id="zName" placeholder="e.g. Inside Dhaka">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Delivery Charge (৳) *</label>
+                <input class="form-input" id="zCharge" type="number" placeholder="60">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Districts (একটি করে type করো, Enter এ add হবে)</label>
+            <div id="districtTagsWrap" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;min-height:36px;"></div>
+            <div style="display:flex;gap:8px;">
+                <input class="form-input" id="districtInput" placeholder="Type district name..." onkeydown="handleDistrictKey(event)">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="addDistrict()">Add</button>
+            </div>
+            <div class="form-hint">
+                অথবা নিচে BD API থেকে select করো:
+                <select class="form-select" id="districtApiSelect" onchange="addFromApi()" style="margin-top:6px;">
+                    <option value="">-- bdapis থেকে select --</option>
+                </select>
+            </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px;">
+            <button class="btn btn-primary btn-full" onclick="saveZone()">💾 Save Zone</button>
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+var allZones = [], editingId = null, districtTags = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    adminInit('delivery', function() { loadZones(); loadBdDistricts(); });
+});
+
+function loadZones() {
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('delivery_zones').select('*').order('created_at').then(function(r) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allZones = r.data || [];
+            renderZones();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.listDocuments(APP_DB, 'delivery_zones', [AppwriteQuery.orderAsc('zone_name')])
+            .then(function(res) {
+                document.getElementById('pageLoader').style.display = 'none';
+                document.getElementById('adminMain').style.display  = 'flex';
+                allZones = res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; });
+                renderZones();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+function renderZones() {
+    var html = '';
+    if (!allZones.length) { html = '<tr><td colspan="4" style="text-align:center;padding:40px;color:#8E8E93;">No zones yet. Add "Inside Dhaka" and "Outside Dhaka" to start.</td></tr>'; }
+    allZones.forEach(function(z) {
+        var districts = (z.districts || []).slice(0, 5).join(', ') + (z.districts && z.districts.length > 5 ? ' +' + (z.districts.length-5) + ' more' : '');
+        html += '<tr>' +
+            '<td style="font-weight:700;">' + z.zone_name + '</td>' +
+            '<td style="font-weight:700;color:#34C759;">৳' + z.charge + '</td>' +
+            '<td style="font-size:12px;color:#8E8E93;">' + (districts || '<em>All remaining (default)</em>') + '</td>' +
+            '<td style="display:flex;gap:6px;">' +
+                '<button class="btn btn-ghost btn-sm" onclick=\'editZone(' + JSON.stringify(z).replace(/'/g,"&apos;") + ')\'><i data-lucide="edit-3" class="lucide-icon icon-hover-pulse"></i> Edit</button>' +
+                '<button class="btn btn-danger btn-sm" onclick="deleteZone(\'' + z.id + '\')"><i data-lucide="trash-2" class="lucide-icon icon-hover-shake icon-danger"></i></button>' +
+            '</td></tr>';
+    });
+    document.getElementById('zonesBody').innerHTML = html;
+}
+
+function loadBdDistricts() {
+    fetch('https://bdapis.com/api/v1.1/divisions').then(function(r) { return r.json(); }).then(function(d) {
+        if (!d.data) return;
+        var select = document.getElementById('districtApiSelect');
+        d.data.forEach(function(div) {
+            fetch('https://bdapis.com/api/v1.1/division/' + div.division).then(function(r2) { return r2.json(); }).then(function(d2) {
+                if (!d2.data) return;
+                var grp = document.createElement('optgroup'); grp.label = div.division;
+                d2.data.forEach(function(dist) {
+                    var opt = document.createElement('option'); opt.value = dist.district; opt.text = dist.district;
+                    grp.appendChild(opt);
+                });
+                select.appendChild(grp);
+            }).catch(function(){});
+        });
+    }).catch(function(){});
+}
+
+function renderTags() {
+    var wrap = document.getElementById('districtTagsWrap');
+    wrap.innerHTML = districtTags.map(function(d, i) {
+        return '<span style="background:rgba(0,122,255,0.15);color:#007AFF;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:6px;">' +
+            d + '<button type="button" onclick="removeDistrict(' + i + ')" style="background:none;border:none;color:#007AFF;cursor:pointer;font-size:14px;line-height:1;">✕</button></span>';
+    }).join('');
+}
+
+function addDistrict() {
+    var val = document.getElementById('districtInput').value.trim();
+    if (val && !districtTags.includes(val)) { districtTags.push(val); renderTags(); }
+    document.getElementById('districtInput').value = '';
+}
+
+function addFromApi() {
+    var val = document.getElementById('districtApiSelect').value;
+    if (val && !districtTags.includes(val)) { districtTags.push(val); renderTags(); }
+    document.getElementById('districtApiSelect').value = '';
+}
+
+function removeDistrict(i) { districtTags.splice(i,1); renderTags(); }
+
+function handleDistrictKey(e) { if (e.key === 'Enter') { e.preventDefault(); addDistrict(); } }
+
+function openModal() {
+    editingId = null; districtTags = [];
+    document.getElementById('zoneModalTitle').textContent = 'Add Delivery Zone';
+    document.getElementById('zName').value = ''; document.getElementById('zCharge').value = '';
+    renderTags();
+    document.getElementById('zoneModal').classList.add('show');
+}
+
+function editZone(z) {
+    editingId = z.id; districtTags = z.districts ? z.districts.slice() : [];
+    document.getElementById('zoneModalTitle').textContent = 'Edit Zone';
+    document.getElementById('zName').value   = z.zone_name || '';
+    document.getElementById('zCharge').value = z.charge || '';
+    renderTags();
+    document.getElementById('zoneModal').classList.add('show');
+}
+
+function saveZone() {
+    var name = document.getElementById('zName').value.trim();
+    var charge = parseInt(document.getElementById('zCharge').value) || 0;
+    if (!name) { showToast('Zone name required', 'error'); return; }
+    var payload = { zone_name: name, charge: charge, districts: districtTags };
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId ? supabaseClient.from('delivery_zones').update(payload).eq('id', editingId) : supabaseClient.from('delivery_zones').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success'); closeModal(); loadZones();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var req;
+        if (editingId) {
+            req = appwriteDatabases.updateDocument(APP_DB, 'delivery_zones', editingId, payload);
+        } else {
+            req = appwriteDatabases.createDocument(APP_DB, 'delivery_zones', AppwriteID.unique(), payload);
+        }
+        req.then(function() {
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+            closeModal();
+            loadZones();
+        }).catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+function deleteZone(id) {
+    if (!adminConfirm('Delete this zone?')) return;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('delivery_zones').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Delete failed', 'error'); return; }
+            showToast('Deleted!', 'success'); loadZones();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'delivery_zones', id)
+            .then(function() {
+                showToast('Deleted!', 'success');
+                loadZones();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+function closeModal() { document.getElementById('zoneModal').classList.remove('show'); }
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+

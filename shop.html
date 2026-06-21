@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shop — Freelancing By Rifat</title>
+    <meta name="description" content="Browse all products. Filter by category, price and more.">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
+    <script src="assets/js/appwrite-init.js"></script>
+    <style>
+        .shop-layout { display: grid; grid-template-columns: 240px 1fr; gap: 20px; padding: 20px 0; }
+        .sidebar { background: #fff; border-radius: 14px; padding: 20px; border: 1px solid #eee; height: fit-content; position: sticky; top: 76px; }
+        .sidebar h3 { font-size: 14px; font-weight: 800; color: var(--text-dark); margin-bottom: 12px; }
+        .sidebar-cat { display: flex; flex-direction: column; gap: 4px; margin-bottom: 20px; }
+        .sidebar-cat a { padding: 9px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 600; color: var(--text-body); transition: var(--transition); }
+        .sidebar-cat a:hover, .sidebar-cat a.active { background: rgba(255,77,77,0.08); color: var(--primary); }
+        .price-range-row { display: flex; gap: 8px; align-items: center; }
+
+        /* Filter bar on top (mobile) */
+        .shop-top-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .shop-filter-btn {
+            display: none; /* shown on mobile via media query */
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .shop-filter-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .shop-filter-active-dot {
+            width: 8px; height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: none;
+        }
+        .shop-filter-active-dot.show { display: inline-block; }
+
+        @media (max-width: 768px) {
+            .shop-layout { grid-template-columns: minmax(0, 1fr); }
+            .sidebar { display: none; }
+            .shop-filter-btn { display: flex; }
+        }
+    </style>
+    <link rel="stylesheet" href="assets/css/premium-icons.css">
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" type="module"></script>
+</head>
+<body style="display:flex;flex-direction:column;min-height:100vh;">
+<div class="page-loader" id="pageLoader">
+    <dotlottie-wc src="https://lottie.host/a9162a6d-bee0-4ebd-adda-d4a43f0bea2b/Nq6NiivYlE.lottie" autoplay loop></dotlottie-wc>
+    <div style="font-size:14px;color:#8B1A1A;font-weight:600;margin-top:-30px;" id="storeName">Loading...</div>
+</div>
+
+<nav class="navbar">
+    <a href="index.html" class="nav-icon-btn">←</a>
+    <a href="index.html" class="navbar-brand"><span id="navBrand">Shop</span></a>
+    <div class="navbar-search">
+        <span class="search-icon"><i data-lucide="search" class="lucide-icon"></i></span>
+        <input type="text" placeholder="Search products..." id="searchInput" oninput="applyFilters()">
+    </div>
+    <div class="navbar-actions">
+        <a href="track.html" class="nav-icon-btn" title="Track"><i data-lucide="package" class="lucide-icon icon-bounce"></i></a>
+        <a href="cart.html" class="nav-icon-btn" id="cartBtn">
+            <i data-lucide="shopping-cart" class="lucide-icon icon-bounce"></i><span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+        </a>
+    </div>
+</nav>
+
+<div class="container" style="flex:1;">
+    <div class="shop-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div>
+                <h3>📂 Categories</h3>
+                <div class="sidebar-cat" id="sidebarCats">
+                    <a href="#" class="active" data-cat="" onclick="selectCat('',this)">🌟 All Products</a>
+                </div>
+            </div>
+            <div>
+                <h3><i data-lucide="badge-dollar-sign" class="lucide-icon icon-bounce"></i> Price Range</h3>
+                <div class="price-range-row">
+                    <input class="form-input" id="minPrice" type="number" placeholder="Min ৳" oninput="applyFilters()" style="font-size:13px;padding:9px 10px;">
+                    <span>—</span>
+                    <input class="form-input" id="maxPrice" type="number" placeholder="Max ৳" oninput="applyFilters()" style="font-size:13px;padding:9px 10px;">
+                </div>
+            </div>
+            <div style="margin-top:16px;">
+                <h3>🔀 Sort By</h3>
+                <select class="form-select" id="sortBy" onchange="applyFilters()" style="font-size:13px;">
+                    <option value="newest">Newest First</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                    <option value="sale">On Sale First</option>
+                </select>
+            </div>
+            <div style="margin-top:16px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;font-weight:600;">
+                    <input type="checkbox" id="onlyFlash" onchange="applyFilters()" style="width:16px;height:16px;accent-color:var(--primary);">
+                    ⚡ Flash Deals Only
+                </label>
+            </div>
+        </aside>
+
+        <!-- Products -->
+        <div>
+            <div class="shop-top-bar">
+                <div style="font-size:14px;font-weight:600;color:#888;" id="resultCount">Loading products...</div>
+                <!-- Mobile filter button (always shown on mobile) -->
+                <button class="shop-filter-btn" id="mobileFilterBtn" onclick="openMobileFilters()">
+                    <i data-lucide="sliders-horizontal" class="lucide-icon"></i> Filters
+                    <span class="shop-filter-active-dot" id="filterActiveDot"></span>
+                </button>
+                <!-- Sort select (visible on mobile) -->
+                <select class="form-select" id="sortByMobile" onchange="document.getElementById('sortBy').value=this.value;applyFilters();" style="font-size:13px;display:none;min-width:120px;">
+                    <option value="newest">Newest</option>
+                    <option value="price_low">Price ↑</option>
+                    <option value="price_high">Price ↓</option>
+                    <option value="sale">Sale</option>
+                </select>
+            </div>
+
+            <!-- Mobile category pills -->
+            <div class="cat-scroll" id="mobileCatRow" style="margin-bottom:16px;display:none;"></div>
+
+            <div class="products-grid" id="productsGrid"></div>
+
+            <!-- Load More Button -->
+            <div id="loadMoreWrap" style="text-align:center;padding:24px 0;display:none;">
+                <button id="loadMoreBtn" class="btn btn-outline" onclick="loadMoreShop()" style="padding:12px 36px;border-radius:30px;font-weight:700;font-size:14px;border:2px solid var(--primary);color:var(--primary);background:transparent;transition:all 0.2s;">
+                    <i data-lucide="chevrons-down" class="lucide-icon"></i> Load More Products
+                </button>
+                <div id="loadMoreInfo" style="font-size:12px;color:#888;margin-top:8px;"></div>
+            </div>
+
+            <!-- Empty state -->
+            <div id="emptyState" style="display:none;text-align:center;padding:80px 20px;color:#999;">
+                <div style="font-size:56px;margin-bottom:14px;"><i data-lucide="search" class="lucide-icon"></i></div>
+                <div style="font-size:18px;font-weight:700;color:var(--text-dark);margin-bottom:6px;">No products found</div>
+                <div>Try different filters or <a href="shop.html" style="color:var(--primary);font-weight:700;">reset all</a></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Filter Modal -->
+<div class="modal-overlay" id="mobileFilterModal" onclick="closeMobileFilters()" style="display:none;">
+    <div class="mobile-filter-sheet" onclick="event.stopPropagation()">
+        <div class="mobile-filter-header">
+            <div style="font-weight:700;">Filters</div>
+            <button onclick="closeMobileFilters()" style="background:none;border:none;font-size:18px;">✕</button>
+        </div>
+        <div class="mobile-filter-body">
+            <div>
+                <h3>📂 Categories</h3>
+                <div class="sidebar-cat" id="mobileSidebarCats">
+                </div>
+            </div>
+            <div>
+                <h3><i data-lucide="badge-dollar-sign" class="lucide-icon"></i> Price Range</h3>
+                <div class="price-range-row">
+                    <input class="form-input" id="mobileMinPrice" type="number" placeholder="Min ৳" oninput="syncPriceToMain()" style="font-size:13px;padding:9px 10px;">
+                    <span>—</span>
+                    <input class="form-input" id="mobileMaxPrice" type="number" placeholder="Max ৳" oninput="syncPriceToMain()" style="font-size:13px;padding:9px 10px;">
+                </div>
+            </div>
+            <div style="margin-top:16px;">
+                <h3>🔀 Sort By</h3>
+                <select class="form-select" id="mobileSortBy" onchange="document.getElementById('sortBy').value=this.value;applyFilters();" style="font-size:13px;">
+                    <option value="newest">Newest First</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                    <option value="sale">On Sale First</option>
+                </select>
+            </div>
+            <div style="margin-top:16px;">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;font-weight:600;">
+                    <input type="checkbox" id="mobileOnlyFlash" onchange="document.getElementById('onlyFlash').checked=this.checked;applyFilters()" style="width:16px;height:16px;accent-color:var(--primary);">
+                    ⚡ Flash Deals Only
+                </label>
+            </div>
+        </div>
+        <div class="mobile-filter-footer">
+            <button class="btn btn-ghost" onclick="resetFilters()">Reset</button>
+            <button class="btn btn-primary" onclick="applyFilters();closeMobileFilters()">Apply</button>
+        </div>
+    </div>
+</div>
+
+<footer class="footer" style="margin-top:40px;">
+    <div id="footerStoreLoc" style="display:none; text-align:center; padding: 20px 20px 0; max-width:400px; margin:0 auto;">
+        <a id="footerStoreLink" href="#" target="_blank" class="btn btn-outline btn-full btn-sm" style="border-color:#ddd; color:#555; background:#fff;"><i data-lucide="map-pin" class="lucide-icon text-primary"></i> <span style="font-weight:700;">Visit Our Store</span></a>
+    </div>
+    <div class="footer-bottom">
+        <span id="footerCopy">© 2025 Freelancing By Rifat</span>
+    </div>
+</footer>
+
+<script>
+var allProducts = [], allCategories = [], activeCatId = '';
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateCartBadge();
+
+    var urlCat = new URLSearchParams(window.location.search).get('cat');
+    if (urlCat) activeCatId = urlCat;
+
+    var p1, p2, p3, p4;
+
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        p3 = fetch('/api/get-products-list?t=' + Date.now()).then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; });
+        p1 = supabaseClient.from('settings').select('*').eq('id',1).single();
+        p2 = supabaseClient.from('categories').select('*').eq('is_active',true).order('sort_order');
+        p4 = supabaseClient.from('product_categories').select('*');
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        p3 = fetch('/api/appwrite-get-products?t=' + Date.now()).then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; }).catch(function() { return { data: [] }; });
+        p1 = appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings').then(function(doc) { return { data: doc }; }).catch(function() { return { data: {} }; });
+        p2 = appwriteDatabases.listDocuments(APP_DB, 'categories', [AppwriteQuery.equal('is_active', true), AppwriteQuery.orderAsc('sort_order')]).then(function(res) { return { data: res.documents.map(function(d){ d.id=d.$id; return d; }) }; }).catch(function() { return { data: [] }; });
+        p4 = appwriteDatabases.listDocuments(APP_DB, 'product_categories', [AppwriteQuery.limit(5000)]).then(function(res) { return { data: res.documents.map(function(d){ d.id=d.$id; return d; }) }; }).catch(function() { return { data: [] }; });
+    } else {
+        p1 = Promise.resolve({ data: {} });
+        p2 = Promise.resolve({ data: [] });
+        p3 = Promise.resolve({ data: [] });
+        p4 = Promise.resolve({ data: [] });
+    }
+
+    Promise.all([p1, p2, p3, p4]).then(function(results) {
+        var r = results[0];
+        allCategories = results[1].data || [];
+        allProducts   = results[2].data || [];
+        var pc = results[3].data || [];
+
+        allProducts.forEach(function(p) {
+            p.category_ids = pc.filter(function(x) { return x.product_id === p.id; }).map(function(x) { return x.category_id; });
+            if (p.category_id && !p.category_ids.includes(p.category_id)) p.category_ids.push(p.category_id);
+        });
+
+        var name = CONFIG.STORE_NAME;
+        if (r.data) {
+            var s = r.data;
+
+            // ═ MAINTENANCE MODE CHECK ═
+            if (s.maintenance_mode === true) {
+                showMaintenancePage(s.maintenance_message || 'আমরা শীঘ্রই ফিরে আসছি।');
+                return;
+            }
+
+            if (s.store_name) {
+                name = s.store_name;
+                document.getElementById('navBrand').textContent = s.store_name;
+            }
+            if (s.store_map_link) {
+                document.getElementById('footerStoreLink').href = s.store_map_link;
+                document.getElementById('footerStoreLoc').style.display = 'block';
+            } else if (s.store_address) {
+                document.getElementById('footerStoreLink').href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(s.store_address);
+                document.getElementById('footerStoreLoc').style.display = 'block';
+            }
+        }
+        document.getElementById('footerCopy').textContent = '© ' + new Date().getFullYear() + ' ' + name;
+
+        renderCategories();
+        applyFilters();
+        document.getElementById('pageLoader').style.display = 'none';
+    });
+
+    // Mobile responsive show/hide
+    function checkMobile() {
+        var isMobile = window.innerWidth <= 768;
+        var sortByMobile  = document.getElementById('sortByMobile');
+        var mobileCatRow  = document.getElementById('mobileCatRow');
+        if (sortByMobile) sortByMobile.style.display = isMobile ? 'block' : 'none';
+        if (mobileCatRow) mobileCatRow.style.display  = isMobile ? 'flex'  : 'none';
+    }
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+});
+
+function renderCategories() {
+    var sidebarCats = document.getElementById('sidebarCats');
+    var mobilePills = document.getElementById('mobileCatRow');
+
+    var html = '<a href="#" class="' + (!activeCatId?'active':'') + '" data-cat="" onclick="selectCat(\'\',this);return false;">🌟 All Products</a>';
+    var mobileHtml = '<a href="#" class="cat-pill' + (!activeCatId?' active':'') + '" onclick="selectCat(\'\',this);return false;">🌟 All</a>';
+
+    allCategories.forEach(function(c) {
+        var isActive = activeCatId === c.id;
+        html += '<a href="#" class="' + (isActive?'active':'') + '" data-cat="' + c.id + '" onclick="selectCat(\'' + c.id + '\',this);return false;">' + c.name + '</a>';
+        mobileHtml += '<a href="#" class="cat-pill' + (isActive?' active':'') + '" onclick="selectCat(\'' + c.id + '\',this);return false;">' + c.name + '</a>';
+    });
+
+    sidebarCats.innerHTML = html;
+    mobilePills.innerHTML = mobileHtml;
+    if (document.getElementById('mobileSidebarCats')) document.getElementById('mobileSidebarCats').innerHTML = html;
+}
+
+function selectCat(id, el) {
+    activeCatId = id;
+    document.querySelectorAll('[data-cat],.cat-pill').forEach(function(a) { a.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    applyFilters();
+}
+
+var filteredProducts = [];
+var shopCurrentPage = 1;
+var SHOP_PAGE_SIZE = 25;
+
+function showMaintenancePage(msg) {
+    document.getElementById('pageLoader').style.display = 'none';
+    document.body.innerHTML = '<style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#0a0a0f;color:#f0f0f0;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;text-align:center;padding:24px;}.icon{font-size:72px;margin-bottom:24px;animation:float 3s ease-in-out infinite;}@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}.title{font-size:28px;font-weight:800;margin-bottom:12px;}.msg{font-size:15px;color:#888;max-width:420px;line-height:1.8;margin-bottom:28px;}.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:30px;font-size:12px;font-weight:700;background:rgba(255,77,77,0.08);color:#ff6b6b;border:1px solid rgba(255,77,77,0.2);}.dot{width:8px;height:8px;border-radius:50%;background:#ff4d4d;animation:pulse 1.5s ease-in-out infinite;}@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.3;transform:scale(0.6);}}</style><div class="icon">\ud83d\udd27</div><div class="title">Site Under Maintenance</div><div class="msg">' + (msg||'\u0986\u09ae\u09b0\u09be \u09b6\u09c0\u0998\u09cd\u09b0\u0987 \u09ab\u09bf\u09b0\u09c7 \u0986\u09b8\u099b\u09bf\u0964') + '</div><div class="badge"><div class="dot"></div> Maintenance Mode Active</div>';
+}
+
+function applyFilters() {
+
+    var q      = (document.getElementById('searchInput').value || '').toLowerCase();
+    var min    = parseInt(document.getElementById('minPrice').value) || 0;
+    var max    = parseInt(document.getElementById('maxPrice').value) || Infinity;
+    var sort   = document.getElementById('sortBy').value;
+    var onSale = document.getElementById('onlyFlash').checked;
+
+    filteredProducts = allProducts.filter(function(p) {
+        var price = p.flash_sale_price > 0 ? p.base_price - p.flash_sale_price : p.base_price;
+        var nameMatch = (p.name||'').toLowerCase().includes(q) || (p.sku||'').toLowerCase().includes(q);
+        return (!q          || nameMatch) &&
+               (!activeCatId || (p.category_ids && p.category_ids.includes(activeCatId))) &&
+               (price >= min && price <= max) &&
+               (!onSale     || p.flash_sale_price > 0);
+    });
+
+    if (sort === 'price_low')  filteredProducts.sort(function(a,b) { return (a.flash_sale_price>0?a.base_price-a.flash_sale_price:a.base_price) - (b.flash_sale_price>0?b.base_price-b.flash_sale_price:b.base_price); });
+    if (sort === 'price_high') filteredProducts.sort(function(a,b) { return (b.flash_sale_price>0?b.base_price-b.flash_sale_price:b.base_price) - (a.flash_sale_price>0?a.base_price-a.flash_sale_price:a.base_price); });
+    if (sort === 'sale')       filteredProducts.sort(function(a,b) { return (b.flash_sale_price||0) - (a.flash_sale_price||0); });
+
+    // Reset pagination
+    shopCurrentPage = 1;
+    var firstBatch = filteredProducts.slice(0, SHOP_PAGE_SIZE);
+
+    document.getElementById('resultCount').textContent = filteredProducts.length + ' product' + (filteredProducts.length !== 1 ? 's' : '') + ' found';
+    document.getElementById('emptyState').style.display = filteredProducts.length ? 'none' : 'block';
+    document.getElementById('productsGrid').style.display = filteredProducts.length ? 'grid' : 'none';
+
+    if (filteredProducts.length) {
+        document.getElementById('productsGrid').innerHTML = firstBatch.map(productCardHtml).join('');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    updateLoadMoreBtn();
+}
+
+function loadMoreShop() {
+    shopCurrentPage++;
+    var start = (shopCurrentPage - 1) * SHOP_PAGE_SIZE;
+    var batch = filteredProducts.slice(start, start + SHOP_PAGE_SIZE);
+    var grid = document.getElementById('productsGrid');
+    if (batch.length) {
+        grid.innerHTML += batch.map(productCardHtml).join('');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+    updateLoadMoreBtn();
+}
+
+function updateLoadMoreBtn() {
+    var loaded = Math.min(shopCurrentPage * SHOP_PAGE_SIZE, filteredProducts.length);
+    var total  = filteredProducts.length;
+    var wrap   = document.getElementById('loadMoreWrap');
+    var btn    = document.getElementById('loadMoreBtn');
+    var info   = document.getElementById('loadMoreInfo');
+
+    if (total <= SHOP_PAGE_SIZE || loaded >= total) {
+        wrap.style.display = loaded >= total && total > SHOP_PAGE_SIZE ? 'block' : 'none';
+        if (loaded >= total && total > SHOP_PAGE_SIZE) {
+            btn.innerHTML = '<i data-lucide="check-circle-2" class="lucide-icon"></i> সব products দেখা হয়ে গেছে';
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'default';
+        }
+    } else {
+        wrap.style.display = 'block';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        btn.style.cursor = 'pointer';
+        btn.innerHTML = '<i data-lucide="chevrons-down" class="lucide-icon"></i> Load More Products';
+        info.textContent = loaded + ' / ' + total + ' products দেখা হচ্ছে';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+}
+
+function productCardHtml(p) {
+    var variants = p.variants || [];
+    var img = '';
+    if (variants.length && variants[0].imageUrl) img = variants[0].imageUrl;
+    else if (p.gallery_images && p.gallery_images.length) img = p.gallery_images[0];
+
+    var finalPrice = p.base_price;
+    var saleHtml = '';
+    if (p.flash_sale_price > 0) {
+        finalPrice = p.base_price - p.flash_sale_price;
+        saleHtml = '<span class="product-old-price">৳' + p.base_price + '</span>';
+    }
+
+    return '<a href="product.html?id=' + p.id + '" class="product-card">' +
+        '<div class="product-img-wrap">' +
+            (img ? '<img src="' + img + '" alt="' + p.name + '" loading="lazy">' : '<div style="height:200px;background:linear-gradient(135deg,#f0f0f5,#e0e0ea);display:flex;align-items:center;justify-content:center;font-size:40px;"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i></div>') +
+            '<div class="product-badges">' +
+                (p.flash_sale_price > 0 ? '<span class="product-badge badge-sale">SALE</span>' : '') +
+            '</div>' +
+        '</div>' +
+        '<div class="product-info">' +
+            '<div class="product-name">' + p.name + '</div>' +
+            '<div class="product-price-row"><span class="product-price">৳' + finalPrice + '</span>' + saleHtml + '</div>' +
+            '<button class="product-add-btn" onclick="quickAdd(event,\'' + p.id + '\')">+ Add to Cart</button>' +
+        '</div>' +
+    '</a>';
+}
+
+function quickAdd(e, id) {
+    e.preventDefault();
+    var p = allProducts.find(function(x) { return x.id === id; });
+    if (!p) return;
+    var cart = getCart();
+    var finalPrice = p.flash_sale_price > 0 ? p.base_price - p.flash_sale_price : p.base_price;
+    var variants = p.variants || [];
+    var color = variants.length ? variants[0].colorName : '';
+    var size  = (variants.length && variants[0].sizes && variants[0].sizes.length) ? variants[0].sizes[0].size : '';
+    var img   = (variants.length && variants[0].imageUrl) ? variants[0].imageUrl : (p.gallery_images && p.gallery_images[0]) || '';
+    var key = p.id + '-' + color + '-' + size;
+    var ex = cart.find(function(i) { return i.key === key; });
+    if (ex) ex.quantity++;
+    else cart.push({ key: key, productId: p.id, productName: p.name, price: finalPrice, color: color, size: size, quantity: 1, image: img });
+    saveCart(cart); updateCartBadge();
+    e.target.innerHTML = '<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Added!';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    setTimeout(function() { e.target.innerHTML = '+ Add to Cart'; }, 1500);
+}
+
+function getCart() { try { return JSON.parse(localStorage.getItem(CONFIG.CART_KEY)||'[]'); } catch(e) { return []; } }
+function saveCart(c) { localStorage.setItem(CONFIG.CART_KEY, JSON.stringify(c)); }
+function updateCartBadge() {
+    var cart = getCart(), count = cart.reduce(function(s,i){return s+(i.quantity||1);},0);
+    var b = document.getElementById('cartBadge');
+    if (b) { b.textContent = count; b.style.display = count > 0 ? 'flex' : 'none'; }
+}
+
+function openMobileFilters() { 
+    document.getElementById('mobileFilterModal').style.display = 'flex'; 
+    populateMobileFilters(); 
+}
+function closeMobileFilters() { 
+    document.getElementById('mobileFilterModal').style.display = 'none'; 
+}
+function populateMobileFilters() {
+    document.getElementById('mobileSidebarCats').innerHTML = document.getElementById('sidebarCats').innerHTML;
+    document.getElementById('mobileMinPrice').value = document.getElementById('minPrice').value;
+    document.getElementById('mobileMaxPrice').value = document.getElementById('maxPrice').value;
+    document.getElementById('mobileSortBy').value = document.getElementById('sortBy').value;
+    document.getElementById('mobileOnlyFlash').checked = document.getElementById('onlyFlash').checked;
+    document.querySelectorAll('#mobileSidebarCats a').forEach(a => {
+        a.onclick = function(e) { e.preventDefault(); selectCat(a.dataset.cat, a); closeMobileFilters(); };
+    });
+}
+function syncPriceToMain() {
+    document.getElementById('minPrice').value = document.getElementById('mobileMinPrice').value;
+    document.getElementById('maxPrice').value = document.getElementById('mobileMaxPrice').value;
+}
+function resetFilters() {
+    activeCatId = '';
+    document.getElementById('minPrice').value = '';
+    document.getElementById('maxPrice').value = '';
+    document.getElementById('sortBy').value = 'newest';
+    document.getElementById('onlyFlash').checked = false;
+    applyFilters();
+    closeMobileFilters();
+}
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="assets/js/offline-handler.js"></script>
+    
+    <!-- Shared Custom Right Click / Long-Press Menu -->
+    <script src="assets/js/context-menu.js"></script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reviews — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <script src="../assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="../assets/js/appwrite-init.js"></script>
+    <script src="assets/js/admin-common.js?v=3"></script>
+    <style>
+        .review-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; }
+        .review-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+        .stars { color: #FF9500; font-size: 16px; }
+        .review-img { width: 80px; height: 80px; border-radius: 10px; object-fit: cover; margin-top: 8px; }
+        .pending-indicator { width: 8px; height: 8px; background: var(--warning); border-radius: 50%; display: inline-block; margin-right: 6px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+    </style>
+    <link rel="stylesheet" href="../assets/css/premium-icons.css">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="spinner"></div></div>
+<main class="admin-main" id="adminMain" style="display:none;">
+    <header class="admin-header">
+        <div class="header-left">
+            <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+            <div><div class="page-title">Reviews</div><div class="page-subtitle" id="reviewSub">Loading...</div></div>
+        </div>
+    </header>
+    <div class="admin-content">
+        <div class="filter-bar">
+            <select class="form-select" id="reviewFilter" onchange="filterReviews()" style="width:auto;min-width:180px;">
+                <option value="">All Reviews</option>
+                <option value="pending"><i data-lucide="hourglass" class="lucide-icon icon-spin icon-warning"></i> Pending Approval</option>
+                <option value="approved"><i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Approved</option>
+            </select>
+            <select class="form-select" id="ratingFilter" onchange="filterReviews()" style="width:auto;min-width:140px;">
+                <option value="">All Ratings</option>
+                <option value="5"><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i> 5 Stars</option>
+                <option value="4"><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i> 4 Stars</option>
+                <option value="3"><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i> 3 Stars</option>
+                <option value="2"><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i> 2 Stars</option>
+                <option value="1"><i data-lucide="star" class="lucide-icon icon-warning"></i> 1 Star</option>
+            </select>
+        </div>
+        <div id="reviewsList"></div>
+    </div>
+</main>
+
+<script>
+var allReviews = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    adminInit('reviews', function() { loadReviews(); });
+});
+
+
+function loadReviews() {
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('reviews').select('*, products(name)').order('created_at', { ascending: false }).then(function(r) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allReviews = r.data || [];
+            var pending = allReviews.filter(function(rv) { return !rv.is_approved; }).length;
+            document.getElementById('reviewSub').textContent = allReviews.length + ' total | ' + pending + ' pending';
+            filterReviews();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.listDocuments(APP_DB, 'reviews', [AppwriteQuery.orderDesc('$createdAt')])
+            .then(function(res) {
+                document.getElementById('pageLoader').style.display = 'none';
+                document.getElementById('adminMain').style.display  = 'flex';
+                allReviews = res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; });
+                var pending = allReviews.filter(function(rv) { return !rv.is_approved; }).length;
+                document.getElementById('reviewSub').textContent = allReviews.length + ' total | ' + pending + ' pending';
+                filterReviews();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+function filterReviews() {
+    var f = document.getElementById('reviewFilter').value;
+    var rf = document.getElementById('ratingFilter').value;
+
+    var filtered = allReviews.filter(function(rv) {
+        return (!f  || (f==='pending' ? !rv.is_approved : rv.is_approved)) &&
+               (!rf || rv.rating === parseInt(rf));
+    });
+    renderReviews(filtered);
+}
+
+function renderReviews(reviews) {
+    var list = document.getElementById('reviewsList');
+    if (!reviews.length) {
+        list.innerHTML = '<div style="text-align:center;padding:60px;color:#8E8E93;"><div style="font-size:40px;"><i data-lucide="star" class="lucide-icon icon-warning"></i></div><div style="margin-top:12px;">No reviews found</div></div>';
+        return;
+    }
+    list.innerHTML = '';
+    reviews.forEach(function(rv) {
+        var stars = '';
+        for (var i = 0; i < 5; i++) { stars += i < rv.rating ? '<i data-lucide="star" class="lucide-icon icon-warning"></i>' : '☆'; }
+        var productName = rv.products ? rv.products.name : '—';
+
+        var card = document.createElement('div'); card.className = 'review-card';
+        card.innerHTML =
+            '<div class="review-header">' +
+                '<div>' +
+                    (!rv.is_approved ? '<span class="pending-indicator"></span>' : '') +
+                    '<b>' + (rv.customer_name || 'Anonymous') + '</b>' +
+                    (rv.customer_phone ? ' <span style="font-size:12px;color:#8E8E93;">(' + rv.customer_phone + ')</span>' : '') +
+                    '<div class="stars" style="margin-top:2px;">' + stars + '</div>' +
+                '</div>' +
+                '<div style="text-align:right;">' +
+                    '<div style="font-size:12px;color:#007AFF;font-weight:600;">' + productName + '</div>' +
+                    '<div style="font-size:11px;color:#8E8E93;">' + formatDate(rv.created_at) + '</div>' +
+                '</div>' +
+            '</div>' +
+            (rv.review_text ? '<div style="font-size:13.5px;line-height:1.6;margin-bottom:8px;">' + rv.review_text + '</div>' : '') +
+            (rv.review_image ? '<img src="' + rv.review_image + '" class="review-img">' : '') +
+            '<div style="display:flex;gap:8px;margin-top:12px;">' +
+                (!rv.is_approved
+                    ? '<button class="btn btn-success btn-sm" onclick="approveReview(\'' + rv.id + '\')"><i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Approve</button>'
+                    : '<span class="badge badge-delivered"><i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Approved</span>') +
+                '<button class="btn btn-danger btn-sm" onclick="deleteReview(\'' + rv.id + '\')"><i data-lucide="trash-2" class="lucide-icon icon-hover-shake icon-danger"></i> Delete</button>' +
+            '</div>';
+        list.appendChild(card);
+    });
+}
+
+function approveReview(id) {
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('reviews').update({ is_approved: true }).eq('id', id).then(function(r) {
+            if (r.error) { showToast('Error', 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Review approved!', 'success');
+            var idx = allReviews.findIndex(function(rv) { return rv.id === id; });
+            if (idx > -1) allReviews[idx].is_approved = true;
+            filterReviews();
+            adminLoadBadges();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.updateDocument(APP_DB, 'reviews', id, { is_approved: true })
+            .then(function() {
+                showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Review approved!', 'success');
+                var idx = allReviews.findIndex(function(rv) { return rv.id === id; });
+                if (idx > -1) allReviews[idx].is_approved = true;
+                filterReviews();
+                adminLoadBadges();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+function deleteReview(id) {
+    if (!adminConfirm('Delete this review permanently?')) return;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('reviews').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Error', 'error'); return; }
+            showToast('Deleted!', 'success');
+            allReviews = allReviews.filter(function(rv) { return rv.id !== id; });
+            filterReviews();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'reviews', id)
+            .then(function() {
+                showToast('Deleted!', 'success');
+                allReviews = allReviews.filter(function(rv) { return rv.id !== id; });
+                filterReviews();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+

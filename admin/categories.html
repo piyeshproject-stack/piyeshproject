@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categories — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <script src="../assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="../assets/js/appwrite-init.js"></script>
+    <script src="assets/js/admin-common.js?v=3"></script>
+    <link rel="stylesheet" href="../assets/css/premium-icons.css">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="spinner"></div></div>
+<main class="admin-main" id="adminMain" style="display:none;">
+    <header class="admin-header">
+        <div class="header-left">
+            <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+            <div><div class="page-title">Categories</div><div class="page-subtitle">Product categories</div></div>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-primary" onclick="openModal()">+ Add Category</button>
+        </div>
+    </header>
+    <div class="admin-content">
+        <div class="card" style="padding:0;">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Icon</th><th>Name</th><th>Sort Order</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="catBody"><tr><td colspan="5" style="text-align:center;padding:40px;color:#8E8E93;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="catModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title" id="catModalTitle">Add Category</div>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="form-group"><label class="form-label">Category Name *</label>
+            <input class="form-input" id="cName" placeholder="e.g. T-Shirts"></div>
+        <div class="form-group"><label class="form-label">Icon URL or HTML Code (e.g. SVG or Emoji)</label>
+            <textarea class="form-input" id="cIcon" placeholder="https://...icon.png or <svg>...</svg>" style="min-height:60px; font-family:monospace; font-size:12px;"></textarea></div>
+        <div class="form-group"><label class="form-label">Sort Order</label>
+            <input class="form-input" id="cSort" type="number" placeholder="0" value="0"></div>
+        <div class="toggle-wrap" onclick="toggleCatActive()" style="margin-bottom:20px;">
+            <div><div class="toggle-label">Active (visible on site)</div></div>
+            <button class="toggle-switch on" id="cActive" type="button"></button>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary btn-full" onclick="saveCat()">💾 Save</button>
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+var allCats = [], editingId = null, cActive = true;
+
+document.addEventListener('DOMContentLoaded', function() {
+    adminInit('categories', function() { loadCats(); });
+});
+
+function loadCats() {
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('categories').select('*').order('sort_order').then(function(r) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allCats = r.data || [];
+            renderCats();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.listDocuments(APP_DB, 'categories', [
+            AppwriteQuery.orderAsc('sort_order')
+        ]).then(function(res) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allCats = res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; });
+            renderCats();
+        }).catch(function(err) {
+            showToast('Load failed: ' + err.message, 'error');
+        });
+    }
+}
+
+function renderCats() {
+    var html = '';
+    if (!allCats.length) { html = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#8E8E93;">No categories yet</td></tr>'; }
+    allCats.forEach(function(c) {
+        var iconHtml = '';
+        var iconUrl = c.icon_url || '';
+        if (iconUrl.trim().startsWith('<')) {
+            iconHtml = '<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--bg-card);overflow:hidden;">' + iconUrl + '</div>';
+        } else if (iconUrl) {
+            iconHtml = '<img src="' + iconUrl + '" style="width:36px;height:36px;border-radius:8px;object-fit:cover;background:var(--bg-card);" onerror="this.style.display=\'none\'">';
+        } else {
+            iconHtml = '<div style="width:36px;height:36px;border-radius:8px;background:var(--bg-card);display:flex;align-items:center;justify-content:center;color:#8E8E93;">—</div>';
+        }
+
+        html += '<tr>' +
+            '<td>' + iconHtml + '</td>' +
+            '<td style="font-weight:600;">' + c.name + '</td>' +
+            '<td>' + (c.sort_order || 0) + '</td>' +
+            '<td><span class="badge ' + (c.is_active ? 'badge-delivered' : 'badge-cancelled') + '">' + (c.is_active ? 'Active' : 'Inactive') + '</span></td>' +
+            '<td style="display:flex;gap:6px;">' +
+                '<button class="btn btn-ghost btn-sm" onclick=\'editCat(' + JSON.stringify(c).replace(/'/g,"&apos;") + ')\'><i data-lucide="edit-3" class="lucide-icon icon-hover-pulse"></i> Edit</button>' +
+                '<button class="btn btn-danger btn-sm" onclick="deleteCat(\'' + c.id + '\')"><i data-lucide="trash-2" class="lucide-icon icon-hover-shake icon-danger"></i></button>' +
+            '</td></tr>';
+    });
+    document.getElementById('catBody').innerHTML = html;
+}
+
+function openModal() {
+    editingId = null; cActive = true;
+    document.getElementById('catModalTitle').textContent = 'Add Category';
+    document.getElementById('cName').value = '';
+    document.getElementById('cIcon').value = '';
+    document.getElementById('cSort').value = 0;
+    setToggle('cActive', true);
+    document.getElementById('catModal').classList.add('show');
+}
+
+function editCat(c) {
+    editingId = c.id; cActive = c.is_active !== false;
+    document.getElementById('catModalTitle').textContent = 'Edit Category';
+    document.getElementById('cName').value = c.name || '';
+    document.getElementById('cIcon').value = c.icon_url || '';
+    document.getElementById('cSort').value = c.sort_order || 0;
+    setToggle('cActive', cActive);
+    document.getElementById('catModal').classList.add('show');
+}
+
+function setToggle(id, state) {
+    var el = document.getElementById(id);
+    if (state) el.classList.add('on'); else el.classList.remove('on');
+}
+
+function toggleCatActive() { cActive = !cActive; setToggle('cActive', cActive); }
+
+function saveCat() {
+    var name = document.getElementById('cName').value.trim();
+    if (!name) { showToast('Category name required', 'error'); return; }
+    var payload = { name: name, icon_url: document.getElementById('cIcon').value.trim(), sort_order: parseInt(document.getElementById('cSort').value)||0, is_active: cActive };
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId ? supabaseClient.from('categories').update(payload).eq('id', editingId) : supabaseClient.from('categories').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success'); closeModal(); loadCats();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        if (editingId) {
+            appwriteDatabases.updateDocument(APP_DB, 'categories', editingId, payload)
+            .then(function() {
+                showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+                closeModal();
+                loadCats();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        } else {
+            appwriteDatabases.createDocument(APP_DB, 'categories', AppwriteID.unique(), payload)
+            .then(function() {
+                showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+                closeModal();
+                loadCats();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        }
+    }
+}
+
+function deleteCat(id) {
+    if (!adminConfirm('Delete this category?')) return;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('categories').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Delete failed', 'error'); return; }
+            showToast('Deleted!', 'success'); loadCats();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'categories', id)
+        .then(function() {
+            showToast('Deleted!', 'success');
+            loadCats();
+        }).catch(function(err) {
+            showToast('Delete failed: ' + err.message, 'error');
+        });
+    }
+}
+
+function closeModal() { document.getElementById('catModal').classList.remove('show'); }
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+

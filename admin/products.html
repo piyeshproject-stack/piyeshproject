@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <script src="../assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="../assets/js/appwrite-init.js"></script>
+    <script src="assets/js/admin-common.js?v=3"></script>
+    <script src="../assets/js/imgbb-uploader.js"></script>
+    <style>
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .product-card {
+            background: var(--bg-secondary); border: 1px solid var(--border);
+            border-radius: var(--radius-md); overflow: hidden; transition: var(--transition);
+        }
+        .product-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
+        .product-img { width: 100%; height: 180px; object-fit: cover; background: var(--bg-card); display: block; }
+        .product-card-body { padding: 14px; }
+        .product-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-price { font-size: 16px; font-weight: 800; color: var(--accent); }
+        .product-old-price { font-size: 12px; color: var(--text-secondary); text-decoration: line-through; margin-left: 6px; }
+        .product-card-footer { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border); }
+
+        /* Variant Builder */
+        .variant-builder { }
+        .variant-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 12px; }
+        .variant-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .color-preview { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); }
+        .size-item { display: grid; grid-template-columns: 80px 1fr 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
+        .gallery-url-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+
+        /* -- Rich Text Editor ---------------------------------- */
+        .rte-wrap { border: 1.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-card); transition: border-color 0.2s; }
+        .rte-wrap:focus-within { border-color: var(--accent,#007AFF); box-shadow: 0 0 0 3px rgba(0,122,255,0.12); }
+        .rte-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 8px 10px; background: rgba(255,255,255,0.04); border-bottom: 1px solid var(--border); }
+        .rte-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary,#888); font-size: 13px; font-weight: 700; cursor: pointer; padding: 0 8px; transition: background 0.15s, color 0.15s; font-family: inherit; }
+        .rte-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary,#fff); }
+        .rte-sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
+        .rte-select { height: 32px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card,#1c1c1e); color: var(--text-secondary,#888); font-size: 12px; padding: 0 6px; cursor: pointer; font-family: inherit; }
+        .rte-select option { background: var(--bg-card,#1c1c1e); }
+        .rte-editor { min-height: 130px; max-height: 300px; overflow-y: auto; padding: 12px 14px; font-size: 14px; line-height: 1.8; color: var(--text-primary,#fff); outline: none; }
+        .rte-editor:empty:before { content: attr(data-placeholder); color: var(--text-secondary,#888); pointer-events: none; }
+        .rte-editor b, .rte-editor strong { font-weight: 700; }
+        .rte-editor i, .rte-editor em { font-style: italic; }
+        .rte-editor u { text-decoration: underline; }
+        .rte-editor s { text-decoration: line-through; }
+        .rte-editor ul { list-style: disc; padding-left: 22px; margin: 4px 0; }
+        .rte-editor ol { list-style: decimal; padding-left: 22px; margin: 4px 0; }
+        .rte-editor h1 { font-size: 1.5em; font-weight: 800; margin: 6px 0 2px; }
+        .rte-editor h2 { font-size: 1.25em; font-weight: 700; margin: 6px 0 2px; }
+        .rte-editor h3 { font-size: 1.1em; font-weight: 700; margin: 4px 0 2px; }
+        .rte-editor blockquote { border-left: 3px solid var(--accent,#007AFF); padding-left: 12px; color: var(--text-secondary,#888); margin: 4px 0; font-style: italic; }
+        .rte-char-count { font-size: 11px; color: var(--text-secondary,#888); text-align: right; padding: 4px 12px 6px; }
+    </style>
+    <link rel="stylesheet" href="../assets/css/premium-icons.css">
+</head>
+<body>
+    <div class="page-loader" id="pageLoader"><div class="spinner"></div></div>
+
+    <main class="admin-main" id="adminMain" style="display:none;">
+        <header class="admin-header">
+            <div class="header-left">
+                <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+                <div>
+                    <div class="page-title">Products</div>
+                    <div class="page-subtitle" id="prodCountSub">Loading...</div>
+                </div>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-primary" onclick="openProductModal()">+ Add Product</button>
+            </div>
+        </header>
+
+        <div class="admin-content">
+            <div class="filter-bar">
+                <div class="search-box">
+                    <span><i data-lucide="search" class="lucide-icon"></i></span>
+                    <input type="text" id="prodSearch" placeholder="Search products..." oninput="filterProducts()">
+                </div>
+                <!-- Mobile filter toggle -->
+                <button class="filter-toggle-btn" id="prodFilterToggle" onclick="toggleProdFilters()">
+                    <i data-lucide="sliders-horizontal" class="lucide-icon"></i> Filter
+                    <span class="filter-count" id="prodFilterCount">0</span>
+                </button>
+                <!-- Inline filters -->
+                <select class="form-select filter-inline" id="catFilter" onchange="filterProducts();updateProdFilterCount()" style="width:auto;min-width:160px;">
+                    <option value="">All Categories</option>
+                </select>
+                <select class="form-select filter-inline" id="activeFilter" onchange="filterProducts();updateProdFilterCount()" style="width:auto;min-width:140px;">
+                    <option value="">All</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+
+            <!-- Mobile Filter Panel -->
+            <div class="filter-panel" id="prodFilterPanel">
+                <div class="filter-panel-row">
+                    <select class="form-select" id="catFilterM" onchange="syncProdFilter('catFilter','catFilterM');filterProducts();updateProdFilterCount()">
+                        <option value="">All Categories</option>
+                    </select>
+                    <select class="form-select" id="activeFilterM" onchange="syncProdFilter('activeFilter','activeFilterM');filterProducts();updateProdFilterCount()">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="filter-panel-actions">
+                    <button class="btn btn-ghost btn-sm" onclick="resetProdFilters()">Reset</button>
+                    <button class="btn btn-primary btn-sm" onclick="toggleProdFilters()">Done</button>
+                </div>
+            </div>
+
+            <div class="product-grid" id="productGrid">
+                <div style="grid-column:1/-1;text-align:center;padding:40px;color:#8E8E93;">Loading products...</div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Product Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-box modal-box-lg" style="max-width:800px;">
+            <div class="modal-header">
+                <div class="modal-title" id="productModalTitle">Add Product</div>
+                <button class="modal-close" onclick="closeModal('productModal')">✕</button>
+            </div>
+
+            <div style="max-height:75vh;overflow-y:auto;padding-right:4px;">
+
+            <!-- Basic Info -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Product Name *</label>
+                    <input class="form-input" id="pName" placeholder="Product name...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Product SKU (Optional)</label>
+                    <input class="form-input" id="pSku" placeholder="e.g. ITEM-123">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">&#128221; Description (Rich Text)</label>
+                <div class="rte-wrap">
+                    <div class="rte-toolbar">
+                        <select class="rte-select" onchange="rteBlock(this.value);this.value='p'" title="Block style">
+                            <option value="p">Paragraph</option>
+                            <option value="h1">Heading 1</option>
+                            <option value="h2">Heading 2</option>
+                            <option value="h3">Heading 3</option>
+                            <option value="blockquote">Quote</option>
+                        </select>
+                        <div class="rte-sep"></div>
+                        <button type="button" class="rte-btn" title="Bold" onclick="rteCmd('bold')"><b>B</b></button>
+                        <button type="button" class="rte-btn" title="Italic" onclick="rteCmd('italic')"><i>I</i></button>
+                        <button type="button" class="rte-btn" title="Underline" onclick="rteCmd('underline')"><u>U</u></button>
+                        <button type="button" class="rte-btn" title="Strikethrough" onclick="rteCmd('strikeThrough')"><s>S</s></button>
+                        <div class="rte-sep"></div>
+                        <button type="button" class="rte-btn" title="Highlight" style="position:relative;overflow:hidden;"><span style="background:#FFD60A;border-radius:3px;padding:1px 6px;color:#000;font-size:12px;font-weight:700;">A</span><input type="color" value="#FFD60A" style="opacity:0;position:absolute;inset:0;cursor:pointer;width:100%;height:100%;" onchange="rteCmd('backColor',this.value)"></button>
+                        <button type="button" class="rte-btn" title="Text color" style="position:relative;overflow:hidden;"><span style="font-size:13px;font-weight:900;color:#FF3B30;text-decoration:underline;">A</span><input type="color" value="#FF3B30" style="opacity:0;position:absolute;inset:0;cursor:pointer;width:100%;height:100%;" onchange="rteCmd('foreColor',this.value)"></button>
+                        <div class="rte-sep"></div>
+                        <button type="button" class="rte-btn" title="Bullet list" onclick="rteCmd('insertUnorderedList')">&#8226; List</button>
+                        <button type="button" class="rte-btn" title="Numbered list" onclick="rteCmd('insertOrderedList')">1. List</button>
+                        <div class="rte-sep"></div>
+                        <button type="button" class="rte-btn" title="Align left" onclick="rteCmd('justifyLeft')">&#8801;</button>
+                        <button type="button" class="rte-btn" title="Align center" onclick="rteCmd('justifyCenter')">&#8803;</button>
+                        <button type="button" class="rte-btn" title="Align right" onclick="rteCmd('justifyRight')">&#8800;</button>
+                        <div class="rte-sep"></div>
+                        <button type="button" class="rte-btn" title="Clear formatting" onclick="rteCmd('removeFormat')" style="font-size:11px;">&#10005; fmt</button>
+                    </div>
+                    <div class="rte-editor" id="pDesc" contenteditable="true" data-placeholder="Product description লিখো..." oninput="document.getElementById('rteCharCount').textContent=this.innerText.trim().length+' chars'"></div>
+                    <div class="rte-char-count" id="rteCharCount">0 chars</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Base Price (৳) *</label>
+                    <input class="form-input" id="pBasePrice" type="number" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Flash Sale Discount (৳)</label>
+                    <input class="form-input" id="pFlashPrice" type="number" placeholder="0">
+                    <div class="form-hint">Final = Base Price - this amount</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Flash Sale End Date</label>
+                    <input class="form-input" id="pFlashEnd" type="datetime-local">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categories (Select Multiple)</label>
+                    <div id="pCategoryList" class="category-checkbox-list"></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="toggle-wrap" onclick="toggleProductField('pActive')">
+                    <div><div class="toggle-label">Active (visible on site)</div></div>
+                    <button class="toggle-switch on" id="pActive" type="button"></button>
+                </div>
+                <div class="toggle-wrap" onclick="toggleProductField('pFeatured')">
+                    <div><div class="toggle-label">Featured (Flash Deals section)</div></div>
+                    <button class="toggle-switch" id="pFeatured" type="button"></button>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="toggle-wrap" onclick="toggleProductField('pAddOnce')" style="border-color:rgba(98,126,234,0.4);background:rgba(98,126,234,0.04);">
+                    <div>
+                        <div class="toggle-label">🛍️ Add-Once Product</div>
+                        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">ON করলে checkout-এ Add-Once popup-এ দেখাবে</div>
+                    </div>
+                    <button class="toggle-switch" id="pAddOnce" type="button"></button>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Gallery Images -->
+            <div class="form-group">
+                <label class="form-label"><i data-lucide="image" class="lucide-icon icon-hover-pulse"></i> Gallery Images</label>
+                <div class="form-hint" style="margin-bottom:8px;">ছবি আপলোড করো অথবা direct URL দাও। <b>ImgBB তে আপলোড করলে best</b>।</div>
+                <div id="galleryWrap"></div>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="addGalleryUrl()" style="margin-top:8px;">+ Add Image</button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label"><i data-lucide="film" class="lucide-icon"></i> Video URL (Optional)</label>
+                <input class="form-input" id="pVideoUrl" placeholder="YouTube / TikTok / Facebook / any video link">
+                <div class="form-hint">যেকোনো ভিডিও লিঙ্ক দাও — Auto-detect করবে। না হলে নিচ থেকে Platform সিলেক্ট করো।</div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Video Platform</label>
+                <select class="form-select" id="pVideoType">
+                    <option value="auto">🔍 Auto Detect</option>
+                    <option value="youtube">▶️ YouTube</option>
+                    <option value="facebook">📘 Facebook</option>
+                    <option value="tiktok">🎵 TikTok</option>
+                    <option value="instagram">📸 Instagram</option>
+                    <option value="vimeo">🎬 Vimeo</option>
+                    <option value="dailymotion">📺 Dailymotion</option>
+                    <option value="twitter">🐦 Twitter / X</option>
+                    <option value="loom">🔴 Loom</option>
+                    <option value="streamable">📡 Streamable</option>
+                    <option value="direct">🎞️ Direct File (mp4/webm)</option>
+                    <option value="other">🌐 Other (iframe embed)</option>
+                </select>
+                <div class="form-hint">Auto Detect কাজ না করলে manually platform select করো।</div>
+            </div>
+
+            <hr class="section-divider">
+
+            <!-- Variant Builder -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+                <label class="form-label" style="margin:0;"><i data-lucide="palette" class="lucide-icon icon-pulse"></i> Color Variants</label>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="addVariant()">+ Add Color</button>
+            </div>
+            <div id="variantsWrap"></div>
+
+            <div style="display:flex;gap:10px;margin-top:20px;">
+                <button class="btn btn-primary btn-full" onclick="saveProduct()" id="saveProductBtn">💾 Save Product</button>
+                <button class="btn btn-ghost" onclick="closeModal('productModal')">Cancel</button>
+            </div>
+
+            </div><!-- /scroll -->
+        </div>
+    </div>
+
+    <script>
+    var allProducts = [], allCategories = [];
+    var editingProductId = null;
+    var galleryUrls = [];
+    var variants = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // adminInit auth guard — তারপর data load
+        adminInit('products', function() {
+            loadCategories();
+            loadProducts();
+        });
+    });
+
+    function loadCategories() {
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('categories').select('*').eq('is_active', true).order('sort_order').then(function(r) {
+                allCategories = r.data || [];
+                var catFilter  = document.getElementById('catFilter');
+                var catFilterM = document.getElementById('catFilterM');
+                var pCatList   = document.getElementById('pCategoryList');
+                allCategories.forEach(function(c) {
+                    var opt = '<option value="' + c.id + '">' + c.name + '</option>';
+                    catFilter.innerHTML  += opt;
+                    if (catFilterM) catFilterM.innerHTML += opt;
+                    pCatList.innerHTML +=
+                        '<label class="category-checkbox-item">' +
+                            '<input type="checkbox" name="pCat" value="' + c.id + '">' +
+                            '<span>' + c.name + '</span>' +
+                        '</label>';
+                });
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.listDocuments(APP_DB, 'categories', [
+                AppwriteQuery.equal('is_active', true),
+                AppwriteQuery.orderAsc('sort_order')
+            ]).then(function(res) {
+                allCategories = res.documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; });
+                var catFilter  = document.getElementById('catFilter');
+                var catFilterM = document.getElementById('catFilterM');
+                var pCatList   = document.getElementById('pCategoryList');
+                allCategories.forEach(function(c) {
+                    var opt = '<option value="' + c.id + '">' + c.name + '</option>';
+                    catFilter.innerHTML  += opt;
+                    if (catFilterM) catFilterM.innerHTML += opt;
+                    pCatList.innerHTML +=
+                        '<label class="category-checkbox-item">' +
+                            '<input type="checkbox" name="pCat" value="' + c.id + '">' +
+                            '<span>' + c.name + '</span>' +
+                        '</label>';
+                });
+            }).catch(function(err) {
+                showToast('Category load error: ' + err.message, 'error');
+            });
+        }
+    }
+
+    // ── Mobile Filter Panel helpers ──────────────────────────
+    function toggleProdFilters() {
+        var panel = document.getElementById('prodFilterPanel');
+        panel.classList.toggle('open');
+        if (panel.classList.contains('open')) {
+            var catFilterM  = document.getElementById('catFilterM');
+            var activeFilterM = document.getElementById('activeFilterM');
+            if (catFilterM)    catFilterM.value    = document.getElementById('catFilter').value;
+            if (activeFilterM) activeFilterM.value = document.getElementById('activeFilter').value;
+        }
+    }
+
+    function syncProdFilter(mainId, mobileId) {
+        document.getElementById(mainId).value = document.getElementById(mobileId).value;
+    }
+
+    function updateProdFilterCount() {
+        var count = 0;
+        if (document.getElementById('catFilter').value)    count++;
+        if (document.getElementById('activeFilter').value) count++;
+        var badge = document.getElementById('prodFilterCount');
+        if (badge) {
+            badge.textContent = count;
+            if (count > 0) badge.classList.add('has-filters');
+            else badge.classList.remove('has-filters');
+        }
+    }
+
+    function resetProdFilters() {
+        document.getElementById('catFilter').value    = '';
+        document.getElementById('activeFilter').value = '';
+        var m1 = document.getElementById('catFilterM');    if (m1) m1.value = '';
+        var m2 = document.getElementById('activeFilterM'); if (m2) m2.value = '';
+        filterProducts();
+        updateProdFilterCount();
+        document.getElementById('prodFilterPanel').classList.remove('open');
+    }
+
+    function loadProducts() {
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            Promise.all([
+                supabaseClient.from('products').select('*').order('created_at', { ascending: false }),
+                supabaseClient.from('product_categories').select('*')
+            ]).then(function(results) {
+                document.getElementById('pageLoader').style.display = 'none';
+                document.getElementById('adminMain').style.display  = 'flex';
+                allProducts = results[0].data || [];
+                var pc = results[1].data || [];
+                
+                allProducts.forEach(function(p) {
+                    p.category_ids = pc.filter(function(x) { return x.product_id === p.id; }).map(function(x) { return x.category_id; });
+                    if (p.category_id && !p.category_ids.includes(p.category_id)) p.category_ids.push(p.category_id);
+                });
+                
+                document.getElementById('prodCountSub').textContent = allProducts.length + ' products';
+                renderProducts(allProducts);
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            Promise.all([
+                appwriteDatabases.listDocuments(APP_DB, 'products',           [AppwriteQuery.orderDesc('$createdAt'), AppwriteQuery.limit(500)]),
+                appwriteDatabases.listDocuments(APP_DB, 'product_categories', [AppwriteQuery.limit(5000)])
+            ]).then(function(results) {
+                document.getElementById('pageLoader').style.display = 'none';
+                document.getElementById('adminMain').style.display  = 'flex';
+                var pc = results[1].documents;
+                allProducts = results[0].documents.map(function(doc) {
+                    doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } }
+                    // variants stored as JSON string
+                    if (typeof doc.variants === 'string') {
+                        try { doc.variants = JSON.parse(doc.variants); } catch(e) { doc.variants = []; }
+                    }
+                    doc.variants = doc.variants || [];
+                    if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } }
+                    else { doc.gallery_images = doc.gallery_images || []; }
+                    doc.category_ids = pc
+                        .filter(function(x) { return x.product_id === doc.id; })
+                        .map(function(x) { return x.category_id; });
+                    return doc;
+                });
+                document.getElementById('prodCountSub').textContent = allProducts.length + ' products';
+                renderProducts(allProducts);
+            }).catch(function(err) {
+                showToast('Load failed: ' + err.message, 'error');
+            });
+        }
+    }
+
+    function filterProducts() {
+        var q   = document.getElementById('prodSearch').value.toLowerCase();
+        var cat = document.getElementById('catFilter').value;
+        var act = document.getElementById('activeFilter').value;
+
+        var filtered = allProducts.filter(function(p) {
+            var nameMatch = (p.name || '').toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q);
+            return (!q   || nameMatch) &&
+                   (!cat || (p.category_ids && p.category_ids.includes(cat))) &&
+                   (!act || (act === 'active' ? p.is_active : !p.is_active));
+        });
+        renderProducts(filtered);
+    }
+
+    function renderProducts(products) {
+        var grid = document.getElementById('productGrid');
+        if (!products.length) {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#8E8E93;"><div style="font-size:40px;margin-bottom:12px;"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i></div><div>No products found</div></div>';
+            return;
+        }
+        grid.innerHTML = '';
+        products.forEach(function(p) {
+            var img = '';
+            var variants = p.variants || [];
+            if (variants.length && variants[0].imageUrl) {
+                img = variants[0].imageUrl;
+            } else if (p.gallery_images && p.gallery_images.length) {
+                img = p.gallery_images[0];
+            }
+
+            var finalPrice = p.base_price;
+            var saleHtml = '';
+            if (p.flash_sale_price > 0) {
+                finalPrice = p.base_price - p.flash_sale_price;
+                saleHtml = '<span class="product-old-price">৳' + p.base_price + '</span> <span class="badge badge-pending" style="font-size:10px;">SALE</span>';
+            }
+
+            var card = document.createElement('div');
+            card.className = 'product-card';
+            card.innerHTML =
+                '<img src="' + img + '" class="product-img" onerror="this.src=\'\';this.style.minHeight=\'60px\'">' +
+                '<div class="product-card-body">' +
+                    '<div class="product-name">' + p.name + '</div>' +
+                    '<div>' +
+                        '<span class="product-price">৳' + finalPrice + '</span>' + saleHtml +
+                    '</div>' +
+                    '<div style="margin-top:6px;font-size:12px;color:#8E8E93;">' +
+                        variants.length + ' color(s) | ' +
+                        (p.is_active ? '<span style="color:#34C759;">●  Active</span>' : '<span style="color:#FF3B30;">● Inactive</span>') +
+                        (p.is_add_once ? ' | <span style="color:#627EEA;font-weight:700;">🛍️ Add-Once</span>' : '') +
+                    '</div>' +
+                '</div>' +
+                '<div class="product-card-footer">' +
+                    '<button class="btn btn-ghost btn-sm" style="flex:1;" onclick="editProduct(\'' + p.id + '\')"><i data-lucide="edit-3" class="lucide-icon icon-hover-pulse"></i> Edit</button>' +
+                    '<button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p.id + '\')"><i data-lucide="trash-2" class="lucide-icon icon-hover-shake icon-danger"></i></button>' +
+                    '<button class="btn btn-ghost btn-sm" onclick="toggleActive(\'' + p.id + '\',' + p.is_active + ')">' + (p.is_active ? '<i data-lucide="circle-dot" class="lucide-icon icon-danger"></i> Hide' : '<i data-lucide="check-circle" class="lucide-icon icon-success"></i> Show') + '</button>' +
+                '</div>';
+            grid.appendChild(card);
+        });
+    }
+
+    // ── Product Modal ────────────────────────────────────────
+    function openProductModal(product) {
+        editingProductId = null;
+        galleryUrls = [''];
+        variants    = [];
+        document.getElementById('productModalTitle').textContent = 'Add New Product';
+        document.getElementById('pName').value      = '';
+        document.getElementById('pSku').value       = '';
+        document.getElementById('pDesc').innerHTML  = ''; document.getElementById('rteCharCount').textContent = '0 chars';
+        document.getElementById('pBasePrice').value = '';
+        document.getElementById('pFlashPrice').value= '';
+        document.getElementById('pFlashEnd').value  = '';
+        document.getElementById('pVideoUrl').value  = '';
+        document.getElementById('pVideoType').value = 'auto';
+        document.querySelectorAll('input[name="pCat"]').forEach(function(cb) { cb.checked = false; });
+        setToggle('pActive', true);
+        setToggle('pFeatured', false);
+        setToggle('pAddOnce', false);
+        renderGallery();
+        renderVariants();
+        document.getElementById('productModal').classList.add('show');
+    }
+
+    function editProduct(id) {
+        var p = allProducts.find(function(x) { return x.id === id; });
+        if (!p) return;
+
+        editingProductId = p.id;
+        galleryUrls = (p.gallery_images && p.gallery_images.length) ? p.gallery_images : [''];
+        variants    = p.variants ? JSON.parse(JSON.stringify(p.variants)) : [];
+
+        document.getElementById('productModalTitle').textContent = 'Edit Product';
+        document.getElementById('pName').value       = p.name || '';
+        document.getElementById('pSku').value        = p.sku || '';
+        document.getElementById('pDesc').innerHTML  = p.description || '';
+        document.getElementById('rteCharCount').textContent = (document.getElementById('pDesc').innerText.length) + ' chars';
+        document.getElementById('pBasePrice').value  = p.base_price || '';
+        document.getElementById('pFlashPrice').value = p.flash_sale_price || '';
+        document.getElementById('pFlashEnd').value   = p.flash_sale_end ? p.flash_sale_end.substring(0,16) : '';
+        document.getElementById('pVideoUrl').value   = p.video_url || '';
+        document.getElementById('pVideoType').value  = p.video_type || 'auto';
+        
+        // Fetch categories for this product
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('product_categories').select('category_id').eq('product_id', p.id).then(function(catRes) {
+                var selectedIds = (catRes.data || []).map(function(c) { return c.category_id; });
+                if (p.category_id && !selectedIds.includes(p.category_id)) selectedIds.push(p.category_id);
+
+                document.querySelectorAll('input[name="pCat"]').forEach(function(cb) {
+                    cb.checked = selectedIds.includes(cb.value);
+                });
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.listDocuments(APP_DB, 'product_categories', [
+                AppwriteQuery.equal('product_id', p.id)
+            ]).then(function(catRes) {
+                var selectedIds = catRes.documents.map(function(c) { return c.category_id; });
+                document.querySelectorAll('input[name="pCat"]').forEach(function(cb) {
+                    cb.checked = selectedIds.includes(cb.value);
+                });
+            }).catch(function(err) {
+                console.error('Category fetch error:', err.message);
+            });
+        }
+
+        setToggle('pActive',   p.is_active);
+        setToggle('pFeatured', p.is_featured);
+        setToggle('pAddOnce',  p.is_add_once);
+        renderGallery();
+        renderVariants();
+        document.getElementById('productModal').classList.add('show');
+    }
+
+    function setToggle(id, state) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (state) el.classList.add('on'); else el.classList.remove('on');
+    }
+
+    function toggleProductField(id) {
+        var el = document.getElementById(id);
+        if (el.classList.contains('on')) el.classList.remove('on'); else el.classList.add('on');
+    }
+
+    // ── Gallery ──────────────────────────────────────────────
+    function renderGallery() {
+        var wrap = document.getElementById('galleryWrap');
+        wrap.innerHTML = '';
+        galleryUrls.forEach(function(url, i) {
+            var parsed = parseImageInput(url);
+            var previewSrc = parsed.previewUrl || '';
+
+            var row = document.createElement('div');
+            row.style.cssText = 'margin-bottom:10px;';
+            row.innerHTML =
+                '<div class="imgbb-upload-row">' +
+                    '<input class="form-input" placeholder="https://...image.jpg" value="' + (url||'') + '" data-gidx="' + i + '" oninput="onGalleryInput(this,' + i + ')">' +
+                    '<button type="button" class="btn btn-ghost btn-sm imgbb-upload-btn" data-gupload="' + i + '">&#128228; Upload</button>' +
+                    '<button type="button" class="btn btn-danger btn-sm" onclick="removeGallery(' + i + ')">&#10005;</button>' +
+                '</div>' +
+                '<div id="gprev-' + i + '" class="imgbb-preview-wrap" style="height:70px;margin-top:6px;' + (previewSrc ? '' : 'display:none;') + '">' +
+                    (previewSrc ?
+                        '<img class="imgbb-img-preview" src="' + previewSrc + '" onerror="document.getElementById(\'gprev-' + i + '\').style.display=\'none\'">' :
+                        '<div class="imgbb-preview-placeholder"><span>&#128247; No image</span></div>'
+                    ) +
+                '</div>';
+            wrap.appendChild(row);
+        });
+
+        // Upload buttons bind
+        wrap.querySelectorAll('[data-gupload]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var idx = parseInt(btn.dataset.gupload);
+                var apiKey = getImgbbKey();
+                if (!apiKey) { showToast('&#9888; ImgBB API Key সেট করো! Settings থেকে দাও।', 'warning'); return; }
+                var fileInput = document.createElement('input');
+                fileInput.type = 'file'; fileInput.accept = 'image/*';
+                fileInput.onchange = function() {
+                    if (!fileInput.files[0]) return;
+                    var origText = btn.innerHTML;
+                    btn.innerHTML = '&#9203; Uploading...'; btn.disabled = true;
+                    imgbbUpload(fileInput.files[0], apiKey)
+                        .then(function(r) {
+                            galleryUrls = collectGallery();
+                            galleryUrls[idx] = r.url;
+                            renderGallery();
+                            showToast('&#10003; Gallery image uploaded!', 'success');
+                        })
+                        .catch(function(e) { showToast('&#10008; ' + e.message, 'error'); btn.innerHTML=origText; btn.disabled=false; });
+                };
+                fileInput.click();
+            });
+        });
+    }
+
+    function onGalleryInput(input, i) {
+        var parsed = parseImageInput(input.value.trim());
+        var prev = document.getElementById('gprev-' + i);
+        if (!prev) return;
+        if (parsed.previewUrl) {
+            prev.style.display = 'flex';
+            var img = prev.querySelector('img');
+            if (img) { img.src = parsed.previewUrl; }
+            else { prev.innerHTML = '<img class="imgbb-img-preview" src="' + parsed.previewUrl + '" onerror="this.parentElement.style.display=\'none\'">';}
+        } else {
+            prev.style.display = 'none';
+        }
+    }
+
+
+    function addGalleryUrl() { 
+        galleryUrls = collectGallery();
+        galleryUrls.push(''); 
+        renderGallery(); 
+    }
+    
+    function removeGallery(i) { 
+        galleryUrls = collectGallery();
+        galleryUrls.splice(i, 1); 
+        if (!galleryUrls.length) galleryUrls = ['']; 
+        renderGallery(); 
+    }
+
+    function collectGallery() {
+        var inputs = document.querySelectorAll('[data-gidx]');
+        var arr = [];
+        inputs.forEach(function(inp) { arr.push(inp.value.trim()); });
+        return arr;
+    }
+
+    // ── Variants ─────────────────────────────────────────────
+    function addVariant() {
+        collectVariants();
+        variants.push({ colorName: '', colorHex: '#007AFF', variantCode: '', imageUrl: '', sizes: [{ size: 'M', stock: 10, extraPrice: 0 }] });
+        renderVariants();
+    }
+
+    function addSize(vi) {
+        collectVariants();
+        variants[vi].sizes.push({ size: '', stock: 0, extraPrice: 0 });
+        renderVariants();
+    }
+
+    function removeVariant(vi) { 
+        collectVariants();
+        variants.splice(vi, 1); 
+        renderVariants(); 
+    }
+    
+    function removeSize(vi, si) { 
+        collectVariants();
+        variants[vi].sizes.splice(si, 1); 
+        renderVariants(); 
+    }
+
+    function applyVariantToAll(vi) {
+        collectVariants();
+        if (variants.length <= 1) {
+            showToast('No other variants to apply to!', 'warning');
+            return;
+        }
+        var sourceVariant = variants[vi];
+        for (var i = 0; i < variants.length; i++) {
+            if (i !== vi) {
+                // Copy all data EXCEPT colorName and colorHex
+                variants[i].imageUrl = sourceVariant.imageUrl;
+                // Deep copy the sizes array
+                variants[i].sizes = JSON.parse(JSON.stringify(sourceVariant.sizes));
+            }
+        }
+        renderVariants();
+        showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Copied image and sizes to all other variants!', 'success');
+    }
+
+    function renderVariants() {
+        var wrap = document.getElementById('variantsWrap');
+        wrap.innerHTML = '';
+
+        variants.forEach(function(v, vi) {
+            var sizesHtml = (v.sizes || []).map(function(s, si) {
+                return '<div class="size-item">' +
+                    '<input class="form-input" placeholder="Size" value="' + (s.size||'') + '" data-v="' + vi + '" data-s="' + si + '" data-f="size">' +
+                    '<input class="form-input" placeholder="Stock" type="number" value="' + (s.stock||0) + '" data-v="' + vi + '" data-s="' + si + '" data-f="stock">' +
+                    '<input class="form-input" placeholder="Extra ৳" type="number" value="' + (s.extraPrice||0) + '" data-v="' + vi + '" data-s="' + si + '" data-f="extraPrice">' +
+                    '<button type="button" class="btn btn-danger btn-sm" onclick="removeSize(' + vi + ',' + si + ')">✕</button>' +
+                '</div>';
+            }).join('');
+
+            var div = document.createElement('div');
+            div.className = 'variant-item';
+            div.innerHTML =
+                '<div class="variant-header">' +
+                    '<div class="color-preview" id="cprev-' + vi + '" style="background:' + (v.colorHex||'#888') + ';"></div>' +
+                    '<input class="form-input" placeholder="Color Name" value="' + (v.colorName||'') + '" data-vf="' + vi + '" data-ff="colorName" style="flex:1;">' +
+                    '<input class="form-input" placeholder="Code (A1)" value="' + (v.variantCode||'') + '" data-vf="' + vi + '" data-ff="variantCode" style="width:100px;" title="Variant Code on Image">' +
+                    '<input type="color" value="' + (v.colorHex||'#007AFF') + '" data-vf="' + vi + '" data-ff="colorHex" title="Color Hex" style="width:44px;height:38px;border-radius:8px;border:none;cursor:pointer;background:none;" oninput="document.getElementById(\'cprev-' + vi + '\').style.background=this.value">' +
+                    '<button type="button" class="btn btn-ghost btn-sm" onclick="applyVariantToAll(' + vi + ')" title="Copy image &amp; sizes to all other colors" style="padding:0 8px;font-size:12.5px;"><i data-lucide="clipboard-list" class="lucide-icon"></i> Apply to All</button>' +
+                    '<button type="button" class="btn btn-danger btn-sm" onclick="removeVariant(' + vi + ')"><i data-lucide="trash-2" class="lucide-icon icon-hover-shake icon-danger"></i></button>' +
+                '</div>' +
+                '<div class="form-group" style="margin-bottom:6px;">' +
+                    '<label class="form-label">Color Image</label>' +
+                    '<div class="imgbb-upload-row">' +
+                        '<input class="form-input" placeholder="https://...color-image.jpg" value="' + (v.imageUrl||'') + '" data-vf="' + vi + '" data-ff="imageUrl" oninput="onVariantImgInput(this,' + vi + ')">' +
+                        '<button type="button" class="btn btn-ghost btn-sm imgbb-upload-btn" data-vupload="' + vi + '">\uD83D\uDCE4 Upload</button>' +
+                    '</div>' +
+                    '<div id="vprev-' + vi + '" class="imgbb-preview-wrap" style="height:65px;margin-top:6px;' + (v.imageUrl ? '' : 'display:none;') + '">' +
+                        (v.imageUrl ? '<img class="imgbb-img-preview" src="' + v.imageUrl + '" onerror="document.getElementById(\'vprev-' + vi + '\').style.display=\'none\'">' : '<div class="imgbb-preview-placeholder"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>No image</span></div>') +
+                    '</div>' +
+                '</div>' +
+                '<label class="form-label">Sizes (Name | Stock | Extra Price ৳)</label>' +
+                sizesHtml +
+                '<button type="button" class="btn btn-ghost btn-sm" onclick="addSize(' + vi + ')" style="margin-top:6px;">+ Add Size</button>';
+
+            wrap.appendChild(div);
+        });
+
+        // Variant upload buttons bind
+        wrap.querySelectorAll('[data-vupload]').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var vi = parseInt(btn.dataset.vupload);
+                var apiKey = getImgbbKey();
+                if (!apiKey) { showToast('\u26A0\uFE0F ImgBB API Key \u09B8\u09C7\u099F \u0995\u09B0\u09CB! Settings \u09A5\u09C7\u0995\u09C7 \u09A6\u09BE\u0993\u0964', 'warning'); return; }
+                var fileInput = document.createElement('input');
+                fileInput.type = 'file'; fileInput.accept = 'image/*';
+                fileInput.onchange = function() {
+                    if (!fileInput.files[0]) return;
+                    var origText = btn.innerHTML;
+                    btn.innerHTML = '\u23F3 Uploading...'; btn.disabled = true;
+                    imgbbUpload(fileInput.files[0], apiKey)
+                        .then(function(r) {
+                            collectVariants();
+                            variants[vi].imageUrl = r.url;
+                            renderVariants();
+                            showToast('\u2705 Variant image uploaded!', 'success');
+                        })
+                        .catch(function(e) { showToast('\u274C ' + e.message, 'error'); btn.innerHTML=origText; btn.disabled=false; });
+                };
+                fileInput.click();
+            });
+        });
+    }
+
+    function onVariantImgInput(input, vi) {
+        var parsed = parseImageInput(input.value.trim());
+        var prev = document.getElementById('vprev-' + vi);
+        if (!prev) return;
+        if (parsed.previewUrl) {
+            prev.style.display = 'flex';
+            var img = prev.querySelector('img');
+            if (img) { img.src = parsed.previewUrl; }
+            else { prev.innerHTML = '<img class="imgbb-img-preview" src="' + parsed.previewUrl + '" onerror="this.parentElement.style.display=\'none\'">';}
+        } else {
+            prev.style.display = 'none';
+        }
+    }
+
+    function collectVariants() {
+        // Collect variant field values from DOM
+        var vfInputs = document.querySelectorAll('[data-vf]');
+        vfInputs.forEach(function(inp) {
+            var vi = parseInt(inp.dataset.vf);
+            var ff = inp.dataset.ff;
+            if (variants[vi] !== undefined) variants[vi][ff] = inp.value;
+        });
+
+        var sfInputs = document.querySelectorAll('[data-v][data-s]');
+        sfInputs.forEach(function(inp) {
+            var vi = parseInt(inp.dataset.v);
+            var si = parseInt(inp.dataset.s);
+            var ff = inp.dataset.f;
+            if (variants[vi] && variants[vi].sizes[si] !== undefined) {
+                var val = inp.value;
+                if (ff === 'stock' || ff === 'extraPrice') val = parseInt(val) || 0;
+                variants[vi].sizes[si][ff] = val;
+            }
+        });
+
+        return variants;
+    }
+
+
+
+    // ── parseImageInput ──────────────────────────────────────
+    // image-seyestem.md documented logic
+    function parseImageInput(raw) {
+        if (!raw) return { previewUrl: null, saveUrl: null };
+        raw = (raw || '').trim();
+        // HTML <img> tag
+        var imgTagMatch = raw.match(/<img[^>]+src=["']([^"']+)["']/i);
+        if (imgTagMatch) return { previewUrl: imgTagMatch[1], saveUrl: imgTagMatch[1] };
+        // BBCode [img]
+        var bbMatch = raw.match(/\[img\](.+?)\[\/img\]/i);
+        if (bbMatch) return { previewUrl: bbMatch[1], saveUrl: bbMatch[1] };
+        // Direct image link (i.ibb.co or common extension)
+        if (/i\.ibb\.co|\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i.test(raw)) {
+            return { previewUrl: raw, saveUrl: raw };
+        }
+        // Viewer link (ibb.co/... not i.ibb.co)
+        if (/^https?:\/\/(www\.)?ibb\.co\//.test(raw)) {
+            return { previewUrl: null, saveUrl: raw };
+        }
+        // Try as direct
+        return { previewUrl: raw, saveUrl: raw };
+    }
+
+    function saveProduct() {
+        var name = document.getElementById('pName').value.trim();
+        if (!name) { showToast('Product name required', 'error'); return; }
+
+        var selectedCats = [];
+        document.querySelectorAll('input[name="pCat"]:checked').forEach(function(cb) {
+            selectedCats.push(cb.value);
+        });
+
+        var payload = {
+            name:             name,
+            sku:              document.getElementById('pSku').value.trim() || null,
+            description:      document.getElementById('pDesc').innerHTML.trim(),
+            base_price:       parseInt(document.getElementById('pBasePrice').value) || 0,
+            flash_sale_price: parseInt(document.getElementById('pFlashPrice').value) || 0,
+            flash_sale_end:   document.getElementById('pFlashEnd').value || null,
+            video_url:        document.getElementById('pVideoUrl').value.trim() || null,
+            video_type:       document.getElementById('pVideoType').value,
+            is_active:        document.getElementById('pActive').classList.contains('on'),
+            is_featured:      document.getElementById('pFeatured').classList.contains('on'),
+            is_add_once:      document.getElementById('pAddOnce').classList.contains('on'),
+            // gallery_images ও variants JSON হিসেবে সেভ হবে
+            gallery_images:   collectGallery()
+                                .map(function(s) { return parseImageInput(s).saveUrl || s.trim(); })
+                                .filter(Boolean),
+            variants:         collectVariants(),
+        };
+
+        var btn = document.getElementById('saveProductBtn');
+        setBtnLoading(btn, true);
+
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            var req = editingProductId
+                ? supabaseClient.from('products').update(payload).eq('id', editingProductId)
+                : supabaseClient.from('products').insert([payload]).select();
+
+            req.then(function(r) {
+                setBtnLoading(btn, false, '💾 Save Product');
+                if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+
+                var productId = editingProductId || (r.data && r.data[0] && r.data[0].id);
+
+                // Categories sync
+                function finishSave() {
+                    showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Product saved!', 'success');
+                    closeModal('productModal');
+                    loadProducts();
+                }
+
+                if (productId) {
+                    supabaseClient.from('product_categories').delete().eq('product_id', productId).then(function() {
+                        if (selectedCats.length) {
+                            var rows = selectedCats.map(function(cid) { return { product_id: productId, category_id: cid }; });
+                            supabaseClient.from('product_categories').insert(rows).then(function() {
+                                finishSave();
+                            }).catch(function() {
+                                finishSave();
+                            });
+                        } else {
+                            finishSave();
+                        }
+                    }).catch(function() {
+                        finishSave();
+                    });
+                } else {
+                    finishSave();
+                }
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            var awProductPayload = {
+                name:             payload.name,
+                sku:              payload.sku,
+                description:      payload.description,
+                base_price:       payload.base_price,
+                flash_sale_price: payload.flash_sale_price,
+                flash_sale_end:   payload.flash_sale_end,
+                video_url:        payload.video_url,
+                video_type:       payload.video_type,
+                is_active:        payload.is_active,
+                is_featured:      payload.is_featured,
+                is_add_once:      payload.is_add_once,
+                gallery_images:   payload.gallery_images,
+                variants:         JSON.stringify(payload.variants) // Complex object হলে JSON string
+            };
+
+            function finishSaveAW(productId) {
+                setBtnLoading(btn, false, '💾 Save Product');
+                // Delete old category mappings then insert new ones
+                appwriteDatabases.listDocuments(APP_DB, 'product_categories', [
+                    AppwriteQuery.equal('product_id', productId)
+                ]).then(function(oldCats) {
+                    var deletePromises = oldCats.documents.map(function(doc) {
+                        return appwriteDatabases.deleteDocument(APP_DB, 'product_categories', doc.$id);
+                    });
+                    return Promise.all(deletePromises);
+                }).then(function() {
+                    if (!selectedCats.length) return Promise.resolve();
+                    var insertPromises = selectedCats.map(function(cid) {
+                        return appwriteDatabases.createDocument(APP_DB, 'product_categories', AppwriteID.unique(), {
+                            product_id: productId,
+                            category_id: cid
+                        });
+                    });
+                    return Promise.all(insertPromises);
+                }).then(function() {
+                    showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Product saved!', 'success');
+                    closeModal('productModal');
+                    loadProducts();
+                }).catch(function(err) {
+                    showToast('Category sync error: ' + err.message, 'error');
+                    loadProducts();
+                });
+            }
+
+            if (editingProductId) {
+                appwriteDatabases.updateDocument(APP_DB, 'products', editingProductId, awProductPayload)
+                .then(function() {
+                    finishSaveAW(editingProductId);
+                }).catch(function(err) {
+                    setBtnLoading(btn, false, '💾 Save Product');
+                    showToast('Error: ' + err.message, 'error');
+                });
+            } else {
+                appwriteDatabases.createDocument(APP_DB, 'products', AppwriteID.unique(), awProductPayload)
+                .then(function(doc) {
+                    finishSaveAW(doc.$id);
+                }).catch(function(err) {
+                    setBtnLoading(btn, false, '💾 Save Product');
+                    showToast('Error: ' + err.message, 'error');
+                });
+            }
+        }
+    }
+
+
+    function deleteProduct(id) {
+        if (!adminConfirm('এই product মুছবেন? এই কাজ undo করা যাবে না।')) return;
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('products').delete().eq('id', id).then(function(r) {
+                if (r.error) { showToast('Delete failed', 'error'); return; }
+                showToast('Deleted!', 'success');
+                allProducts = allProducts.filter(function(p) { return p.id !== id; });
+                renderProducts(allProducts);
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            // Delete product_categories first, then the product
+            appwriteDatabases.listDocuments(APP_DB, 'product_categories', [
+                AppwriteQuery.equal('product_id', id)
+            ]).then(function(catRes) {
+                var delCatPromises = catRes.documents.map(function(doc) {
+                    return appwriteDatabases.deleteDocument(APP_DB, 'product_categories', doc.$id);
+                });
+                return Promise.all(delCatPromises);
+            }).then(function() {
+                return appwriteDatabases.deleteDocument(APP_DB, 'products', id);
+            }).then(function() {
+                showToast('Deleted!', 'success');
+                allProducts = allProducts.filter(function(p) { return p.id !== id; });
+                renderProducts(allProducts);
+            }).catch(function(err) {
+                showToast('Delete failed: ' + err.message, 'error');
+            });
+        }
+    }
+
+    function toggleActive(id, current) {
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('products').update({ is_active: !current }).eq('id', id).then(function(r) {
+                if (r.error) { showToast('Update failed', 'error'); return; }
+                var idx = allProducts.findIndex(function(p) { return p.id === id; });
+                if (idx > -1) allProducts[idx].is_active = !current;
+                renderProducts(allProducts);
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.updateDocument(APP_DB, 'products', id, { is_active: !current })
+            .then(function() {
+                var idx = allProducts.findIndex(function(p) { return p.id === id; });
+                if (idx > -1) allProducts[idx].is_active = !current;
+                renderProducts(allProducts);
+            }).catch(function(err) {
+                showToast('Update failed: ' + err.message, 'error');
+            });
+        }
+    }
+
+
+    // ── Rich Text Editor helpers ─────────────────────────────
+    function rteCmd(cmd, val) {
+        var ed = document.getElementById('pDesc');
+        ed.focus();
+        document.execCommand(cmd, false, val || null);
+        updateRteCharCount();
+    }
+    function rteBlock(tag) {
+        var ed = document.getElementById('pDesc');
+        ed.focus();
+        document.execCommand('formatBlock', false, '<' + tag + '>');
+        updateRteCharCount();
+    }
+    function updateRteCharCount() {
+        var ed = document.getElementById('pDesc');
+        var cc = document.getElementById('rteCharCount');
+        if (ed && cc) cc.textContent = (ed.innerText || '').trim().length + ' chars';
+    }
+    // ── Paste handler: sanitize & preserve basic formatting ──
+    (function() {
+        function setupRtePaste() {
+            var ed = document.getElementById('pDesc');
+            if (!ed) return;
+            ed.addEventListener('paste', function(e) {
+                e.preventDefault();
+                var cd = e.clipboardData || window.clipboardData;
+                var html = cd.getData('text/html');
+                var text = cd.getData('text/plain');
+                if (html) {
+                    var tmp = document.createElement('div');
+                    tmp.innerHTML = html;
+                    // Remove dangerous elements
+                    tmp.querySelectorAll('script,style,meta,link,head,form,iframe,object,embed').forEach(function(el){ el.remove(); });
+                    var SAFE = ['b','strong','i','em','u','s','strike','h1','h2','h3','ul','ol','li','br','p','blockquote','span'];
+                    // Walk all elements and flatten unsafe ones
+                    var els = Array.from(tmp.querySelectorAll('*'));
+                    els.forEach(function(el) {
+                        var tag = el.tagName ? el.tagName.toLowerCase() : '';
+                        if (SAFE.indexOf(tag) === -1) {
+                            var frag = document.createDocumentFragment();
+                            while (el.firstChild) frag.appendChild(el.firstChild);
+                            el.parentNode && el.parentNode.replaceChild(frag, el);
+                        } else {
+                            // Keep only color/background-color inline styles
+                            var st = el.getAttribute('style') || '';
+                            var keepSt = [];
+                            var colMatch = st.match(/(?:background-)?color\s*:[^;]+/g);
+                            if (colMatch) keepSt = keepSt.concat(colMatch);
+                            if (keepSt.length) el.setAttribute('style', keepSt.join(';'));
+                            else el.removeAttribute('style');
+                            el.removeAttribute('class');
+                            el.removeAttribute('id');
+                        }
+                    });
+                    document.execCommand('insertHTML', false, tmp.innerHTML);
+                } else if (text) {
+                    // Plain text: preserve line breaks
+                    var esc = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                    var br = esc.replace(/\n/g, '<br>');
+                    document.execCommand('insertHTML', false, br);
+                }
+                updateRteCharCount();
+            });
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupRtePaste);
+        else setupRtePaste();
+    })();
+    function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+    </script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart — Freelancing By Rifat</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="assets/js/appwrite-init.js"></script>
+    <style>
+        .cart-layout { display: grid; grid-template-columns: 1fr 360px; gap: 20px; padding: 20px 0; }
+        .order-summary { background: #fff; border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border); position: sticky; top: 80px; height: fit-content; }
+        .summary-row   { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; }
+        .summary-total { border-top: 2px solid var(--border); padding-top: 12px; margin-top: 8px; font-size: 18px; font-weight: 800; }
+        @media (max-width: 768px) { .cart-layout { grid-template-columns: 1fr; } .order-summary { position: static; } }
+
+        /* Messaging Bottom Sheet */
+        @keyframes cartSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .cart-msg-sheet-inner {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: #fff; border-radius: 22px 22px 0 0;
+            padding: 24px 20px 36px;
+            max-height: 88vh; overflow-y: auto;
+            animation: cartSlideUp 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+        .msg-app-btn {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 14px; border: 1.5px solid #eee;
+            border-radius: 12px; background: #fff; cursor: pointer;
+            transition: all 0.2s; text-decoration: none; color: #333;
+            width: 100%;
+        }
+        .msg-app-btn:hover { border-color: #25D366; background: rgba(37,211,102,0.05); transform: translateY(-1px); }
+        .msg-app-btn img { width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0; }
+        .msg-app-btn span { font-size: 13px; font-weight: 600; }
+        .cart-order-items-preview {
+            background: var(--bg-light); border-radius: 12px; padding: 12px;
+            margin-bottom: 14px; font-size: 13px; line-height: 1.9;
+            border: 1px solid var(--border-light); max-height: 130px; overflow-y: auto;
+        }
+        .sheet-input {
+            width: 100%; padding: 12px 14px;
+            background: var(--bg-light); border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 14px;
+            color: var(--text-dark); outline: none; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .sheet-input:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px var(--primary-glow); }
+        .sheet-input::placeholder { color: var(--text-muted); }
+        .sheet-textarea { resize: none; min-height: 75px; }
+        .sheet-section-label {
+            font-size: 11px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px;
+        }
+        .required-star { color: var(--primary); }
+    </style>
+    <link rel="stylesheet" href="assets/css/premium-icons.css">
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" type="module"></script>
+</head>
+<body>
+<div class="page-loader" id="pageLoader">
+    <dotlottie-wc src="https://lottie.host/a9162a6d-bee0-4ebd-adda-d4a43f0bea2b/Nq6NiivYlE.lottie" autoplay loop></dotlottie-wc>
+    <div style="font-size:14px;color:#8B1A1A;font-weight:600;margin-top:-30px;" id="storeName">Loading...</div>
+</div>
+
+<nav class="navbar">
+    <a href="shop.html" class="nav-icon-btn">←</a>
+    <a href="index.html" class="navbar-brand"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> <span id="navBrand">Cart</span></a>
+    <div style="margin-left:auto;font-size:13px;color:#888;" id="cartCountLabel"></div>
+</nav>
+
+<div class="container">
+    <div style="padding-top:10px;margin-bottom:4px;font-size:22px;font-weight:900;color:var(--text-dark);"><i data-lucide="shopping-cart" class="lucide-icon icon-bounce"></i> Your Cart</div>
+
+    <div class="cart-layout">
+        <!-- Cart Items -->
+        <div id="cartItemsWrap"></div>
+
+        <!-- Order Summary -->
+        <div>
+            <div class="order-summary">
+                <div style="font-size:16px;font-weight:800;color:var(--text-dark);margin-bottom:16px;"><i data-lucide="clipboard-list" class="lucide-icon"></i> Order Summary</div>
+
+                <div class="summary-row"><span>Subtotal</span><span id="sumSubtotal">৳0</span></div>
+                <div class="summary-row" id="discountRow" style="color:var(--success);display:none;"><span>Discount</span><span id="sumDiscount">-৳0</span></div>
+                <div class="summary-row"><span style="color:#888;font-size:13px;">Delivery</span><span style="color:#888;font-size:13px;">Calculated at checkout</span></div>
+                <div class="summary-row summary-total"><span>Subtotal</span><span id="sumTotal" style="color:var(--primary);">৳0</span></div>
+
+                <a href="checkout.html" class="btn btn-primary btn-full btn-lg" id="checkoutBtn" style="margin-top:16px;">
+                    <i data-lucide="rocket" class="lucide-icon icon-bounce"></i> Proceed to Checkout
+                </a>
+
+                <!-- Order by Message button — settings থেকে show/hide হবে -->
+                <button class="btn btn-full" id="cartMsgOrderBtn" onclick="openCartMsgSheet()"
+                    style="display:none;margin-top:10px;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-weight:700;border:none;font-size:14px;">
+                    💬 Order by Message
+                </button>
+
+                <a href="shop.html" style="display:block;text-align:center;margin-top:12px;font-size:13px;color:#888;font-weight:600;">← Continue Shopping</a>
+            </div>
+
+            <!-- Trust badges -->
+            <div style="background:#fff;border:1px solid #eee;border-radius:14px;padding:16px;margin-top:14px;">
+                <div style="font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:12px;">Why shop with us?</div>
+                <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:#666;">
+                    <div>🔒 Secure &amp; Safe Checkout</div>
+                    <div><i data-lucide="truck" class="lucide-icon icon-bounce"></i> Fast Delivery Nationwide</div>
+                    <div><i data-lucide="package" class="lucide-icon icon-bounce"></i> Quality Guaranteed</div>
+                    <div>↩️ Easy Return Policy</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Message Order Bottom Sheet ══════════════════════════════ -->
+<div id="cartMsgSheet" style="display:none;position:fixed;inset:0;z-index:9999;">
+    <!-- Backdrop -->
+    <div onclick="closeCartMsgSheet()" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);"></div>
+
+    <!-- Sheet -->
+    <div class="cart-msg-sheet-inner">
+        <!-- Handle bar -->
+        <div style="width:40px;height:4px;background:#ddd;border-radius:99px;margin:0 auto 18px;"></div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <h3 style="font-size:17px;font-weight:800;color:var(--text-dark);">💬 Order by Message</h3>
+            <button onclick="closeCartMsgSheet()" style="background:none;border:none;font-size:20px;color:#bbb;cursor:pointer;line-height:1;">✕</button>
+        </div>
+        <p style="font-size:13px;color:#888;margin-bottom:18px;">ঠিকানা দাও, তারপর পছন্দের অ্যাপে অর্ডার পাঠাও</p>
+
+        <!-- Cart Items Preview -->
+        <div class="sheet-section-label">🛒 তোমার অর্ডার</div>
+        <div class="cart-order-items-preview" id="cartMsgItemsPreview"></div>
+
+        <!-- Customer Info -->
+        <div class="sheet-section-label">📋 ডেলিভারি তথ্য</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+            <input class="sheet-input" id="cmName"    placeholder="নাম (optional)">
+            <input class="sheet-input" id="cmPhone"   placeholder="মোবাইল নম্বর ✱" type="tel">
+            <textarea class="sheet-textarea sheet-input" id="cmAddress"
+                placeholder="ডেলিভারি ঠিকানা ✱ — বাসা/ফ্ল্যাট নং, রোড, এলাকা, জেলা"></textarea>
+        </div>
+
+        <!-- App Buttons -->
+        <div class="sheet-section-label" style="margin-bottom:10px;">👇 কোন অ্যাপে পাঠাবে?</div>
+        <div id="cartMsgAppsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div>
+
+        <div id="cartMsgNoApps" style="display:none;text-align:center;padding:20px;color:#999;font-size:13px;">
+            কোনো messaging app configure করা নেই। Admin → Settings থেকে দাও।
+        </div>
+    </div>
+</div>
+
+<script>
+var cartSettings = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Settings লোড করো (messaging apps + store name)
+    var settingsPromise;
+    try {
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            settingsPromise = supabaseClient.from('settings').select('*').eq('id', 1).single();
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            settingsPromise = appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings')
+                .then(function(doc) {
+                    if (typeof doc.messaging_apps === 'string') {
+                        try { doc.messaging_apps = JSON.parse(doc.messaging_apps); } catch(e) { doc.messaging_apps = []; }
+                    }
+                    return { data: doc };
+                }).catch(function() { return { data: {} }; });
+        } else {
+            settingsPromise = Promise.resolve({ data: {} });
+        }
+
+    settingsPromise.then(function(r) {
+        if (r && r.data) {
+            cartSettings = r.data;
+            if (r.data.store_name) {
+                document.getElementById('navBrand').textContent = r.data.store_name;
+            }
+            // Messaging order button দেখাও যদি enabled থাকে
+            var hasApps = r.data.messaging_apps && r.data.messaging_apps.some(function(a) { return a.enabled && a.contact; });
+            if ((r.data.allow_msg_order || r.data.allow_whatsapp_order) && hasApps) {
+                document.getElementById('cartMsgOrderBtn').style.display = 'flex';
+            }
+        }
+        document.getElementById('pageLoader').style.display = 'none';
+    }).catch(function(err) {
+        console.error('Settings load error:', err);
+        document.getElementById('pageLoader').style.display = 'none';
+    });
+    } catch (e) {
+        console.error('Init error:', e);
+        document.getElementById('pageLoader').style.display = 'none';
+    }
+
+    renderCart();
+});
+
+function getCart()   { try { return JSON.parse(localStorage.getItem(CONFIG.CART_KEY)||'[]'); } catch(e){ return []; } }
+function saveCart(c) { localStorage.setItem(CONFIG.CART_KEY, JSON.stringify(c)); }
+
+function renderCart() {
+    var cart = getCart();
+    var wrap = document.getElementById('cartItemsWrap');
+    document.getElementById('cartCountLabel').textContent = cart.length + ' item' + (cart.length!==1?'s':'');
+
+    if (!cart.length) {
+        wrap.innerHTML =
+            '<div style="text-align:center;padding:80px 20px;">' +
+            '<div style="font-size:64px;margin-bottom:16px;"><i data-lucide="shopping-cart" class="lucide-icon icon-bounce"></i></div>' +
+            '<div style="font-size:20px;font-weight:800;color:var(--text-dark);margin-bottom:8px;">Cart is empty</div>' +
+            '<div style="color:#999;margin-bottom:20px;">Add some products to get started</div>' +
+            '<a href="shop.html" class="btn btn-primary btn-lg"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> Start Shopping</a>' +
+            '</div>';
+        updateSummary(cart);
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        return;
+    }
+
+    wrap.innerHTML = cart.map(function(item, i) {
+        var subtotal = item.price * (item.quantity || 1);
+        return '<div class="cart-item" id="item-' + i + '">' +
+            (item.image ? '<img src="' + item.image + '" class="cart-item-img" onerror="this.style.display=\'none\'">' : '') +
+            '<div class="cart-item-info">' +
+                '<div class="cart-item-name">' + item.productName + '</div>' +
+                '<div class="cart-item-meta">' +
+                    (item.color ? '<i data-lucide="palette" class="lucide-icon icon-pulse"></i> ' + item.color + '  ' : '') +
+                    (item.size  ? '📏 ' + item.size  : '') +
+                '</div>' +
+                '<div class="cart-item-price">৳' + subtotal + '</div>' +
+            '</div>' +
+            '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">' +
+                '<button onclick="removeItem(' + i + ')" style="background:none;border:none;font-size:18px;color:#ccc;cursor:pointer;" title="Remove">✕</button>' +
+                '<div class="qty-control">' +
+                    '<button class="qty-btn" onclick="changeQty(' + i + ',-1)">−</button>' +
+                    '<span class="qty-num">' + (item.quantity || 1) + '</span>' +
+                    '<button class="qty-btn" onclick="changeQty(' + i + ',1)">+</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+
+    updateSummary(cart);
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function changeQty(i, delta) {
+    var cart = getCart();
+    cart[i].quantity = Math.max(1, (cart[i].quantity || 1) + delta);
+    saveCart(cart);
+    renderCart();
+}
+
+function removeItem(i) {
+    var cart = getCart();
+    cart.splice(i, 1);
+    saveCart(cart);
+    renderCart();
+}
+
+function updateSummary(cart) {
+    var subtotal = cart.reduce(function(s,i) { return s + i.price*(i.quantity||1); }, 0);
+    document.getElementById('sumSubtotal').textContent = '৳' + subtotal;
+    document.getElementById('sumTotal').textContent    = '৳' + subtotal;
+
+    var checkoutBtn = document.getElementById('checkoutBtn');
+    if (checkoutBtn && !cart.length) {
+        checkoutBtn.style.opacity = '0.4';
+        checkoutBtn.style.pointerEvents = 'none';
+    }
+    var msgBtn = document.getElementById('cartMsgOrderBtn');
+    if (msgBtn && !cart.length) {
+        msgBtn.style.opacity = '0.4';
+        msgBtn.style.pointerEvents = 'none';
+    }
+}
+
+// ── Messaging Sheet ─────────────────────────────────────────────
+var CART_MSG_URL_PATTERNS = {
+    whatsapp:  'https://wa.me/{contact}?text={msg}',
+    telegram:  'https://t.me/{contact}?text={msg}',
+    messenger: 'https://m.me/{contact}',
+    viber:     'viber://chat?number=%2B{contact}',
+    signal:    'https://signal.me/#p/{contact}',
+    imo:       'https://imo.im/{contact}',
+    line:      'https://line.me/R/ti/p/{contact}',
+    wechat:    'weixin://dl/chat?{contact}',
+    skype:     'skype:{contact}?chat',
+    discord:   'https://discord.com/users/{contact}',
+    snapchat:  'https://snapchat.com/add/{contact}',
+    instagram: 'https://ig.me/m/{contact}',
+    twitter:   'https://twitter.com/messages/compose?recipient_id={contact}',
+    tiktok:    'https://tiktok.com/@{contact}',
+    kakaotalk: 'https://open.kakao.com/o/{contact}',
+    email:     'mailto:{contact}?subject={subject}&body={msg}',
+    sms:       'sms:{contact}?body={msg}'
+};
+
+var CART_MSG_APP_ICONS = {
+    whatsapp:  'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/whatsapp.svg',
+    telegram:  'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/telegram.svg',
+    messenger: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/messenger.svg',
+    viber:     'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/viber.svg',
+    signal:    'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/signal.svg',
+    imo:       'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/imo.svg',
+    line:      'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/line.svg',
+    wechat:    'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/wechat.svg',
+    skype:     'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/skype.svg',
+    discord:   'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/discord.svg',
+    snapchat:  'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/snapchat.svg',
+    instagram: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/instagram.svg',
+    twitter:   'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/x.svg',
+    tiktok:    'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/tiktok.svg',
+    kakaotalk: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/kakaotalk.svg',
+    email:     'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/gmail.svg',
+    sms:       'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/imessage.svg'
+};
+
+function openCartMsgSheet() {
+    var cart = getCart();
+    if (!cart.length) return;
+
+    // Cart items preview তৈরি করো
+    var previewHtml = cart.map(function(item) {
+        var sub = item.price * (item.quantity || 1);
+        var line = '🛍️ <b>' + item.productName + '</b>';
+        if (item.color) line += ' · ' + item.color;
+        if (item.size)  line += ' · ' + item.size;
+        line += ' × ' + (item.quantity || 1) + ' = <b style="color:var(--primary);">৳' + sub + '</b>';
+        return '<div>' + line + '</div>';
+    }).join('');
+
+    var total = cart.reduce(function(s, i) { return s + i.price * (i.quantity||1); }, 0);
+    previewHtml += '<div style="border-top:1px solid var(--border-light);margin-top:8px;padding-top:8px;font-weight:800;color:var(--primary);">মোট: ৳' + total + '</div>';
+
+    document.getElementById('cartMsgItemsPreview').innerHTML = previewHtml;
+
+    // App buttons build করো
+    var apps = (cartSettings.messaging_apps || []).filter(function(a) { return a.enabled && a.contact; });
+    var list = document.getElementById('cartMsgAppsList');
+    var noApps = document.getElementById('cartMsgNoApps');
+    list.innerHTML = '';
+
+    if (!apps.length) {
+        noApps.style.display = 'block';
+        list.style.display = 'none';
+    } else {
+        noApps.style.display = 'none';
+        list.style.display = 'grid';
+        apps.forEach(function(app) {
+            var icon = CART_MSG_APP_ICONS[app.key] || '';
+            var btn = document.createElement('button');
+            btn.className = 'msg-app-btn';
+            btn.type = 'button';
+            btn.innerHTML = '<img src="' + icon + '" onerror="this.style.display=\'none\'"><span>' + (app.name || app.key) + '</span>';
+            btn.addEventListener('click', function() { sendCartMsg(app); });
+            list.appendChild(btn);
+        });
+    }
+
+    document.getElementById('cartMsgSheet').style.display = 'block';
+    // scroll to top of sheet
+    setTimeout(function() {
+        var inner = document.querySelector('.cart-msg-sheet-inner');
+        if (inner) inner.scrollTop = 0;
+    }, 50);
+}
+
+function closeCartMsgSheet() {
+    document.getElementById('cartMsgSheet').style.display = 'none';
+}
+
+function buildCartMsg(name, phone, address) {
+    var cart = getCart();
+    var total = cart.reduce(function(s, i) { return s + i.price * (i.quantity||1); }, 0);
+
+    var msg = 'হ্যালো! আমি অর্ডার করতে চাই:\n\n';
+    msg += '🛒 *অর্ডার তালিকা:*\n';
+    cart.forEach(function(item) {
+        msg += '• ' + item.productName;
+        if (item.color) msg += ' (' + item.color + ')';
+        if (item.size)  msg += ' [' + item.size + ']';
+        msg += ' × ' + (item.quantity || 1) + ' = ৳' + (item.price * (item.quantity||1)) + '\n';
+    });
+    msg += '💰 মোট: ৳' + total + '\n\n';
+    msg += '📋 *ডেলিভারি তথ্য:*\n';
+    if (name)    msg += '👤 নাম: '    + name    + '\n';
+    if (phone)   msg += '📞 ফোন: '   + phone   + '\n';
+    if (address) msg += '📍 ঠিকানা: ' + address + '\n';
+    msg += '\n📦 অনুগ্রহ করে অর্ডার কনফার্ম করুন।';
+    return msg;
+}
+
+function sendCartMsg(app) {
+    var phone   = (document.getElementById('cmPhone')   || {}).value || '';
+    var address = (document.getElementById('cmAddress') || {}).value || '';
+    var name    = (document.getElementById('cmName')    || {}).value || '';
+
+    if (!phone.trim()) {
+        alert('মোবাইল নম্বর দাও ✱');
+        document.getElementById('cmPhone').focus();
+        return;
+    }
+    if (!address.trim()) {
+        alert('ডেলিভারি ঠিকানা দাও ✱');
+        document.getElementById('cmAddress').focus();
+        return;
+    }
+
+    var msg  = buildCartMsg(name.trim(), phone.trim(), address.trim());
+    var storeName = (cartSettings.store_name || CONFIG.STORE_NAME);
+    var pattern = CART_MSG_URL_PATTERNS[app.key] || 'https://wa.me/{contact}?text={msg}';
+    var url = pattern
+        .replace('{contact}', encodeURIComponent(app.contact))
+        .replace('{msg}',     encodeURIComponent(msg))
+        .replace('{subject}', encodeURIComponent('Order from ' + storeName));
+    window.open(url, '_blank');
+}
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="assets/js/offline-handler.js"></script>
+    <!-- Shared Custom Right Click / Long-Press Menu -->
+    <script src="assets/js/context-menu.js"></script></body>
+</html>
+
+
+

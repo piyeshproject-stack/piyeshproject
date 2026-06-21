@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add-ons — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <script src="../assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="../assets/js/appwrite-init.js"></script>
+    <script src="assets/js/admin-common.js?v=3"></script>
+    <link rel="stylesheet" href="../assets/css/premium-icons.css">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="spinner"></div></div>
+<main class="admin-main" id="adminMain" style="display:none;">
+    <header class="admin-header">
+        <div class="header-left">
+            <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+            <div><div class="page-title">Add-ons</div><div class="page-subtitle">Checkout extra items</div></div>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-primary" onclick="openModal()">+ Add Item</button>
+        </div>
+    </header>
+    <div class="admin-content">
+        <div class="card" style="margin-bottom:16px;background:rgba(0,122,255,0.06);border-color:rgba(0,122,255,0.2);">
+            <div style="font-size:13px;color:#8E8E93;">
+                <b style="color:#007AFF;">Add-ons</b> হলো checkout এ extra items যা user চাইলে add করতে পারবে।
+                উদাহরণ: Gift Wrap <i data-lucide="gift" class="lucide-icon icon-bounce"></i> (+৳50), Extra Box <i data-lucide="package" class="lucide-icon icon-bounce"></i> (+৳30)
+            </div>
+        </div>
+        <div class="card" style="padding:0;">
+            <div class="table-wrap">
+                <table>
+                    <thead><tr><th>Icon</th><th>Name</th><th>Price (৳)</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody id="addonsBody"><tr><td colspan="5" style="text-align:center;padding:40px;color:#8E8E93;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="modal-overlay" id="addonModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title" id="addonModalTitle">Add Add-on</div>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Icon (Emoji) *</label>
+                <input class="form-input" id="aIcon" placeholder="<i data-lucide="gift" class="lucide-icon icon-bounce"></i>" style="font-size:22px;text-align:center;" maxlength="4">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Price (৳) *</label>
+                <input class="form-input" id="aPrice" type="number" placeholder="50">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Item Name *</label>
+            <input class="form-input" id="aName" placeholder="e.g. Gift Wrap">
+        </div>
+        <div class="toggle-wrap" onclick="toggleAA()" style="margin-bottom:20px;">
+            <div><div class="toggle-label">Active (show in checkout)</div></div>
+            <button class="toggle-switch on" id="aActive" type="button"></button>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary btn-full" onclick="saveAddon()">💾 Save</button>
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+var allAddons = [], editingId = null, aActive = true;
+
+document.addEventListener('DOMContentLoaded', function() {
+    adminInit('addons', function() { loadAddons(); });
+});
+
+function loadAddons() {
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('addons').select('*').order('created_at').then(function(r) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allAddons = r.data || [];
+            renderAddons();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.listDocuments(APP_DB, 'addons', [
+            AppwriteQuery.orderAsc('$createdAt')
+        ]).then(function(res) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allAddons = res.documents.map(function(doc) {
+                doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } }
+                return doc;
+            });
+            renderAddons();
+        }).catch(function(err) {
+            showToast('Load failed: ' + err.message, 'error');
+        });
+    }
+}
+
+function renderAddons() {
+    var html = '';
+    if (!allAddons.length) { html = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#8E8E93;">No add-ons yet</td></tr>'; }
+    allAddons.forEach(function(a) {
+        html += '<tr>' +
+            '<td style="font-size:24px;">' + (a.icon||'<i data-lucide="gift" class="lucide-icon icon-bounce"></i>') + '</td>' +
+            '<td style="font-weight:700;">' + a.name + '</td>' +
+            '<td style="font-weight:700;color:#007AFF;">+৳' + a.price + '</td>' +
+            '<td><span class="badge ' + (a.is_active ? 'badge-delivered' : 'badge-cancelled') + '">' + (a.is_active ? 'Active' : 'Inactive') + '</span></td>' +
+            '<td style="display:flex;gap:6px;">' +
+                '<button class="btn btn-ghost btn-sm" onclick=\'editAddon(' + JSON.stringify(a).replace(/'/g,"&apos;") + ')\'><i data-lucide="edit-3" class="lucide-icon icon-hover-pulse"></i></button>' +
+                '<button class="btn btn-danger btn-sm" onclick="deleteAddon(\'' + a.id + '\')"><i data-lucide="trash-2" class="lucide-icon icon-hover-shake icon-danger"></i></button>' +
+            '</td></tr>';
+    });
+    document.getElementById('addonsBody').innerHTML = html;
+}
+
+function openModal() {
+    editingId = null; aActive = true;
+    document.getElementById('addonModalTitle').textContent = 'Add Add-on';
+    ['aIcon','aName','aPrice'].forEach(function(id) { document.getElementById(id).value = ''; });
+    setToggle('aActive', true);
+    document.getElementById('addonModal').classList.add('show');
+}
+
+function editAddon(a) {
+    editingId = a.id; aActive = a.is_active !== false;
+    document.getElementById('addonModalTitle').textContent = 'Edit Add-on';
+    document.getElementById('aIcon').value  = a.icon || '<i data-lucide="gift" class="lucide-icon icon-bounce"></i>';
+    document.getElementById('aName').value  = a.name || '';
+    document.getElementById('aPrice').value = a.price || '';
+    setToggle('aActive', aActive);
+    document.getElementById('addonModal').classList.add('show');
+}
+
+function setToggle(id, state) {
+    var el = document.getElementById(id);
+    if (state) el.classList.add('on'); else el.classList.remove('on');
+}
+function toggleAA() { aActive = !aActive; setToggle('aActive', aActive); }
+
+function saveAddon() {
+    var name = document.getElementById('aName').value.trim();
+    var price = parseInt(document.getElementById('aPrice').value) || 0;
+    if (!name || !price) { showToast('Name and price required', 'error'); return; }
+    var payload = { name: name, icon: document.getElementById('aIcon').value.trim() || '<i data-lucide="gift" class="lucide-icon icon-bounce"></i>', price: price, is_active: aActive };
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId ? supabaseClient.from('addons').update(payload).eq('id', editingId) : supabaseClient.from('addons').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success'); closeModal(); loadAddons();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var awPayload = { name: payload.name, icon: payload.icon, price: payload.price, is_active: payload.is_active, created_at: new Date().toISOString() };
+        if (editingId) {
+            appwriteDatabases.updateDocument(APP_DB, 'addons', editingId, { name: payload.name, icon: payload.icon, price: payload.price, is_active: payload.is_active })
+            .then(function() {
+                showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+                closeModal();
+                loadAddons();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        } else {
+            appwriteDatabases.createDocument(APP_DB, 'addons', AppwriteID.unique(), awPayload)
+            .then(function() {
+                showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+                closeModal();
+                loadAddons();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        }
+    }
+}
+
+function deleteAddon(id) {
+    if (!adminConfirm('Delete this add-on?')) return;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('addons').delete().eq('id', id).then(function(r) {
+            if (r.error || !true) { showToast('Delete failed', 'error'); return; }
+            showToast('Deleted!', 'success'); loadAddons();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'addons', id)
+        .then(function() {
+            showToast('Deleted!', 'success');
+            loadAddons();
+        }).catch(function(err) {
+            showToast('Delete failed: ' + err.message, 'error');
+        });
+    }
+}
+function closeModal() { document.getElementById('addonModal').classList.remove('show'); }
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+

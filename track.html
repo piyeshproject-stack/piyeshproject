@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Order — Freelancing By Rifat</title>
+    <meta name="description" content="Track your order status using your Order ID and phone number.">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
+    <script src="assets/js/appwrite-init.js"></script>
+    <style>
+        body { background: linear-gradient(135deg, #f0f4ff, #e8ecf5); min-height: 100vh; }
+        .track-wrap { max-width: 560px; margin: 0 auto; padding: 20px; }
+        .track-card { background: #fff; border-radius: var(--radius-xl); padding: 32px; box-shadow: var(--shadow-md); }
+
+        /* Timeline */
+        .timeline { margin: 28px 0; }
+        .timeline-item { display: flex; gap: 16px; position: relative; padding-bottom: 24px; }
+        .timeline-item:last-child { padding-bottom: 0; }
+        .timeline-item:not(:last-child)::before {
+            content: ''; position: absolute; left: 19px; top: 38px;
+            width: 2px; height: calc(100% - 10px); background: #e8eaed;
+        }
+        .timeline-item.done::before { background: var(--success); }
+        .timeline-dot {
+            width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; border: 2px solid #e8eaed; background: #f8f9fa;
+            transition: var(--transition); z-index: 1;
+        }
+        .timeline-item.done  .timeline-dot { background: var(--success); border-color: var(--success); color: #fff; }
+        .timeline-item.current .timeline-dot { background: var(--primary); border-color: var(--primary); color: #fff; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,77,77,0.4);} 50%{box-shadow:0 0 0 8px rgba(255,77,77,0);} }
+        .timeline-content { flex: 1; padding-top: 9px; }
+        .timeline-title { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+        .timeline-sub   { font-size: 12px; color: #888; margin-top: 2px; }
+    </style>
+    <link rel="stylesheet" href="assets/css/premium-icons.css">
+</head>
+<body>
+<nav class="navbar" style="background:rgba(255,255,255,0.9);">
+    <a href="index.html" class="nav-icon-btn">←</a>
+    <a href="index.html" class="navbar-brand"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> <span id="navBrand">Track Order</span></a>
+</nav>
+
+<div class="track-wrap">
+    <!-- Search Form -->
+    <div class="track-card" id="trackForm">
+        <div style="text-align:center;margin-bottom:28px;">
+            <div style="font-size:48px;margin-bottom:10px;"><i data-lucide="package" class="lucide-icon icon-bounce"></i></div>
+            <h1 style="font-size:22px;font-weight:900;color:var(--text-dark);margin-bottom:6px;">Track Your Order</h1>
+            <p style="color:#888;font-size:14px;">Enter your Order ID and phone number to see status.</p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Order ID *</label>
+            <input class="form-input" id="trackOrderId" placeholder="e.g. A1B2C3D4" style="font-size:18px;font-weight:700;letter-spacing:2px;text-align:center;" oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Phone Number *</label>
+            <input class="form-input" id="trackPhone" placeholder="01XXXXXXXXX" type="tel">
+        </div>
+        <div id="trackError" style="color:var(--danger);font-size:13px;text-align:center;margin-bottom:10px;display:none;"></div>
+        <button class="btn btn-primary btn-full btn-lg" onclick="trackOrder()" id="trackBtn"><i data-lucide="search" class="lucide-icon"></i> Track Order</button>
+    </div>
+
+    <!-- Result -->
+    <div id="trackResult" style="display:none;"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var settingsPromise;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        settingsPromise = supabaseClient.from('settings').select('store_name').eq('id',1).single();
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        settingsPromise = appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings').then(function(doc) { return { data: doc }; }).catch(function() { return { data: {} }; });
+    } else {
+        settingsPromise = Promise.resolve({ data: {} });
+    }
+    settingsPromise.then(function(r) {
+        if (r.data) document.getElementById('navBrand').textContent = r.data.store_name || '';
+    });
+
+    // Pre-fill from URL
+    var urlId = new URLSearchParams(window.location.search).get('id');
+    if (urlId) {
+        document.getElementById('trackOrderId').value = urlId.toUpperCase();
+    }
+});
+
+var BASE_STEPS = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
+var PICKUP_STEPS = ['Pending', 'Confirmed', 'Processing', 'Ready to Pickup', 'Picked Up'];
+var STATUS_ICONS = { 
+    Pending: '<i data-lucide="hourglass" class="lucide-icon icon-spin icon-warning"></i>', 
+    Confirmed: '<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i>', 
+    Processing: '🔄', 
+    Shipped: '<i data-lucide="truck" class="lucide-icon icon-bounce"></i>', 
+    Delivered: '🎉', 
+    'Ready to Pickup': '<i data-lucide="store" class="lucide-icon icon-bounce"></i>',
+    'Picked Up': '🎉',
+    Cancelled: '<i data-lucide="x-circle" class="lucide-icon icon-danger"></i>' 
+};
+
+function trackOrder() {
+    var orderId = document.getElementById('trackOrderId').value.trim().toUpperCase().replace(/-/g, '');
+    var phone   = document.getElementById('trackPhone').value.trim();
+    var errEl   = document.getElementById('trackError');
+    var btn     = document.getElementById('trackBtn');
+
+    errEl.style.display = 'none';
+    if (!orderId || !phone) { errEl.textContent = 'Please fill in all fields'; errEl.style.display = 'block'; return; }
+
+    btn.disabled = true; btn.textContent = 'Tracking...';
+
+    var trackPromise;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        trackPromise = supabaseClient.from('orders').select('*').eq('id', orderId).eq('customer_phone', phone).single();
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        trackPromise = appwriteDatabases.listDocuments(APP_DB, 'orders', [AppwriteQuery.equal('$id', orderId), AppwriteQuery.equal('customer_phone', phone), AppwriteQuery.limit(1)]).then(function(res) { var doc = res.documents[0]; if (doc) { doc.id=doc.$id; if (typeof doc.items==='string') { try{doc.items=JSON.parse(doc.items);}catch(e){doc.items=[];} } return { data: doc }; } return { data: null }; }).catch(function() { return { data: null }; });
+    } else {
+        trackPromise = Promise.resolve({ data: null, error: { message: 'Appwrite not implemented' } });
+    }
+    trackPromise.then(function(r) {
+        btn.disabled = false; btn.innerHTML = '<i data-lucide="search" class="lucide-icon"></i> Track Order';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+
+        if (r.error || !r.data) {
+            errEl.innerHTML = '<i data-lucide="x-circle" class="lucide-icon icon-danger"></i> Order not found. Please check your Order ID and phone number.';
+            errEl.style.display = 'block';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            return;
+        }
+
+        renderTrackResult(r.data);
+    });
+}
+
+function renderTrackResult(order) {
+    document.getElementById('trackForm').style.display   = 'none';
+    document.getElementById('trackResult').style.display = 'block';
+
+    var isPickup = order.delivery_type === 'pickup';
+    var stepsArr = isPickup ? PICKUP_STEPS : BASE_STEPS;
+    var currentStep = BASE_STEPS.indexOf(order.status);
+    var isCancelled = order.status === 'Cancelled';
+
+    var timelineHtml = '';
+    if (isCancelled) {
+        timelineHtml = '<div class="timeline-item current">' +
+            '<div class="timeline-dot" style="background:#EF4444;border-color:#EF4444;"><i data-lucide="x-circle" class="lucide-icon icon-danger"></i></div>' +
+            '<div class="timeline-content"><div class="timeline-title" style="color:#EF4444;">Order Cancelled</div><div class="timeline-sub">This order was cancelled.</div></div>' +
+        '</div>';
+    } else {
+        timelineHtml = stepsArr.map(function(displayStatus, i) {
+            var cls = i < currentStep ? 'done' : i === currentStep ? 'current' : '';
+            var icon = i < currentStep ? '✓' : STATUS_ICONS[displayStatus] || '○';
+            var subText = '';
+            if (i === 3 && order.courier_name) { // Shipped or Ready to Pickup
+                subText = (isPickup ? 'At ' : 'Via ') + order.courier_name + (order.tracking_number ? ' | Tracking: ' + order.tracking_number : '');
+            }
+            return '<div class="timeline-item ' + cls + '">' +
+                '<div class="timeline-dot">' + icon + '</div>' +
+                '<div class="timeline-content">' +
+                    '<div class="timeline-title">' + displayStatus + '</div>' +
+                    (subText ? '<div class="timeline-sub">' + subText + '</div>' : '') +
+                    (i === currentStep ? '<div class="timeline-sub" style="color:var(--primary);">Current Status</div>' : '') +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    var trackUrlHtml = '';
+    if (order.tracking_url) {
+        var tUrl = order.tracking_url.trim();
+        if (!tUrl.match(/^https?:\/\//i)) {
+            tUrl = 'https://' + tUrl;
+        }
+        trackUrlHtml = '<a href="' + tUrl + '" target="_blank" class="btn btn-primary btn-full" style="margin-top:14px;">🔗 Track on Courier Website</a>';
+    }
+
+    var payInfo = '';
+    if (order.payment_status === 'Unpaid' && order.payment_method !== 'COD') {
+        payInfo = '<div style="background:rgba(255,149,0,0.08);border:1.5px solid rgba(255,149,0,0.3);border-radius:12px;padding:14px;margin-top:14px;font-size:13px;">' +
+            '<b style="color:#FF9500;">⚠️ Payment Pending</b><br>Please complete your payment and share TrxID with us.' +
+        '</div>';
+    }
+
+    document.getElementById('trackResult').innerHTML =
+        '<div class="track-card">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
+                '<div>' +
+                    '<div style="font-size:12px;color:#888;font-weight:700;">ORDER ID</div>' +
+                    '<div style="font-size:20px;font-weight:900;color:var(--text-dark);">' + order.id + '</div>' +
+                '</div>' +
+                '<span class="badge ' + getStatusClass(order.status) + '" style="font-size:13px;padding:6px 14px;">' + order.status + '</span>' +
+            '</div>' +
+
+            '<div style="background:var(--bg-light);border-radius:12px;padding:14px;margin-bottom:20px;font-size:13px;">' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+                    '<div><span style="color:#888;font-weight:700;">NAME</span><div style="font-weight:700;">' + order.customer_name + '</div></div>' +
+                    '<div><span style="color:#888;font-weight:700;">PHONE</span><div style="font-weight:700;">' + order.customer_phone + '</div></div>' +
+                    '<div><span style="color:#888;font-weight:700;">TOTAL</span><div style="font-weight:800;color:var(--primary);">৳' + order.grand_total + '</div></div>' +
+                    '<div><span style="color:#888;font-weight:700;">PAYMENT</span><div style="font-weight:700;">' + order.payment_method + '</div></div>' +
+                '</div>' +
+            '</div>' +
+
+            '<div style="font-size:14px;font-weight:800;color:var(--text-dark);margin-bottom:14px;"><i data-lucide="map-pin" class="lucide-icon icon-bounce"></i> Delivery Timeline</div>' +
+            '<div class="timeline">' + timelineHtml + '</div>' +
+
+            trackUrlHtml + payInfo +
+
+            '<div style="display:flex;gap:10px;margin-top:20px;">' +
+                '<button class="btn btn-ghost btn-full btn-sm" onclick="resetTrack()">← Track Another</button>' +
+                '<a href="index.html" class="btn btn-ghost btn-full btn-sm"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> Shop More</a>' +
+            '</div>' +
+        '</div>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function getStatusClass(s) {
+    var m = { Pending: 'badge-pending', Confirmed: 'badge-confirmed', Processing: 'badge-confirmed', Shipped: 'badge-shipped', Delivered: 'badge-delivered', Cancelled: 'badge-cancelled' };
+    return m[s] || 'badge-pending';
+}
+
+function resetTrack() {
+    document.getElementById('trackResult').style.display = 'none';
+    document.getElementById('trackForm').style.display   = 'block';
+}
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="assets/js/offline-handler.js"></script>
+    <!-- Shared Custom Right Click / Long-Press Menu -->
+    <script src="assets/js/context-menu.js"></script></body>
+</html>
+
+
+

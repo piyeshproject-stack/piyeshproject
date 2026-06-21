@@ -1,0 +1,48 @@
+CRITICAL - 2026-06-04 20:35:56 --> syntax error, unexpected token ","
+in APPPATH/Modules/User/Views/merchant/invoice/update.php on line 52.
+ 1 APPPATH/system/View/View.php(231): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 2 APPPATH/system/Common.php(1190): CodeIgniter\View\View->render()
+ 3 APPPATH/Modules/User/Controllers/MerchantController.php(36): view()
+ 4 APPPATH/system/CodeIgniter.php(942): User\Controllers\MerchantController->update()
+ 5 APPPATH/system/CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController()
+ 6 APPPATH/system/CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest()
+ 7 FCPATH/index.php(43): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-06-04 20:36:09 --> syntax error, unexpected token ","
+in APPPATH/Modules/User/Views/merchant/invoice/update.php on line 52.
+ 1 APPPATH/system/View/View.php(231): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 2 APPPATH/system/Common.php(1190): CodeIgniter\View\View->render()
+ 3 APPPATH/Modules/User/Controllers/MerchantController.php(36): view()
+ 4 APPPATH/system/CodeIgniter.php(942): User\Controllers\MerchantController->update()
+ 5 APPPATH/system/CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController()
+ 6 APPPATH/system/CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest()
+ 7 FCPATH/index.php(43): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-06-04 20:36:11 --> syntax error, unexpected token ","
+in APPPATH/Modules/User/Views/merchant/invoice/update.php on line 52.
+ 1 APPPATH/system/View/View.php(231): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 2 APPPATH/system/Common.php(1190): CodeIgniter\View\View->render()
+ 3 APPPATH/Modules/User/Controllers/MerchantController.php(36): view()
+ 4 APPPATH/system/CodeIgniter.php(942): User\Controllers\MerchantController->update()
+ 5 APPPATH/system/CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController()
+ 6 APPPATH/system/CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest()
+ 7 FCPATH/index.php(43): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-06-04 20:36:29 --> syntax error, unexpected token ","
+in APPPATH/Modules/User/Views/merchant/invoice/update.php on line 52.
+ 1 APPPATH/system/View/View.php(231): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 2 APPPATH/system/Common.php(1190): CodeIgniter\View\View->render()
+ 3 APPPATH/Modules/User/Controllers/MerchantController.php(36): view()
+ 4 APPPATH/system/CodeIgniter.php(942): User\Controllers\MerchantController->update()
+ 5 APPPATH/system/CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController()
+ 6 APPPATH/system/CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest()
+ 7 FCPATH/index.php(43): CodeIgniter\CodeIgniter->run()
+CRITICAL - 2026-06-04 20:36:43 --> syntax error, unexpected token ","
+in APPPATH/Modules/User/Views/merchant/invoice/update.php on line 52.
+ 1 APPPATH/system/View/View.php(231): CodeIgniter\View\View->CodeIgniter\View\{closure}()
+ 2 APPPATH/system/Common.php(1190): CodeIgniter\View\View->render()
+ 3 APPPATH/Modules/User/Controllers/MerchantController.php(36): view()
+ 4 APPPATH/system/CodeIgniter.php(942): User\Controllers\MerchantController->update()
+ 5 APPPATH/system/CodeIgniter.php(502): CodeIgniter\CodeIgniter->runController()
+ 6 APPPATH/system/CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest()
+ 7 FCPATH/index.php(43): CodeIgniter\CodeIgniter->run()
+ALERT - 2026-06-04 21:12:26 --> {"status":1,"message":"Payment Link","payment_url":"https:\/\/updatepaysanbox.ekhonidigital.com\/api\/execute\/df2c6b63a40d2f0b45dc7a762518ca73"}
+ALERT - 2026-06-04 21:59:00 --> {"status":1,"message":"Payment Link","payment_url":"https:\/\/updatepaysanbox.ekhonidigital.com\/api\/execute\/1ce13e0060d7364e068dbd8cb30f9554"}
+ALERT - 2026-06-04 23:17:59 --> {"status":1,"message":"Payment Link","payment_url":"https:\/\/updatepaysanbox.ekhonidigital.com\/api\/execute\/ba7b271c2c8b3259b1ac6501b5d01744"}

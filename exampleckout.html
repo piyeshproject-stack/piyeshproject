@@ -1,0 +1,2011 @@
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<style>
+    /* 💎 Checkout Modal Styles */
+    #glass-checkout-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
+        z-index: 100000;
+        display: none;
+        justify-content: center;
+        align-items: flex-start;
+        overflow-y: auto;
+        padding: 20px;
+        font-family: -apple-system, sans-serif;
+        box-sizing: border-box;
+    }
+
+    .chk-wrapper {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(25px);
+        padding: 30px;
+        border-radius: 28px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        width: 100%;
+        max-width: 600px;
+        margin: auto;
+        position: relative;
+    }
+
+    .modal-close-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.05);
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+
+    .checkout-title {
+        text-align: center;
+        color: #1C1C1E;
+        margin: 0 0 20px 0;
+        font-size: 26px;
+        font-weight: 800;
+    }
+
+    /* Stepper */
+    .chk-stepper {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        margin-bottom: 25px;
+        padding: 0 10px;
+    }
+
+    .chk-stepper::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        right: 10px;
+        height: 4px;
+        background: rgba(0, 0, 0, 0.08);
+        z-index: 1;
+        transform: translateY(-50%);
+        border-radius: 4px;
+    }
+
+    .chk-stepper-progress {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        height: 4px;
+        background: #007AFF;
+        z-index: 2;
+        transform: translateY(-50%);
+        transition: 0.4s ease;
+        width: 0%;
+        border-radius: 4px;
+    }
+
+    .chk-step-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #F2F2F7;
+        border: 3px solid #E5E5EA;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        z-index: 3;
+        position: relative;
+        transition: 0.4s;
+        color: #8E8E93;
+        font-size: 13px;
+    }
+
+    .chk-step-circle.active {
+        border-color: #007AFF;
+        color: #007AFF;
+        background: #fff;
+        box-shadow: 0 0 10px rgba(0, 122, 255, 0.2);
+    }
+
+    .chk-step-circle.completed {
+        background: #007AFF;
+        border-color: #007AFF;
+        color: #fff;
+    }
+
+    .chk-step-content {
+        display: none;
+        animation: fadeIn 0.4s ease;
+    }
+
+    .chk-step-content.active {
+        display: block;
+    }
+
+    .chk-section-title {
+        font-size: 13px;
+        color: #8E8E93;
+        text-transform: uppercase;
+        font-weight: 800;
+        margin-top: 20px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        padding-bottom: 6px;
+    }
+
+    .chk-form-group {
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
+    .chk-form-group label {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 6px;
+        font-weight: 700;
+    }
+
+    .chk-input,
+    .chk-select {
+        width: 100%;
+        padding: 14px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.6);
+        box-sizing: border-box;
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+    .chk-input:focus,
+    .chk-select:focus {
+        border-color: #007AFF;
+        background: #fff;
+        outline: none;
+    }
+
+    .chk-flex-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .chk-flex-row>div {
+        flex: 1;
+        min-width: 140px;
+    }
+
+    .chk-cart-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 12px;
+        border-radius: 16px;
+        margin-bottom: 10px;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .chk-item-img {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        object-fit: cover;
+    }
+
+    .chk-item-info {
+        flex: 1;
+    }
+
+    .chk-addon-box {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255, 255, 255, 0.6);
+        padding: 14px 16px;
+        border-radius: 16px;
+        margin-bottom: 10px;
+        border: 1.5px solid transparent;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .chk-addon-box.active {
+        border-color: #007AFF;
+        background: rgba(0, 122, 255, 0.05);
+    }
+
+    .chk-addon-box input {
+        display: none;
+    }
+
+    .chk-summary-box {
+        background: rgba(0, 0, 0, 0.03);
+        padding: 20px;
+        border-radius: 20px;
+        margin-top: 20px;
+    }
+
+    .chk-summary-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 15px;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .chk-total-row {
+        font-size: 20px;
+        font-weight: 800;
+        border-top: 1px dashed #D1D1D6;
+        padding-top: 12px;
+        margin-top: 12px;
+    }
+
+    .chk-btn-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 25px;
+    }
+
+    .chk-action-btn {
+        flex: 1;
+        padding: 15px;
+        background: #007AFF;
+        color: white;
+        border: none;
+        border-radius: 15px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .chk-action-btn.back {
+        background: rgba(0, 0, 0, 0.05);
+        color: #1C1C1E;
+    }
+
+    .chk-action-btn.cart {
+        background: #FF9500;
+        color: white;
+    }
+
+    .chk-submit-btn {
+        width: 100%;
+        padding: 18px;
+        background: #34C759;
+        color: white;
+        border: none;
+        border-radius: 16px;
+        font-size: 17px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .chk-full-loader {
+        text-align: center;
+        padding: 40px;
+        color: #8E8E93;
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    @keyframes spin {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+<div id="glass-checkout-modal">
+    <div class="chk-wrapper" id="chkMainWrapper">
+        <button class="modal-close-btn" onclick="closeEmbeddedCheckout()">✕</button>
+        <h2 class="checkout-title">Secure Checkout</h2>
+
+        <div id="chkStatusLoader" class="chk-full-loader" style="display: none;">
+            <span
+                style="font-size:40px; display:block; margin-bottom:15px; animation: spin 1s infinite linear;"><i data-lucide="settings" class="lucide-icon icon-hover-spin"></i></span>
+            <div id="chkStatusText" style="color:#007AFF; font-size:18px;">Verifying payment securely...</div>
+            <p style="font-size:13px; margin-top:10px;">Please wait, do not close this window.</p>
+        </div>
+
+        <form id="chkOrderForm" style="display:none;">
+
+            <div class="chk-stepper">
+                <div class="chk-stepper-progress" id="chkStepProgress"></div>
+                <div class="chk-step-circle active" id="chkStep1-ind">1</div>
+                <div class="chk-step-circle" id="chkStep2-ind">2</div>
+                <div class="chk-step-circle" id="chkStep3-ind">3</div>
+            </div>
+
+
+            <div class="chk-step-content active" id="chkStep1">
+                <div class="chk-section-title"><i data-lucide="package" class="lucide-icon icon-bounce"></i> Order Items</div>
+                <div id="chkCartList"></div>
+
+                <div class="chk-section-title">👤 Personal Info</div>
+                <div class="chk-form-group">
+                    <label>Full Name</label>
+                    <input type="text" class="chk-input" id="chkName" required="" placeholder="E.g., Hasan Mahmud">
+                </div>
+
+                <div class="chk-flex-row">
+                    <div class="chk-form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" class="chk-input" id="chkPhone" required="" placeholder="01XXXXXXXXX"
+                            maxlength="11">
+                    </div>
+                    <div class="chk-form-group">
+                        <label>Email (Optional)</label>
+                        <input type="email" class="chk-input" id="chkEmail" placeholder="you@email.com">
+                    </div>
+                </div>
+
+                <div class="chk-btn-group">
+                    <button type="button" class="chk-action-btn cart" onclick="closeEmbeddedCheckout()"><i data-lucide="shopping-cart" class="lucide-icon icon-bounce"></i> Keep in
+                        Cart</button>
+                    <button type="button" class="chk-action-btn" onclick="chkGoToStep(2)">Next Step ➔</button>
+                </div>
+            </div>
+
+
+            <div class="chk-step-content" id="chkStep2">
+                <div class="chk-section-title">🗺️ Delivery Info</div>
+                <div class="chk-flex-row">
+                    <div class="chk-form-group">
+                        <label>Division</label>
+                        <select class="chk-select" id="chkDivision" required="" onchange="chkLoadDistricts(this.value)">
+                            <option value="" disabled="" selected="">Select...</option>
+                        </select>
+                    </div>
+                    <div class="chk-form-group">
+                        <label>District</label>
+                        <select class="chk-select" id="chkDistrict" required="" onchange="chkLoadThanas(this.value)"
+                            disabled="">
+                            <option value="" disabled="" selected="">Select...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="chk-flex-row">
+                    <div class="chk-form-group">
+                        <label>Area</label>
+                        <select class="chk-select" id="chkArea" required="" disabled="">
+                            <option value="" disabled="" selected="">Select...</option>
+                        </select>
+                    </div>
+                    <div class="chk-form-group">
+                        <label>Zone</label>
+                        <select class="chk-select" id="chkLocation" onchange="chkCalc()" required=""></select>
+                    </div>
+                </div>
+
+                <div class="chk-form-group">
+                    <label>Full Address</label>
+                    <input type="text" class="chk-input" id="chkAddress" required=""
+                        placeholder="House, Road, Block...">
+                </div>
+
+                <div id="chkExtrasSection" style="display: none;">
+                    <div class="chk-section-title"><i data-lucide="sparkles" class="lucide-icon icon-pulse"></i> Addons</div>
+                    <div id="chkAddonsContainer"></div>
+                </div>
+
+                <div class="chk-form-group">
+                    <label>🎟️ Promo Code</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" class="chk-input" id="chkPromo" placeholder="Code">
+                        <button type="button" onclick="chkApplyPromo()"
+                            style="padding:10px 20px; border-radius:12px; border:none; background:#1C1C1E; color:#fff; font-weight:bold; cursor:pointer;">Apply</button>
+                    </div>
+                </div>
+
+                <div class="chk-btn-group">
+                    <button type="button" class="chk-action-btn back" onclick="chkGoToStep(1)">Back</button>
+                    <button type="button" class="chk-action-btn" onclick="chkGoToStep(3)">Next Step ➔</button>
+                </div>
+            </div>
+
+
+            <div class="chk-step-content" id="chkStep3">
+                <div class="chk-section-title"><i data-lucide="credit-card" class="lucide-icon icon-bounce"></i> Payment Method</div>
+                <div class="chk-form-group">
+                    <select class="chk-select" id="chkPayMethod" onchange="chkTogglePay()">
+                        <option value="COD" id="chkCodOpt">💵 Cash on Delivery (COD)</option>
+                        <option value="Online"><i data-lucide="globe" class="lucide-icon icon-spin"></i> Online Payment</option>
+                        <option value="bKash">🟣 bKash</option>
+                        <option value="Nagad">🟠 Nagad</option>
+                    </select>
+                </div>
+
+                <div id="chkPayInfo"
+                    style="display:none; background:rgba(0,0,0,0.03); padding:15px; border-radius:15px; margin-bottom:15px;">
+                    <div id="chkManualPay">
+                        <p style="margin:0 0 10px 0; font-size:13px;">Send Money to: <strong id="chkAdminNum"
+                                style="color:#007AFF;">...</strong></p>
+                        <input type="tel" class="chk-input" id="chkSender" placeholder="Sender Number"
+                            style="margin-bottom:10px;">
+                        <input type="text" class="chk-input" id="chkTrx" placeholder="Transaction ID">
+                    </div>
+                    <p id="chkOnlineMsg"
+                        style="display:none; color:#007AFF; font-weight:bold; margin:0; text-align:center;">Redirecting
+                        to payment gateway automatically...</p>
+                </div>
+
+                <div class="chk-summary-box">
+                    <div class="chk-summary-row">
+                        <span>Subtotal:</span> <span id="summSub">৳0</span>
+                    </div>
+                    <div class="chk-summary-row">
+                        <span>Add-ons:</span> <span id="summAddon">৳0</span>
+                    </div>
+                    <div class="chk-summary-row">
+                        <span>Delivery:</span> <span id="summDel">৳0</span>
+                    </div>
+                    <div class="chk-summary-row" id="summPromoRow" style="display:none; color:#34C759;">
+                        <span>Discount:</span> <span id="summPromo">-৳0</span>
+                    </div>
+                    <div class="chk-summary-row chk-total-row">
+                        <span>Total Amount:</span> <span id="summTotal">৳0</span>
+                    </div>
+                    <div class="chk-summary-row" id="summAdvRow" style="display:none; color:#FF3B30;">
+                        <span>Advance Payable:</span> <span id="summAdv">৳0</span>
+                    </div>
+                </div>
+
+                <div class="chk-btn-group" style="flex-direction:column;">
+                    <button type="submit" id="chkSubmit" class="chk-submit-btn">Place Order</button>
+                    <button type="button" class="chk-action-btn back" onclick="chkGoToStep(2)"
+                        style="width:100%;">Back</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div id="chkInvoiceLayout"
+    style="display:none; padding:40px; font-family:sans-serif; background:#fff; color:#000; width:800px;">
+    <h1 style="color:#007AFF; text-align:center; margin-bottom:5px;" id="chkInvStoreName">Store Name</h1>
+    <h3 style="text-align:center; color:#555; margin-top:0;">Cart Invoice / Receipt</h3>
+    <div
+        style="display:flex; justify-content:space-between; margin-top:30px; border-bottom:2px solid #eee; padding-bottom:20px;">
+        <div>
+            <p><b>Order ID:</b> <span id="chkInvOrderId"></span></p>
+            <p><b>Date:</b> <span id="chkInvDate"></span></p>
+        </div>
+        <div style="text-align:right;">
+            <p><b>Customer:</b> <span id="chkInvCustName"></span></p>
+            <p><b>Phone:</b> <span id="chkInvCustPhone"></span></p>
+            <p><b>Address:</b> <span id="chkInvCustAddr"></span></p>
+        </div>
+    </div>
+
+    <h4 style="margin-top:20px;">Order Items:</h4>
+    <div id="chkInvItemsList" style="background:#f9f9f9; padding:15px; border-radius:10px; margin-bottom:20px;"></div>
+
+    <div style="text-align:right; font-size:16px;">
+        <p>Subtotal: <span id="chkInvSub"></span></p>
+        <p>Add-ons: <span id="chkInvAddon"></span></p>
+        <p>Delivery: <span id="chkInvDel"></span></p>
+        <p>Discount: <span id="chkInvDis"></span></p>
+        <h2 style="color:#007AFF; margin-top:10px;">Total: <span id="chkInvTotal"></span></h2>
+    </div>
+</div>
+
+<script>
+    // ============================================================================
+    // FIREBASE INITIALIZATION
+    // ============================================================================
+    const chk_firebaseConfig = {
+        apiKey: "AIzaSyChIiaZP6dLZYvDTzabu7vSnV3DN-DAPGI",
+        authDomain: "order-recive.firebaseapp.com",
+        projectId: "order-recive",
+        storageBucket: "order-recive.firebasestorage.app",
+        messagingSenderId: "750438065040",
+        appId: "1:750438065040:web:c2ec5a713d5f7fe2220915"
+    };
+
+    if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+        firebase.initializeApp(chk_firebaseConfig);
+    }
+    const chkDb = firebase.firestore();
+
+    // ============================================================================
+    // GLOBAL VARIABLES DECLARATION
+    // ============================================================================
+    const CHK_PAYMENT_PROXY_URL = "https://mypay.freelancingbyrifat.top/api_proxy.php";
+    const CHK_PAYMENT_API_KEY = "8QFIJJNzDGGw1qmhdCJcK5xcvuh8PwRXviUfDlLatVhgkjXlZv";
+
+    let chkCartData = [];
+    let chkBasePriceTotal = 0;
+    let chkAddons = [];
+    let chkValidPromos = {};
+    let chkZons = [];
+    let chkHybrid = { enabled: false, advanceAmount: -1 };
+
+    let chkBkash = "";
+    let chkNagad = "";
+    let chkMainBot = "";
+    let chkMainChats = [];
+    let chkDraftBot = "";
+    let chkDraftChat = "";
+    let chkStoreName = "My Store";
+    let chkPromoDiscount = 0;
+    let chkPromoCode = "";
+    let chkClientIP = "Fetching...";
+    let chk_isDraftSent = false;
+    let chkGeoData = [];
+
+    // Fetch IP Address
+    fetch('https://api.ipify.org?format=json')
+        .then(r => r.json())
+        .then(d => { chkClientIP = d.ip; })
+        .catch(e => { console.log("Failed to fetch IP"); });
+
+
+    // ============================================================================
+    // MULTI-STEP NAVIGATION LOGIC
+    // ============================================================================
+    let chkCurrentStep = 1;
+
+    function chkGoToStep(step) {
+        // Step 1 to 2 validation
+        if (step === 2) {
+            let nameVal = document.getElementById('chkName').value;
+            if (!nameVal) {
+                alert("Please enter your Name");
+                return;
+            }
+
+            let phoneVal = document.getElementById('chkPhone').value;
+            if (phoneVal.length !== 11 || !phoneVal.startsWith('01')) {
+                alert("Please enter a valid 11-digit Phone Number starting with 01");
+                return;
+            }
+        }
+
+        // Step 2 to 3 validation
+        if (step === 3) {
+            let divVal = document.getElementById('chkDivision').value;
+            let distVal = document.getElementById('chkDistrict').value;
+            let addVal = document.getElementById('chkAddress').value;
+
+            if (!divVal || !distVal || !addVal) {
+                alert("Please fill out your complete address information.");
+                return;
+            }
+        }
+
+        // Hide all steps
+        let stepContents = document.querySelectorAll('.chk-step-content');
+        for (let i = 0; i < stepContents.length; i++) {
+            stepContents[i].classList.remove('active');
+        }
+
+        // Show target step
+        document.getElementById(`chkStep${step}`).classList.add('active');
+
+        // Reset indicators
+        document.getElementById('chkStep1-ind').classList.remove('active', 'completed');
+        document.getElementById('chkStep2-ind').classList.remove('active', 'completed');
+        document.getElementById('chkStep3-ind').classList.remove('active', 'completed');
+
+        // Update UI based on step
+        if (step === 1) {
+            document.getElementById('chkStepProgress').style.width = '0%';
+            document.getElementById('chkStep1-ind').classList.add('active');
+        }
+
+        if (step === 2) {
+            document.getElementById('chkStepProgress').style.width = '50%';
+            document.getElementById('chkStep1-ind').classList.add('completed');
+            document.getElementById('chkStep2-ind').classList.add('active');
+        }
+
+        if (step === 3) {
+            document.getElementById('chkStepProgress').style.width = '100%';
+            document.getElementById('chkStep1-ind').classList.add('completed');
+            document.getElementById('chkStep2-ind').classList.add('completed');
+            document.getElementById('chkStep3-ind').classList.add('active');
+        }
+
+        chkCurrentStep = step;
+        chkCalc(); // Always recalculate price on step change
+    }
+
+    // ============================================================================
+    // MODAL TRIGGERS AND DATA FETCHING
+    // ============================================================================
+    async function openEmbeddedCheckout() {
+        let storedCart = localStorage.getItem('my_cart');
+        chkCartData = storedCart ? JSON.parse(storedCart) : [];
+
+        if (chkCartData.length === 0) {
+            alert("Your cart is empty!");
+            return;
+        }
+
+        document.getElementById('glass-checkout-modal').style.display = 'flex';
+        document.getElementById('chkOrderForm').style.display = 'block';
+        chkGoToStep(1);
+
+        try {
+            // Fetch configuration settings
+            let setSnap = await chkDb.collection("settings").doc("general").get();
+            if (setSnap.exists) {
+                let s = setSnap.data();
+                chkStoreName = s.storeName || "My Store";
+                chkBkash = s.bkash;
+                chkNagad = s.nagad;
+                chkMainBot = s.mainBotToken;
+                chkMainChats = s.mainChatIds || [];
+                chkDraftBot = s.draftBotToken;
+                chkDraftChat = s.draftChatId;
+
+                if (s.deliveryZones && s.deliveryZones.length > 0) {
+                    chkZons = s.deliveryZones;
+                } else {
+                    chkZons = [{ name: "Inside Dhaka", price: 60 }, { name: "Outside Dhaka", price: 120 }];
+                }
+
+                if (s.hybridCod) {
+                    chkHybrid = s.hybridCod;
+                }
+            }
+
+            // Fetch dynamic addons
+            let addSnap = await chkDb.collection("addons").get();
+            chkAddons = [];
+            addSnap.forEach(d => {
+                if (d.data().active) {
+                    chkAddons.push(d.data());
+                }
+            });
+
+            // Fetch promo codes
+            let prmSnap = await chkDb.collection("promos").get();
+            chkValidPromos = {};
+            prmSnap.forEach(d => {
+                if (d.data().active) {
+                    chkValidPromos[d.data().code] = d.data();
+                }
+            });
+
+            chkInitGeo();
+            chkRenderItems();
+            chkRenderAddons();
+            chkPopulateZones();
+            chkTogglePay();
+            chkCalc();
+        } catch (e) {
+            console.log("Error loading checkout data:", e);
+        }
+    }
+
+    function closeEmbeddedCheckout() {
+        document.getElementById('glass-checkout-modal').style.display = 'none';
+    }
+
+    // ============================================================================
+    // RENDERING FUNCTIONS
+    // ============================================================================
+    function chkRenderItems() {
+        let list = document.getElementById('chkCartList');
+        list.innerHTML = '';
+        chkBasePriceTotal = 0;
+
+        for (let i = 0; i < chkCartData.length; i++) {
+            let item = chkCartData[i];
+            chkBasePriceTotal += (item.price * item.quantity);
+
+            let itemHtml = `
+                <div class="chk-cart-item">
+                    <img src="${item.image}" class="chk-item-img">
+                    <div class="chk-item-info">
+                        <div style="font-weight:bold;">${item.productName} (x${item.quantity})</div>
+                        <div style="font-size:12px;color:#888;">Color: ${item.color} | Size: ${item.size}</div>
+                    </div>
+                    <div style="font-weight:bold;color:#007AFF;">৳${item.price * item.quantity}</div>
+                </div>
+            `;
+            list.innerHTML += itemHtml;
+        }
+    }
+
+    function chkRenderAddons() {
+        let cont = document.getElementById('chkAddonsContainer');
+        cont.innerHTML = '';
+
+        if (chkAddons.length === 0) {
+            document.getElementById('chkExtrasSection').style.display = 'none';
+            return;
+        }
+
+        document.getElementById('chkExtrasSection').style.display = 'block';
+
+        for (let i = 0; i < chkAddons.length; i++) {
+            let a = chkAddons[i];
+            let div = document.createElement('div');
+            div.className = 'chk-addon-box';
+            div.id = `chk-add-${i}`;
+
+            div.innerHTML = `
+                <div>${a.icon} ${a.name}</div>
+                <div>+৳${a.price}</div>
+                <input type="checkbox" id="chk-cb-${i}">
+            `;
+
+            div.onclick = () => {
+                let cb = document.getElementById(`chk-cb-${i}`);
+                cb.checked = !cb.checked;
+
+                if (cb.checked) {
+                    div.classList.add('active');
+                } else {
+                    div.classList.remove('active');
+                }
+                chkCalc();
+            };
+
+            cont.appendChild(div);
+        }
+    }
+
+    // ============================================================================
+    // GEOLOCATION & PROMO
+    // ============================================================================
+    async function chkApplyPromo() {
+        let inputEl = document.getElementById('chkPromo');
+        let c = inputEl.value.toUpperCase().trim();
+
+        if (!c) return;
+
+        if (chkValidPromos[c]) {
+            chkPromoDiscount = chkValidPromos[c].discount;
+            chkPromoCode = c;
+            alert("✅ Promo Applied Successfully!");
+            chkCalc();
+        } else {
+            alert("❌ Invalid Promo Code!");
+            chkPromoDiscount = 0;
+            chkCalc();
+        }
+    }
+
+    async function chkInitGeo() {
+        try {
+            let response = await fetch("https://bdapis.com/api/v1.1/divisions");
+            let d = await response.json();
+
+            let divSelect = document.getElementById('chkDivision');
+            for (let i = 0; i < d.data.length; i++) {
+                let v = d.data[i];
+                let o = document.createElement('option');
+                o.value = v.division;
+                o.text = v.division;
+                divSelect.appendChild(o);
+            }
+        } catch (e) {
+            console.log("Geo API Init Error", e);
+        }
+    }
+
+    async function chkLoadDistricts(div) {
+        let ds = document.getElementById('chkDistrict');
+        ds.innerHTML = '<option>Loading...</option>';
+        ds.disabled = true;
+
+        try {
+            let response = await fetch(`https://bdapis.com/api/v1.1/division/${div}`);
+            let d = await response.json();
+            chkGeoData = d.data;
+
+            ds.innerHTML = '<option value="" disabled selected>Select...</option>';
+
+            for (let i = 0; i < d.data.length; i++) {
+                let v = d.data[i];
+                let o = document.createElement('option');
+                o.value = v.district;
+                o.text = v.district;
+                ds.appendChild(o);
+            }
+
+            ds.disabled = false;
+
+            let l = document.getElementById('chkLocation');
+            if (div.toLowerCase() === 'dhaka') {
+                let dhakaZone = chkZons.find(z => z.name.toLowerCase().includes('inside'));
+                l.value = dhakaZone ? dhakaZone.name : chkZons[0].name;
+            } else {
+                let outZone = chkZons.find(z => z.name.toLowerCase().includes('outside'));
+                l.value = outZone ? outZone.name : chkZons[chkZons.length - 1].name;
+            }
+
+            chkCalc();
+        } catch (e) {
+            console.log("Geo District Error", e);
+        }
+    }
+
+    function chkLoadThanas(dist) {
+        let as = document.getElementById('chkArea');
+        as.innerHTML = '<option value="" disabled selected>Select...</option>';
+
+        let obj = chkGeoData.find(d => d.district === dist);
+
+        if (obj && obj.upazilla) {
+            for (let i = 0; i < obj.upazilla.length; i++) {
+                let u = obj.upazilla[i];
+                let o = document.createElement('option');
+                o.value = u;
+                o.text = u;
+                as.appendChild(o);
+            }
+            as.disabled = false;
+        }
+    }
+
+    function chkPopulateZones() {
+        let z = document.getElementById('chkLocation');
+        z.innerHTML = '';
+
+        for (let i = 0; i < chkZons.length; i++) {
+            let zn = chkZons[i];
+            let o = document.createElement('option');
+            o.value = zn.name;
+            o.text = `${zn.name} (৳${zn.price})`;
+            o.dataset.price = zn.price;
+            z.appendChild(o);
+        }
+    }
+
+    // ============================================================================
+    // CALCULATION LOGIC
+    // ============================================================================
+    function chkTogglePay() {
+        let m = document.getElementById('chkPayMethod').value;
+        let i = document.getElementById('chkPayInfo');
+        let man = document.getElementById('chkManualPay');
+        let onl = document.getElementById('chkOnlineMsg');
+
+        if (chkHybrid.enabled) {
+            document.getElementById('chkCodOpt').text = "💵 Hybrid COD (Advance)";
+        }
+
+        if (m === 'COD') {
+            if (chkHybrid.enabled) {
+                i.style.display = 'block';
+                man.style.display = 'none';
+                onl.style.display = 'block';
+            } else {
+                i.style.display = 'none';
+            }
+        } else if (m === 'Online') {
+            i.style.display = 'block';
+            man.style.display = 'none';
+            onl.style.display = 'block';
+        } else {
+            i.style.display = 'block';
+            man.style.display = 'block';
+            onl.style.display = 'none';
+            document.getElementById('chkAdminNum').innerText = m === 'bKash' ? chkBkash : chkNagad;
+        }
+
+        chkCalc();
+    }
+
+    function chkCalc() {
+        // Ensure cart is looped properly for base price
+        chkBasePriceTotal = 0;
+        for (let i = 0; i < chkCartData.length; i++) {
+            let item = chkCartData[i];
+            chkBasePriceTotal += (item.price * item.quantity);
+        }
+
+        let l = document.getElementById('chkLocation');
+        let dlv = 0;
+        if (l.options[l.selectedIndex]) {
+            dlv = parseInt(l.options[l.selectedIndex].dataset.price);
+        }
+
+        let adn = 0;
+        for (let i = 0; i < chkAddons.length; i++) {
+            let cb = document.getElementById(`chk-cb-${i}`);
+            if (cb && cb.checked) {
+                adn += chkAddons[i].price;
+            }
+        }
+
+        let fin = (chkBasePriceTotal + adn + dlv) - chkPromoDiscount;
+
+        document.getElementById('summSub').innerText = `৳${chkBasePriceTotal}`;
+        document.getElementById('summAddon').innerText = `৳${adn}`;
+        document.getElementById('summDel').innerText = `৳${dlv}`;
+
+        let promoRow = document.getElementById('summPromoRow');
+        if (chkPromoDiscount > 0) {
+            promoRow.style.display = 'flex';
+            document.getElementById('summPromo').innerText = `-৳${chkPromoDiscount}`;
+        } else {
+            promoRow.style.display = 'none';
+        }
+
+        document.getElementById('summTotal').innerText = `৳${fin}`;
+
+        let advRow = document.getElementById('summAdvRow');
+        let adv = 0;
+
+        let method = document.getElementById('chkPayMethod').value;
+        if (chkHybrid.enabled && method === 'COD') {
+            if (chkHybrid.advanceAmount === -1) {
+                adv = dlv;
+            } else {
+                adv = chkHybrid.advanceAmount;
+            }
+
+            if (adv > fin) {
+                adv = fin;
+            }
+
+            advRow.style.display = 'flex';
+            document.getElementById('summAdv').innerText = `৳${adv}`;
+        } else {
+            advRow.style.display = 'none';
+        }
+
+        return {
+            productTotal: chkBasePriceTotal,
+            delivery: dlv,
+            addonTotal: adn,
+            discount: chkPromoDiscount,
+            finalTotal: fin,
+            advancePayable: adv
+        };
+    }
+
+    // ============================================================================
+    // TELEGRAM DRAFT BOT
+    // ============================================================================
+    function chkSendDraft() {
+        let ph = document.getElementById('chkPhone').value;
+
+        if (chk_isDraftSent || !chkDraftBot || ph.length !== 11) {
+            return;
+        }
+
+        chk_isDraftSent = true;
+        let tItems = "";
+
+        for (let i = 0; i < chkCartData.length; i++) {
+            let item = chkCartData[i];
+            tItems += `\n📦 Item ${i + 1}: ${item.productName}\n ├ Color: ${item.color}\n ├ Size: ${item.size}\n └ Qty: ${item.quantity}\n`;
+        }
+
+        let customerName = document.getElementById('chkName').value || 'Unknown';
+
+        let t = `⚠️ *DRAFT ORDER (CART)!*\n━━━━━━━━━━━━━━${tItems}\n👤 *Name:* ${customerName}\n📞 *Phone:* \`${ph}\``;
+
+        fetch(`https://api.telegram.org/bot${chkDraftBot}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chkDraftChat, text: t, parse_mode: 'MarkdownV2' })
+        }).catch(e => {
+            console.log("Draft sending failed", e);
+        });
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        let modal = document.getElementById('glass-checkout-modal');
+        if (document.visibilityState === 'hidden' && modal.style.display === 'flex') {
+            chkSendDraft();
+        }
+    });
+
+    // ============================================================================
+    // FINAL ORDER SUBMISSION
+    // ============================================================================
+    document.getElementById('chkOrderForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        // Prevent draft firing after submit
+        chk_isDraftSent = true;
+
+        let pm = document.getElementById('chkPayMethod').value;
+        let snd = document.getElementById('chkSender').value;
+        let trx = document.getElementById('chkTrx').value;
+
+        if (pm === 'bKash' || pm === 'Nagad') {
+            if (snd.length !== 11) {
+                alert("Invalid Sender Number");
+                return;
+            }
+            if (trx.length < 8) {
+                alert("Invalid Trx");
+                return;
+            }
+        }
+
+        let btn = document.getElementById('chkSubmit');
+        btn.innerText = "Processing...";
+        btn.disabled = true;
+
+        let cst = chkCalc();
+
+        let fpm = pm;
+        if (pm === 'COD' && chkHybrid.enabled) {
+            fpm = 'Hybrid COD';
+        }
+
+        let orderId = Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+        let selAddons = [];
+        for (let i = 0; i < chkAddons.length; i++) {
+            let cb = document.getElementById(`chk-cb-${i}`);
+            if (cb && cb.checked) {
+                selAddons.push(`${chkAddons[i].icon} ${chkAddons[i].name}`);
+            }
+        }
+        let addonsString = selAddons.length > 0 ? selAddons.join(', ') : "None";
+
+        let orderData = {
+            orderId: orderId,
+            time: new Date().toLocaleString('en-US'),
+            status: "Pending",
+            customer: {
+                name: document.getElementById('chkName').value,
+                phone: document.getElementById('chkPhone').value,
+                email: document.getElementById('chkEmail').value,
+                division: document.getElementById('chkDivision').value,
+                district: document.getElementById('chkDistrict').value,
+                area: document.getElementById('chkArea').value,
+                address: document.getElementById('chkAddress').value
+            },
+            items: {
+                id: "CART",
+                cartItems: chkCartData,
+                addons: addonsString
+            },
+            pricing: cst,
+            payment: {
+                method: fpm,
+                sender: snd,
+                trxId: trx,
+                status: "Unpaid"
+            }
+        };
+
+        try {
+            // Save to Firebase
+            await chkDb.collection("orders").doc(orderId).set(orderData);
+
+            let isAuto = false;
+            if (pm === 'Online' || (fpm === 'Hybrid COD' && cst.advancePayable > 0)) {
+                isAuto = true;
+            }
+
+            // IF AUTO PAYMENT -> REDIRECT AND STOP
+            if (isAuto) {
+                let payAmt = cst.finalTotal;
+                if (fpm === 'Hybrid COD') {
+                    payAmt = cst.advancePayable;
+                }
+
+                // Build URL clearly
+                let baseUrl = window.location.href.split('?')[0];
+                let sUrl = baseUrl + `?status=completed&order_id=${orderId}`;
+                let cUrl = baseUrl + `?status=cancel`;
+
+                let reqBody = {
+                    cus_name: orderData.customer.name,
+                    cus_email: orderData.customer.email || orderData.customer.phone + "@linko.com",
+                    amount: payAmt,
+                    success_url: sUrl,
+                    cancel_url: cUrl
+                };
+
+                let payRes = await fetch(`${CHK_PAYMENT_PROXY_URL}?action=create`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "API-KEY": CHK_PAYMENT_API_KEY },
+                    body: JSON.stringify(reqBody)
+                });
+
+                let pD = JSON.parse(await payRes.text());
+
+                if (pD.payment_url) {
+                    window.location.href = pD.payment_url;
+                    return; // 🛑 Stops here. Logic resumes on gateway return.
+                }
+            }
+
+            // IF MANUAL COD -> SEND TELEGRAM IMMEDIATELY
+            let tItems = "";
+            for (let i = 0; i < chkCartData.length; i++) {
+                let item = chkCartData[i];
+                tItems += `\n📦 Item ${i + 1}: ${item.productName}\n ├ Color: ${item.color}\n ├ Size: ${item.size}\n └ Qty: ${item.quantity}\n`;
+            }
+
+            let addonsText = selAddons.length > 0 ? selAddons.join(',') : 'None';
+            let tgT = `🛍️ *NEW CART ORDER!*\n━━━━━━━━━━━━━━\n📦 *ID:* \`${orderId}\`\n*ITEMS:*${tItems}▪️ *Add-ons:* ${addonsText}\n\n👤 *CUSTOMER:*\n ├ *Name:* ${orderData.customer.name}\n ├ *Phone:* \`${orderData.customer.phone}\`\n └ *Addr:* ${orderData.customer.address}, ${orderData.customer.area}\n\n💳 *PAYMENT:* ${fpm} (৳${cst.finalTotal})`;
+
+            if (snd) {
+                tgT += `\n ├ Sender: \`${snd}\`\n └ TrxID: \`${trx}\``;
+            }
+
+            for (let i = 0; i < chkMainChats.length; i++) {
+                let chatId = chkMainChats[i];
+                await fetch(`https://api.telegram.org/bot${chkMainBot}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text: tgT, parse_mode: 'MarkdownV2' })
+                }).catch(e => { });
+            }
+
+            localStorage.removeItem('my_cart');
+            chkShowSuccess(orderId, orderData, tItems);
+
+        } catch (e) {
+            alert("Error: " + e.message);
+            btn.innerText = "Place Order";
+            btn.disabled = false;
+        }
+    });
+
+    // ============================================================================
+    // 🔍 AUTO PAYMENT VERIFICATION (When Returning from Gateway)
+    // ============================================================================
+    window.addEventListener('load', async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        let status = urlParams.get('status');
+        let orderId = urlParams.get('order_id');
+        let trxId = urlParams.get('transaction_id') || urlParams.get('transactionId'); // Fixed camelCase catch
+
+        if (status === 'cancel') {
+            alert("Payment was cancelled.");
+            // Clean URL
+            let cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+        else if ((status === 'success' || status === 'completed' || status === 'COMPLETED') && orderId) {
+
+            // Show Loading State
+            document.getElementById('glass-checkout-modal').style.display = 'flex';
+            document.getElementById('chkOrderForm').style.display = 'none';
+            document.getElementById('chkStatusLoader').style.display = 'block';
+
+            try {
+                // Preload variables if missing
+                if (!chkMainBot) {
+                    let setSnap = await chkDb.collection("settings").doc("general").get();
+                    if (setSnap.exists) {
+                        let s = setSnap.data();
+                        chkStoreName = s.storeName || "My Store";
+                        chkMainBot = s.mainBotToken;
+                        chkMainChats = s.mainChatIds || [];
+                    }
+                }
+
+                const orderSnap = await chkDb.collection("orders").doc(orderId).get();
+
+                if (orderSnap.exists) {
+                    let oData = orderSnap.data();
+
+                    let cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+
+                    // Skip if already paid
+                    if (oData.payment.status === 'Paid' || oData.payment.status === 'Advance Paid') {
+                        window.history.replaceState({}, document.title, cleanUrl);
+                        document.getElementById('chkStatusLoader').style.display = 'none';
+                        chkShowSuccess(orderId, oData, "");
+                        return;
+                    }
+
+                    // Duplicate Transaction ID Check
+                    if (trxId) {
+                        const trxCheck = await chkDb.collection("orders").where("payment.trxId", "==", trxId).get();
+                        if (!trxCheck.empty) {
+                            alert("Warning: Transaction ID already exists/used in another order.");
+                            document.getElementById('chkStatusLoader').style.display = 'none';
+                            return;
+                        }
+                    }
+
+                    // Request Verification from c-panel proxy
+                    const verifyRes = await fetch(`${CHK_PAYMENT_PROXY_URL}?action=verify`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "API-KEY": CHK_PAYMENT_API_KEY },
+                        body: JSON.stringify({ transaction_id: trxId })
+                    });
+
+                    let verifyData = await verifyRes.json();
+                    const vStatus = (verifyData.status || "").toUpperCase();
+
+                    if (vStatus === "COMPLETED" || vStatus === "SUCCESS" || vStatus === "VALID") {
+
+                        let newPayStatus = oData.payment.method === 'Hybrid COD' ? 'Advance Paid' : 'Paid';
+
+                        // Update Firebase
+                        await chkDb.collection("orders").doc(orderId).update({
+                            "status": "Order Placed",
+                            "payment.trxId": trxId || "Auto-Verified",
+                            "payment.status": newPayStatus
+                        });
+
+                        // Send Telegram Message *AFTER* Successful Verification
+                        let tItems = "";
+                        for (let i = 0; i < oData.items.cartItems.length; i++) {
+                            let item = oData.items.cartItems[i];
+                            tItems += `\n📦 Item ${i + 1}: ${item.productName}\n ├ Color: ${item.color}\n ├ Size: ${item.size}\n └ Qty: ${item.quantity}\n`;
+                        }
+
+                        let tgT = `🛍️ *NEW CART ORDER (VERIFIED)!*\n━━━━━━━━━━━━━━\n📦 *ID:* \`${orderId}\`\n*ITEMS:*${tItems}▪️ *Add-ons:* ${oData.items.addons}\n\n👤 *CUSTOMER:*\n ├ *Name:* ${oData.customer.name}\n ├ *Phone:* \`${oData.customer.phone}\`\n └ *Addr:* ${oData.customer.address}, ${oData.customer.area}\n\n💳 *PAYMENT:* ${oData.payment.method} (৳${oData.pricing.finalTotal})\n └ TrxID: \`${trxId}\``;
+
+                        for (let i = 0; i < chkMainChats.length; i++) {
+                            let chatId = chkMainChats[i];
+                            await fetch(`https://api.telegram.org/bot${chkMainBot}/sendMessage`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ chat_id: chatId, text: tgT, parse_mode: 'HTML' })
+                            }).catch(e => { });
+                        }
+
+                        // Cleanup
+                        window.history.replaceState({}, document.title, cleanUrl);
+                        document.getElementById('chkStatusLoader').style.display = 'none';
+                        localStorage.removeItem('my_cart');
+                        chkShowSuccess(orderId, oData, "");
+
+                    } else {
+                        alert("Payment Verification Failed! Invalid Trx ID.");
+                        document.getElementById('chkStatusLoader').style.display = 'none';
+                    }
+                }
+            } catch (e) {
+                alert("Payment Verification Error. " + e.message);
+                document.getElementById('chkStatusLoader').style.display = 'none';
+            }
+        }
+    });
+
+    // ============================================================================
+    // SUCCESS UI / PDF GENERATOR
+    // ============================================================================
+    function chkShowSuccess(id, data, itemsHtmlForPdf) {
+        document.getElementById('chkInvStoreName').innerText = chkStoreName;
+        document.getElementById('chkInvOrderId').innerText = id;
+        document.getElementById('chkInvDate').innerText = data.time;
+        document.getElementById('chkInvCustName').innerText = data.customer.name;
+        document.getElementById('chkInvCustPhone').innerText = data.customer.phone;
+        document.getElementById('chkInvCustAddr').innerText = `${data.customer.address}, ${data.customer.area}, ${data.customer.district}`;
+
+        let pdfItems = "";
+        let itemsArray = data.items.cartItems || chkCartData;
+
+        for (let i = 0; i < itemsArray.length; i++) {
+            let item = itemsArray[i];
+            pdfItems += `<p style="margin:5px 0;"><b>${item.productName}</b> - ${item.color}/${item.size} (x${item.quantity}) - ৳${item.price * item.quantity}</p>`;
+        }
+
+        document.getElementById('chkInvItemsList').innerHTML = pdfItems;
+
+        document.getElementById('chkInvSub').innerText = `৳${data.pricing.productTotal}`;
+        document.getElementById('chkInvAddon').innerText = `৳${data.pricing.addonTotal}`;
+        document.getElementById('chkInvDel').innerText = `৳${data.pricing.delivery}`;
+        document.getElementById('chkInvDis').innerText = `-৳${data.pricing.discount}`;
+        document.getElementById('chkInvTotal').innerText = `৳${data.pricing.finalTotal}`;
+
+        document.getElementById('chkMainWrapper').innerHTML = `
+            <div style="text-align:center;">
+                <h1 style="font-size:50px;margin:0;">🎉</h1>
+                <h2 style="color:#34C759;">Order Confirmed!</h2>
+                <div style="background:rgba(0,0,0,0.05); padding:15px; border-radius:15px; margin:20px 0;">
+                    Order ID: <b style="color:#007AFF; font-size:18px;">${id}</b>
+                    <br>
+                    <button onclick="chkCopyId('${id}')" style="margin-top:10px; padding:8px 15px; border-radius:10px; border:none; background:#007AFF; color:white; font-weight:bold; cursor:pointer;"><i data-lucide="clipboard-list" class="lucide-icon"></i> Copy ID</button>
+                </div>
+                <button onclick="chkDownloadPDF('${id}')" style="width:100%; padding:15px; background:#1C1C1E; color:white; border-radius:15px; border:none; font-weight:bold; font-size:16px; margin-bottom:10px; cursor:pointer;">📥 Download PDF Invoice</button>
+                <button onclick="window.location.reload()" style="width:100%; padding:15px; background:rgba(0,0,0,0.1); border-radius:15px; border:none; font-weight:bold; font-size:16px; cursor:pointer; color:var(--ios-text);">Return to Shop</button>
+            </div>
+        `;
+    }
+
+    function chkCopyId(id) {
+        navigator.clipboard.writeText(id).then(() => {
+            alert("Copied!");
+        }).catch(() => {
+            let t = document.createElement('textarea');
+            t.value = id;
+            document.body.appendChild(t);
+            t.select();
+            document.execCommand('copy');
+            document.body.removeChild(t);
+            alert("Copied!");
+        });
+    }
+
+    function chkDownloadPDF(id) {
+        let el = document.getElementById('chkInvoiceLayout');
+        el.style.display = 'block';
+        if (typeof html2pdf !== 'undefined') {
+            html2pdf().set({
+                margin: 10,
+                filename: `Invoice_${id}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(el).save().then(() => {
+                el.style.display = 'none';
+            });
+        } else {
+            alert("PDF Generator is loading. Try again in 2 seconds.");
+            el.style.display = 'none';
+        }
+    }
+</script>
+
+
+<script>
+    // Amra ekta variable set korlam jeta track korbe user kon "Order Now" theke asheche
+    window.isDirectBuy = false;
+    window.directProductDetails = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // 1. PRODUCT PAGE ER "ORDER NOW" BUTTON ER KAJ
+        // Nicher '.product-order-now-btn' er jaygay apnar product page er order now button er class class/id diben
+        let productOrderBtn = document.querySelector('.product-order-now-btn');
+
+        if (productOrderBtn) {
+            productOrderBtn.addEventListener('click', function (e) {
+                e.preventDefault(); // Ager default add to cart thekalam
+                window.isDirectBuy = true; // Direct buy on korlam
+
+                // Ekhane apnar product er details nite hobe web page theke
+                // (Nicher class gulo apnar website er html onujayi milate hobe)
+                window.directProductDetails = {
+                    name: document.querySelector('.product-title').innerText, // Product er nam
+                    price: parseFloat(document.querySelector('.product-price').innerText.replace(/[^\d.-]/g, '')), // Dam
+                    size: document.querySelector('.size-selector') ? document.querySelector('.size-selector').value : 'N/A', // Size
+                    color: document.querySelector('.color-selector') ? document.querySelector('.color-selector').value : 'N/A', // Color
+                    qty: 1
+                };
+
+                // Popup open korar function (Apnar 1337 line code e popup open korar je function ache, seta ekhane call korben)
+                // Jemon: document.querySelector('.checkout-popup').style.display = 'block';
+                openPopupCheckout();
+
+                // Checkout design update korar function call
+                renderCheckoutPopupItems();
+            });
+        }
+
+        // 2. CART ER "ORDER NOW" BUTTON ER KAJ
+        // Nicher '.cart-order-now-btn' er jaygay apnar cart er order now button er class/id diben
+        let cartOrderBtn = document.querySelector('.cart-order-now-btn');
+
+        if (cartOrderBtn) {
+            cartOrderBtn.addEventListener('click', function (e) {
+                window.isDirectBuy = false; // Direct buy off, mane ebar normal cart theke
+                window.directProductDetails = null;
+
+                // openPopupCheckout(); // Apnar popup open function
+                renderCheckoutPopupItems();
+            });
+        }
+    });
+
+    // 3. POPUP ER VITOR PRODUCT DEKHANOR NOTUN LOGIC (Override Function)
+    function renderCheckoutPopupItems() {
+        // Jekhane popup er vitor product gulo list hoy tar container class diben ekhane
+        let popupItemContainer = document.querySelector('.popup-checkout-items');
+        // Total dam jekhane dekhabe tar class
+        let popupTotalDisplay = document.querySelector('.popup-total-price');
+
+        if (!popupItemContainer) return; // Jodi container na thake tahole thamun
+
+        popupItemContainer.innerHTML = ''; // Age theke thaka list clear korlam
+        let subtotal = 0;
+
+        if (window.isDirectBuy && window.directProductDetails) {
+            // JODI PRODUCT PAGE THEKE DIRECT ORDER NOW E CLICK KORE (Shudhu oi 1ta product)
+            let item = window.directProductDetails;
+            subtotal = item.price * item.qty;
+
+            popupItemContainer.innerHTML = `
+                <div class="checkout-single-item" style="border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
+                    <p style="margin: 0; font-weight: bold;">${item.name}</p>
+                    <p style="margin: 0; font-size: 13px; color: #555;">Size: ${item.size} | Color: ${item.color}</p>
+                    <p style="margin: 0;">Dam: ৳${item.price} x ${item.qty}</p>
+                </div>
+            `;
+        } else {
+            // JODI CART THEKE ORDER NOW E CLICK KORE (Cart er shob product)
+            // window.cartArray hocche apnar ager code er cart er variable er nam. (Ota khuje ekhane milate hobe)
+            if (window.cartArray && window.cartArray.length > 0) {
+                window.cartArray.forEach(item => {
+                    subtotal += (item.price * item.qty);
+                    popupItemContainer.innerHTML += `
+                        <div class="checkout-single-item" style="border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 10px;">
+                            <p style="margin: 0; font-weight: bold;">${item.name}</p>
+                            <p style="margin: 0; font-size: 13px; color: #555;">Size: ${item.size} | Color: ${item.color}</p>
+                            <p style="margin: 0;">Dam: ৳${item.price} x ${item.qty}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                popupItemContainer.innerHTML = '<p>Apnar cart faka!</p>';
+            }
+        }
+
+        // Subtotal update (Jodi shipping charge add korte chan tahole er sathe jog korben)
+        if (popupTotalDisplay) {
+            let shippingCharge = 60; // Udahoron shorup
+            let grandTotal = subtotal + shippingCharge;
+            popupTotalDisplay.innerText = '৳' + grandTotal;
+        }
+    }
+</script>
+
+<style>
+    /* Payment Failed Modal Design */
+    .fail-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(5px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+    }
+
+    .fail-modal-box {
+        background: #fff;
+        padding: 30px;
+        border-radius: 20px;
+        text-align: center;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .fail-icon {
+        width: 70px;
+        height: 70px;
+        background: #FF3B30;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 35px;
+        margin: 0 auto 15px;
+        box-shadow: 0 10px 20px rgba(255, 59, 48, 0.3);
+    }
+
+    .fail-title {
+        font-size: 22px;
+        font-weight: 800;
+        color: #1C1C1E;
+        margin-bottom: 10px;
+    }
+
+    .fail-desc {
+        font-size: 15px;
+        color: #8E8E93;
+        margin-bottom: 25px;
+        line-height: 1.5;
+    }
+
+    .fail-btn {
+        background: #1C1C1E;
+        color: white;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        width: 100%;
+        transition: 0.2s;
+    }
+
+    .fail-btn:active {
+        transform: scale(0.95);
+    }
+
+    @keyframes popIn {
+        from {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+
+
+<div id="paymentFailModal" class="fail-modal-overlay">
+    <div class="fail-modal-box">
+        <div class="fail-icon">✖</div>
+        <div class="fail-title">Payment Cancelled!</div>
+        <div class="fail-desc">Apnar payment ti somponno hoyni ba apni cancel korechen. Doya kore abar chesta korun.
+        </div>
+        <button class="fail-btn" onclick="closeFailModal()">Bujhte Perechi</button>
+    </div>
+</div>
+
+<script>
+    // 1. URL CLEANER & FAILED POPUP LOGIC
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get('status');
+        const cancel = urlParams.get('cancel'); // Kono kono gateway te cancel thake
+
+        // Jodi status failed, cancelled ba cancel=true hoy
+        if (status === 'failed' || status === 'canceled' || status === 'cancelled' || cancel === 'true') {
+
+            // Popup Show Korbe
+            document.getElementById('paymentFailModal').style.display = 'flex';
+
+            // 🔥 MAGIC: Page load houyar sathe sathei URL clean kore dibe (Refresh hobe na)
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    });
+
+    function closeFailModal() {
+        document.getElementById('paymentFailModal').style.display = 'none';
+    }
+
+
+    // ==========================================
+    // 2. BEAUTIFUL INVOICE GENERATOR (No Cut-off)
+    // ==========================================
+
+    // Ei function ta call korlei notun shundor invoice load hobe
+    // orderData object e apni apnar order er shob details pass korben
+    window.generateStyleHytInvoice = function (orderData) {
+
+        // Items er list toiri kora
+        let itemsHtml = '';
+        orderData.items.forEach(item => {
+            itemsHtml += `
+                <tr style="border-bottom: 1px solid #E5E5EA;">
+                    <td style="padding: 15px; color: #1C1C1E; font-weight: 600;">${item.name} <br>
+                        <small style="color: #8E8E93; font-weight: normal;">${item.variant || 'N/A'}</small>
+                    </td>
+                    <td style="padding: 15px; text-align: center; color: #3A3A3C;">${item.qty}</td>
+                    <td style="padding: 15px; text-align: right; color: #1C1C1E; font-weight: 600;">৳${item.price}</td>
+                    <td style="padding: 15px; text-align: right; color: #007AFF; font-weight: bold;">৳${item.price * item.qty}</td>
+                </tr>
+            `;
+        });
+
+        // Invoice er shundor HTML Template
+        let invoiceHTML = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Invoice - ${orderData.orderId}</title>
+                <style>
+                    body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
+                    .invoice-container { max-width: 800px; margin: 40px auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #007AFF; padding-bottom: 20px; margin-bottom: 30px; }
+                    .store-name { font-size: 36px; font-weight: 900; color: #007AFF; margin: 0; letter-spacing: -1px; }
+                    .invoice-title { font-size: 24px; color: #8E8E93; text-transform: uppercase; letter-spacing: 2px; }
+                    
+                    .info-section { display: flex; justify-content: space-between; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
+                    .info-block { width: 45%; }
+                    .info-title { font-size: 14px; color: #8E8E93; text-transform: uppercase; margin-bottom: 5px; font-weight: bold; }
+                    .info-value { font-size: 16px; color: #1C1C1E; font-weight: 500; line-height: 1.5; }
+                    
+                    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; table-layout: fixed; }
+                    th { background: #F2F2F7; padding: 15px; text-align: left; font-size: 14px; color: #8E8E93; text-transform: uppercase; }
+                    th.right { text-align: right; }
+                    th.center { text-align: center; }
+                    
+                    .summary-box { width: 100%; max-width: 350px; margin-left: auto; border-top: 2px solid #E5E5EA; padding-top: 20px; }
+                    .summary-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 16px; color: #3A3A3C; }
+                    .summary-row.total { font-size: 22px; font-weight: 900; color: #007AFF; border-top: 1px solid #E5E5EA; padding-top: 15px; margin-top: 10px; }
+                    
+                    .footer { text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid #E5E5EA; color: #8E8E93; font-size: 14px; }
+                    
+                    /* Print e jate perfect ashe tar jonno */
+                    @media print {
+                        body { background: #fff; }
+                        .invoice-container { margin: 0; padding: 20px; box-shadow: none; max-width: 100%; }
+                    }
+                </style>
+                <link rel="stylesheet" href="assets/css/premium-icons.css">
+</head>
+            <body>
+                <div class="invoice-container">
+                    <div class="header">
+                        <h1 class="store-name">Style Hyt BD</h1>
+                        <div class="invoice-title">INVOICE</div>
+                    </div>
+                    
+                    <div class="info-section">
+                        <div class="info-block">
+                            <div class="info-title">Order Information</div>
+                            <div class="info-value">
+                                <strong>Order ID:</strong> ${orderData.orderId}<br>
+                                <strong>Date:</strong> ${orderData.date}
+                            </div>
+                        </div>
+                        <div class="info-block" style="text-align: right;">
+                            <div class="info-title">Customer Details</div>
+                            <div class="info-value">
+                                <strong>${orderData.customerName}</strong><br>
+                                Phone: ${orderData.phone}<br>
+                                <span style="display:inline-block; max-width: 250px; word-wrap: break-word;">${orderData.address}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 50%;">Product Details</th>
+                                <th class="center" style="width: 15%;">Qty</th>
+                                <th class="right" style="width: 15%;">Price</th>
+                                <th class="right" style="width: 20%;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                    </table>
+                    
+                    <div class="summary-box">
+                        <div class="summary-row">
+                            <span>Subtotal:</span>
+                            <span>৳${orderData.subtotal}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Delivery Charge:</span>
+                            <span>৳${orderData.delivery}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount:</span>
+                            <span>- ৳${orderData.discount || 0}</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Grand Total:</span>
+                            <span>৳${orderData.total}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Thank you for shopping with Style Hyt BD!</p>
+                        <p>If you have any questions, please contact our support.</p>
+                    </div>
+                </div>
+                
+                <script>
+                    // Page load howar 1 second por automatic print option ashbe
+                    setTimeout(() => { window.print(); }, 1000);
+                <\/script>
+            
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="assets/js/offline-handler.js"></script>
+</body>
+            </html>
+        `;
+
+        // Notun window te invoice ta open korbe ar print popup anbe
+        let printWindow = window.open('', '_blank');
+        printWindow.document.write(invoiceHTML);
+        printWindow.document.close();
+    };
+
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.body.addEventListener('click', function (e) {
+            if (e.target.closest('.color-swatch') || e.target.closest('.size-btn') || e.target.closest('.qty-btn') || e.target.closest('.color-options') || e.target.closest('.size-options')) {
+                setTimeout(updateCalculatedLivePrice, 50);
+            }
+        });
+        setTimeout(updateCalculatedLivePrice, 1000);
+    });
+
+    function updateCalculatedLivePrice() {
+        if (typeof basePrice === 'undefined') return;
+        let finalPrice = basePrice; // Default main sale price
+
+        // ১. যদি ডাটাবেসে সাইজের সাথে আসল দাম (Actual Price) দেওয়া থাকে, তবে সেটি বেস প্রাইসকে OVERRIDE করবে
+        if (typeof selColor !== 'undefined' && selColor && typeof selSize !== 'undefined' && selSize) {
+
+            // নতুন ডাটা স্ট্রাকচার (sizePrices) চেক করা
+            if (selColor.sizePrices && selColor.sizePrices[selSize]) {
+                finalPrice = parseFloat(selColor.sizePrices[selSize]) || finalPrice;
+            }
+            // ভুল করে আগের বাগ ভার্সনে সেভ হলে, সেটার জন্য ফলব্যাক
+            else if (selColor.sizes && typeof selColor.sizes[selSize] === 'object' && selColor.sizes[selSize].price) {
+                finalPrice = parseFloat(selColor.sizes[selSize].price) || finalPrice;
+            }
+        }
+
+        // ২. ওয়েবসাইটের টেক্সট আপডেট
+        let priceDisplay = document.getElementById('p_price');
+        if (priceDisplay) {
+            priceDisplay.innerText = '৳' + finalPrice;
+        }
+
+        // ৩. কার্টে বা চেকআউটে নতুন দামটি জোর করে পাঠানো (Override)
+        if (typeof window.originalCreateItemObject === 'undefined' && typeof createItemObject === 'function') {
+            window.originalCreateItemObject = createItemObject;
+            window.createItemObject = function () {
+                let item = window.originalCreateItemObject();
+                if (item) item.price = finalPrice; // কার্টে যাওয়ার আগে আসল দাম সেট
+                return item;
+            };
+        } else if (typeof window.createItemObject === 'function') {
+            window.createItemObject = function () {
+                let item = window.originalCreateItemObject();
+                if (item) item.price = finalPrice;
+                return item;
+            };
+        }
+
+        // ৪. ডাইরেক্ট বাই (Direct Buy) পপআপ
+        if (typeof window.directProductDetails !== 'undefined' && window.directProductDetails && window.isDirectBuy) {
+            window.directProductDetails.price = finalPrice;
+            if (typeof renderCheckoutPopupItems === 'function') renderCheckoutPopupItems();
+        }
+    }
+</script>
+
+
+
+
+<script>
+    // ========================================================
+    // <i data-lucide="settings" class="lucide-icon icon-hover-spin"></i> কনফিগারেশন সেটিং (আপনার প্রয়োজন মতো true বা false করুন)
+    // ========================================================
+
+    // ১. এই পুরো ফান বক্স ফিচারটি চালু বা বন্ধ করতে চান?
+    // true = চালু থাকবে, false = পুরো বক্সটি গায়েব হয়ে যাবে
+    const ENABLE_PROMISE_BOX = true;
+
+    // ২. প্রথম বক্সে টিক দেওয়া কি বাধ্যতামূলক? (টিক না দিলে অর্ডার হবে না)
+    // true = টিক না দিলে অর্ডার হবে না, false = টিক না দিলেও অর্ডার হবে
+    const REQUIRE_CHECKBOX_1_TO_ORDER = true;
+
+    // ৩. দ্বিতীয় ফান বক্সটি (ডেলিভারি ম্যানের কাছে পেমেন্ট) চালু করতে চান?
+    // true = চালু থাকবে, false = দ্বিতীয় বক্সটি গায়েব হয়ে যাবে
+    const ENABLE_CHECKBOX_2 = true;
+
+    // ৪. দ্বিতীয় বক্সে টিক দেওয়া কি বাধ্যতামূলক?
+    const REQUIRE_CHECKBOX_2_TO_ORDER = true;
+
+    // ========================================================
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // ফিচারটি বন্ধ থাকলে কোড এখানেই থেমে যাবে
+        if (!ENABLE_PROMISE_BOX) return;
+
+        // এই লুপটি প্রতি ০.৫ সেকেন্ড পর পর চেক করবে যে ৩য় স্টেপ (Place Order) আসলো কিনা
+        let checkPopupInterval = setInterval(() => {
+
+            // ১. "Place Order" বাটন খুঁজে বের করা (যেটা স্ক্রিনে ভিজিবল আছে)
+            let allButtons = document.querySelectorAll('button, .place-order-btn, .btn-submit');
+            let placeOrderBtn = null;
+
+            for (let i = 0; i < allButtons.length; i++) {
+                let btn = allButtons[i];
+                if (btn.innerText && btn.innerText.trim().toLowerCase().includes('place order') && btn.offsetParent !== null) {
+                    placeOrderBtn = btn;
+                    break;
+                }
+            }
+
+            // ২. পেমেন্ট মেথড "COD" সিলেক্ট করা আছে কিনা তা চেক করা
+            let isCod = false;
+            let visibleSelects = document.querySelectorAll('select');
+
+            for (let i = 0; i < visibleSelects.length; i++) {
+                let select = visibleSelects[i];
+                if (select.offsetParent !== null) { // ড্রপডাউনটি স্ক্রিনে থাকলে
+                    let selectedText = select.options[select.selectedIndex].text.toLowerCase();
+                    if (selectedText.includes('cash') || selectedText.includes('cod')) {
+                        isCod = true;
+                        break;
+                    }
+                }
+            }
+
+            // ৩. যদি "Place Order" বাটন পাওয়া যায় (মানে স্টেপ ৩)
+            if (placeOrderBtn) {
+                let existingBox = document.getElementById('funPromiseWrapper');
+
+                // যদি বক্সটি আগে থেকে তৈরি না থাকে, তবে নতুন করে তৈরি করবে
+                if (!existingBox) {
+                    let funBox = document.createElement('div');
+                    funBox.id = 'funPromiseWrapper';
+
+                    funBox.style.cssText = 'position: relative; margin: 15px 0; border: 1.5px dashed #FF3B30; border-radius: 12px; padding: 15px; background: #FFF5F5; box-shadow: 0 4px 12px rgba(255, 59, 48, 0.08); display: none; display: flex; flex-direction: column; gap: 15px;';
+
+                    let htmlContent = `
+                        <!-- Checkbox 1 -->
+                        <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; margin: 0;">
+                            <input type="checkbox" id="funPromiseCheck1" style="margin-top: 3px; width: 20px; height: 20px; cursor: pointer; accent-color: #FF3B30;">
+                            <span style="font-size: 14.5px; color: #1C1C1E; line-height: 1.5; text-align: left; font-weight: 600;">
+                                আমি নিশ্চিত, এই অর্ডার সত্যিই নিতে প্রতিশ্রুতিবদ্ধ। রিসিভ না করলে আল্লাহর গজব আমার উপর পড়বে এবং পরকালে কঠোর শাস্তি হবে।
+                            </span>
+                        </label>
+                        
+                        <!-- Tooltip Container 1 -->
+                        <div id="funTooltip1" style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%) translateY(10px); opacity: 0; visibility: hidden; background: #34C759; color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; white-space: nowrap; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 6px 15px rgba(52, 199, 89, 0.25); z-index: 100;">
+                            মাশাআল্লাহ! আপনার নিয়ত পরিষ্কার 😇
+                            <div style="position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 6px; border-style: solid; border-color: #34C759 transparent transparent transparent;"></div>
+                        </div>
+                    `;
+
+                    // Checkbox 2 (Jodi enable kora thake)
+                    if (ENABLE_CHECKBOX_2) {
+                        htmlContent += `
+                            <!-- Checkbox 2 -->
+                            <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; margin: 0; padding-top: 10px; border-top: 1px solid rgba(255, 59, 48, 0.2);">
+                                <input type="checkbox" id="funPromiseCheck2" style="margin-top: 3px; width: 20px; height: 20px; cursor: pointer; accent-color: #34C759;">
+                                <span style="font-size: 14.5px; color: #1C1C1E; line-height: 1.5; text-align: left; font-weight: 600;">
+                                    পণ্য হাতে পেয়ে ডেলিভারি ম্যানের কাছে মূল্য পরিশোধ করুন
+                                </span>
+                            </label>
+                            
+                            <!-- Tooltip Container 2 -->
+                            <div id="funTooltip2" style="position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%) translateY(-10px); opacity: 0; visibility: hidden; background: #007AFF; color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; white-space: nowrap; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 6px 15px rgba(0, 122, 255, 0.25); z-index: 100;">
+                                ধন্যবাদ! <i data-lucide="truck" class="lucide-icon icon-bounce"></i>
+                                <div style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); border-width: 6px; border-style: solid; border-color: transparent transparent #007AFF transparent;"></div>
+                            </div>
+                        `;
+                    }
+
+                    funBox.innerHTML = htmlContent;
+
+                    placeOrderBtn.parentNode.insertBefore(funBox, placeOrderBtn);
+
+                    // Logic for Tooltip 1
+                    let checkBox1 = funBox.querySelector('#funPromiseCheck1');
+                    let tooltip1 = funBox.querySelector('#funTooltip1');
+
+                    if (checkBox1 && tooltip1) {
+                        checkBox1.addEventListener('change', function () {
+                            if (this.checked) {
+                                tooltip1.style.opacity = '1';
+                                tooltip1.style.visibility = 'visible';
+                                tooltip1.style.transform = 'translateX(-50%) translateY(-10px)';
+                            } else {
+                                tooltip1.style.opacity = '0';
+                                tooltip1.style.visibility = 'hidden';
+                                tooltip1.style.transform = 'translateX(-50%) translateY(10px)';
+                            }
+                        });
+                    }
+
+                    // Logic for Tooltip 2
+                    if (ENABLE_CHECKBOX_2) {
+                        let checkBox2 = funBox.querySelector('#funPromiseCheck2');
+                        let tooltip2 = funBox.querySelector('#funTooltip2');
+
+                        if (checkBox2 && tooltip2) {
+                            checkBox2.addEventListener('change', function () {
+                                if (this.checked) {
+                                    tooltip2.style.opacity = '1';
+                                    tooltip2.style.visibility = 'visible';
+                                    tooltip2.style.transform = 'translateX(-50%) translateY(10px)';
+                                } else {
+                                    tooltip2.style.opacity = '0';
+                                    tooltip2.style.visibility = 'hidden';
+                                    tooltip2.style.transform = 'translateX(-50%) translateY(-10px)';
+                                }
+                            });
+                        }
+                    }
+                }
+
+                // শুধুমাত্র COD সিলেক্ট থাকলে বক্সটি শো করবে
+                if (document.getElementById('funPromiseWrapper')) {
+                    if (isCod) {
+                        document.getElementById('funPromiseWrapper').style.display = 'flex';
+                    } else {
+                        document.getElementById('funPromiseWrapper').style.display = 'none';
+                        let cb1 = document.getElementById('funPromiseCheck1');
+                        if (cb1) cb1.checked = false;
+                        let tt1 = document.getElementById('funTooltip1');
+                        if (tt1) tt1.style.opacity = '0';
+
+                        if (ENABLE_CHECKBOX_2) {
+                            let cb2 = document.getElementById('funPromiseCheck2');
+                            if (cb2) cb2.checked = false;
+                            let tt2 = document.getElementById('funTooltip2');
+                            if (tt2) tt2.style.opacity = '0';
+                        }
+                    }
+                }
+            }
+        }, 500);
+
+        // 🔥 ৪. "Place Order" বাটনের ক্লিক আটকে দেওয়া (যদি চেকবক্সে টিক না থাকে)
+        document.body.addEventListener('click', function (e) {
+            // ফিচার যদি বন্ধ থাকে তাহলে কিছুই করবে না
+            if (!ENABLE_PROMISE_BOX) return;
+
+            let isPlaceOrderClicked = false;
+            let clickedElement = e.target;
+
+            // ইউজার "Place Order" বাটনের কোথাও ক্লিক করেছে কিনা তা চেক করা
+            while (clickedElement && clickedElement !== document.body) {
+                if (
+                    clickedElement.tagName === 'BUTTON' &&
+                    clickedElement.innerText &&
+                    clickedElement.innerText.trim().toLowerCase().includes('place order')
+                ) {
+                    isPlaceOrderClicked = true;
+                    break;
+                }
+                clickedElement = clickedElement.parentNode;
+            }
+
+            if (isPlaceOrderClicked) {
+                let wrapper = document.getElementById('funPromiseWrapper');
+
+                if (wrapper && wrapper.style.display !== 'none') {
+                    let checkBox1 = document.getElementById('funPromiseCheck1');
+                    let checkBox2 = document.getElementById('funPromiseCheck2');
+
+                    let missingCheck = false;
+                    let alertMsg = "";
+
+                    if (REQUIRE_CHECKBOX_1_TO_ORDER && checkBox1 && !checkBox1.checked) {
+                        missingCheck = true;
+                        alertMsg = 'অর্ডার কনফার্ম করতে দয়া করে "আমি নিশ্চিত..." বক্সে টিক দিন!';
+                    } else if (ENABLE_CHECKBOX_2 && REQUIRE_CHECKBOX_2_TO_ORDER && checkBox2 && !checkBox2.checked) {
+                        missingCheck = true;
+                        alertMsg = 'অর্ডার কনফার্ম করতে দয়া করে "পণ্য হাতে পেয়ে..." বক্সে টিক দিন!';
+                    }
+
+                    if (missingCheck) {
+                        e.preventDefault();          // ডিফল্ট কাজ আটকে দিবে
+                        e.stopPropagation();         // অন্য কোনো স্ক্রিপ্টকে চলতে দিবে না
+                        e.stopImmediatePropagation();
+
+                        alert(alertMsg);
+                    }
+                }
+            }
+        }, true); // true = Capture phase, অর্থাৎ অন্য যেকোনো কোডের আগে এটি কাজ করবে
+
+    });
+</script>
+
+
+

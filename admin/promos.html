@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promo Codes — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <script src="../assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="../assets/js/appwrite-init.js"></script>
+    <script src="assets/js/admin-common.js?v=3"></script>
+    <link rel="stylesheet" href="../assets/css/premium-icons.css">
+    <style>
+        .advanced-group {
+            background: rgba(0,0,0,0.02);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .advanced-title {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .modal-box {
+            max-width: 680px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .meta-tag {
+            font-size: 11px;
+            font-weight: 700;
+            background: #f1f1f1;
+            color: #333;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 2px;
+        }
+        /* ── Multi-select Checkbox UI ─────────────────────────── */
+        .chip-select-wrap {
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: #fff;
+            overflow: hidden;
+        }
+        .chip-select-wrap:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(139,26,26,0.08);
+        }
+        /* Selected chips row */
+        .chip-tags-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 6px 8px 4px;
+            min-height: 10px;
+        }
+        .chip-tags-area:empty { padding: 0; }
+        .chip-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--accent);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 20px;
+            cursor: default;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .chip-tag .chip-remove {
+            font-size: 15px;
+            cursor: pointer;
+            opacity: 0.8;
+            font-weight: 400;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+        }
+        .chip-tag .chip-remove:hover { opacity: 1; }
+        /* Search row */
+        .chip-search-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            border-top: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            background: #fafafa;
+        }
+        .chip-search-icon { font-size: 13px; color: #aaa; flex-shrink: 0; }
+        .chip-search {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 12.5px;
+            background: transparent;
+            font-family: inherit;
+            color: var(--text-dark);
+            user-select: text;
+            -webkit-user-select: text;
+        }
+        .chip-search::placeholder { color: #bbb; }
+        /* Checkbox list */
+        .chip-list {
+            max-height: 160px;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+        .chip-list::-webkit-scrollbar { width: 4px; }
+        .chip-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        .chip-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 10px;
+            cursor: pointer;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: var(--text-body);
+            transition: background 0.1s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .chip-checkbox-item:hover { background: rgba(139,26,26,0.05); }
+        .chip-checkbox-item.selected {
+            background: rgba(139,26,26,0.07);
+            color: var(--accent);
+            font-weight: 700;
+        }
+        .chip-checkbox-item input[type="checkbox"] {
+            width: 15px;
+            height: 15px;
+            accent-color: var(--accent);
+            cursor: pointer;
+            flex-shrink: 0;
+            user-select: none;
+        }
+        .chip-no-results {
+            padding: 10px 12px;
+            font-size: 12px;
+            color: #aaa;
+            text-align: center;
+        }
+    </style>
+
+
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="spinner"></div></div>
+<main class="admin-main" id="adminMain" style="display:none;">
+    <header class="admin-header">
+        <div class="header-left">
+            <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+            <div>
+                <div class="page-title">Advanced Coupon & Promo System</div>
+                <div class="page-subtitle">Fully automated, premium discount codes management</div>
+            </div>
+        </div>
+        <div class="header-right" style="display:flex;gap:10px;">
+            <button class="btn btn-outline" onclick="openRepeatSettings()"><i data-lucide="settings" class="lucide-icon"></i> Repeat Customer Config</button>
+            <button class="btn btn-primary" onclick="openModal()">+ Add Coupon</button>
+        </div>
+    </header>
+    <div class="admin-content">
+        <!-- Dashboard overview cards -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px;">
+            <div class="card" style="display:flex;align-items:center;gap:14px;padding:16px;">
+                <div style="background:rgba(52,199,89,0.1);color:#34C759;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;"><i data-lucide="ticket" class="lucide-icon"></i></div>
+                <div><div style="font-size:20px;font-weight:800;color:var(--text-dark);" id="totalCoupons">0</div><div style="font-size:12px;color:var(--text-secondary);">Active Promo Codes</div></div>
+            </div>
+            <div class="card" style="display:flex;align-items:center;gap:14px;padding:16px;">
+                <div style="background:rgba(0,122,255,0.1);color:#007AFF;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;"><i data-lucide="eye" class="lucide-icon"></i></div>
+                <div><div style="font-size:20px;font-weight:800;color:var(--text-dark);" id="publicCouponsCount">0</div><div style="font-size:12px;color:var(--text-secondary);">Public Checkout Coupons</div></div>
+            </div>
+        </div>
+
+        <!-- Repeated Customer Coupon Config Preview Card -->
+        <div class="card" id="repeatCustCard" style="margin-bottom:20px; border-left: 4px solid #BF5AF2; display: none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="font-size:14px;font-weight:800;color:var(--text-dark);display:flex;align-items:center;gap:6px;margin-bottom:2px;"><i data-lucide="refresh-cw" class="lucide-icon icon-spin"></i> Repeated Customer Promo System Enabled</h3>
+                    <div id="repeatCustSummary" style="font-size:13px;color:#666;">Delivered customer phone numbers auto-generate coupons using this config.</div>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="openRepeatSettings()">✏️ Edit Config</button>
+            </div>
+        </div>
+
+        <div class="card" style="padding:0;">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Coupon Code</th>
+                            <th>Type / Vis.</th>
+                            <th>Value / Cap</th>
+                            <th>Minimum Spend</th>
+                            <th>Applicable For</th>
+                            <th>Expiry / Uses</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="promoBody"><tr><td colspan="7" style="text-align:center;padding:40px;color:#8E8E93;">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Main Promo Add/Edit Modal -->
+<div class="modal-overlay" id="promoModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title" id="promoModalTitle">Add Promo Code</div>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Code *</label>
+                <input class="form-input" id="pCode" placeholder="SAVE100" style="text-transform:uppercase; font-weight:700;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Type / Visibility *</label>
+                <select class="form-select" id="pType">
+                    <option value="public">Public (Auto-suggest at Checkout)</option>
+                    <option value="private">Private (Must input exactly)</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Discount Type *</label>
+                <select class="form-select" id="pDiscType" onchange="toggleDiscTypeFields()">
+                    <option value="flat">Flat Amount (৳)</option>
+                    <option value="percent">Percentage (%)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" id="discAmountLabel">Value (৳/%) *</label>
+                <input class="form-input" id="pDiscount" type="number" placeholder="50">
+            </div>
+            <div class="form-group" id="maxCapWrap" style="display:none;">
+                <label class="form-label">Maximum Discount Cap (৳)</label>
+                <input class="form-input" id="pMaxCap" type="number" placeholder="No limit">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Usage Limit (blank = ∞)</label>
+                <input class="form-input" id="pLimit" type="number" placeholder="No limit">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Expiry Date (optional)</label>
+                <input class="form-input" id="pExpiry" type="datetime-local">
+            </div>
+        </div>
+
+        <!-- Dynamic Advanced Fields -->
+        <div class="advanced-group">
+            <div class="advanced-title"><i data-lucide="shield-check" class="lucide-icon"></i> Minimum Spend & Delivery Options</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Minimum Purchase Spend (৳)</label>
+                    <input class="form-input" id="pMinSpend" type="number" placeholder="e.g. 500 (Delivery not counted)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Delivery Reward Type</label>
+                    <select class="form-select" id="pDelReward" onchange="toggleDelDiscountField()">
+                        <option value="none">No Delivery Discount</option>
+                        <option value="free">Free Delivery (Full Discount)</option>
+                        <option value="amount">Fixed Delivery Discount (৳)</option>
+                        <option value="percent">Percentage Delivery Discount (%)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="delDiscAmountWrap" style="display:none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" id="delDiscLabel">Delivery Discount Amount (৳)</label>
+                        <input class="form-input" id="pDelDiscAmount" type="number" placeholder="e.g. 60">
+                    </div>
+                    <div class="form-group" id="delDiscCapWrap" style="display:none;">
+                        <label class="form-label">Max Delivery Discount Cap (৳)</label>
+                        <input class="form-input" id="pDelDiscCap" type="number" placeholder="No cap">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="advanced-group">
+            <div class="advanced-title"><i data-lucide="sliders" class="lucide-icon"></i> Restrictions (Optional)</div>
+            <div class="form-group">
+                <label class="form-label">Applicable for Specific Products</label>
+                <div class="chip-select-wrap" id="pProductsWrap">
+                    <div class="chip-tags-area" id="pProductsTags"></div>
+                    <div class="chip-search-row">
+                        <span class="chip-search-icon">🔍</span>
+                        <input class="chip-search" id="pProductsSearch" placeholder="Search products..." oninput="filterChipOptions('pProductsList', this.value)">
+                    </div>
+                    <div class="chip-list" id="pProductsList"></div>
+                </div>
+                <div class="form-hint">Check products this coupon applies to. Leave empty for all.</div>
+            </div>
+            <div class="form-group" style="margin-top:10px;">
+                <label class="form-label">Applicable for Specific Categories</label>
+                <div class="chip-select-wrap" id="pCategoriesWrap">
+                    <div class="chip-tags-area" id="pCategoriesTags"></div>
+                    <div class="chip-search-row">
+                        <span class="chip-search-icon">🔍</span>
+                        <input class="chip-search" id="pCategoriesSearch" placeholder="Search categories..." oninput="filterChipOptions('pCategoriesList', this.value)">
+                    </div>
+                    <div class="chip-list" id="pCategoriesList"></div>
+                </div>
+                <div class="form-hint">Leave empty for all categories.</div>
+            </div>
+            <div class="form-row" style="margin-top:10px;">
+                <div class="form-group">
+                    <label class="form-label">Allowed Districts/Locations</label>
+                    <div class="chip-select-wrap" id="pDistrictsWrap">
+                        <div class="chip-tags-area" id="pDistrictsTags"></div>
+                        <div class="chip-search-row">
+                            <span class="chip-search-icon">🔍</span>
+                            <input class="chip-search" id="pDistrictsSearch" placeholder="Search or type district name..." oninput="filterChipOptions('pDistrictsList', this.value)" onkeydown="addDistrictChip(event)">
+                        </div>
+                        <div class="chip-list" id="pDistrictsList"></div>
+                    </div>
+                    <div class="form-hint">Check or press Enter to add custom. Leave empty for all.</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Allowed Payment Methods</label>
+                    <div class="chip-select-wrap" id="pPaymentsWrap">
+                        <div class="chip-tags-area" id="pPaymentsTags"></div>
+                        <div class="chip-search-row">
+                            <span class="chip-search-icon">🔍</span>
+                            <input class="chip-search" id="pPaymentsSearch" placeholder="Search methods..." oninput="filterChipOptions('pPaymentsList', this.value)">
+                        </div>
+                        <div class="chip-list" id="pPaymentsList"></div>
+                    </div>
+                    <div class="form-hint">Enforces only these at checkout. Leave empty for all.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="toggle-wrap" onclick="togglePA()" style="margin-bottom:20px;">
+            <div><div class="toggle-label">Active / Enabled</div></div>
+            <button class="toggle-switch on" id="pActive" type="button"></button>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary btn-full" onclick="savePromo()">💾 Save Coupon</button>
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- Repeated Customer Promo Settings Modal -->
+<div class="modal-overlay" id="repeatModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title">✏️ Repeat Customer Coupon Settings</div>
+            <button class="modal-close" onclick="closeRepeatModal()">✕</button>
+        </div>
+        <p style="font-size:13px; color:#666; margin-bottom:14px;">
+            Here, you can automate customized personal coupon creation. Once an order status is marked as "Delivered", the customer's phone number becomes their unique personal coupon.
+        </p>
+        <div class="toggle-wrap" onclick="toggleRepActive()" style="margin-bottom:14px;">
+            <div><div class="toggle-label">Enabled</div></div>
+            <button class="toggle-switch on" id="repActive" type="button"></button>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Personal Discount Type *</label>
+                <select class="form-select" id="repType" onchange="toggleRepDiscTypeFields()">
+                    <option value="flat">Flat Amount (৳)</option>
+                    <option value="percent">Percentage (%)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Value *</label>
+                <input class="form-input" id="repValue" type="number" placeholder="100">
+            </div>
+            <div class="form-group" id="repCapWrap" style="display:none;">
+                <label class="form-label">Max Limit Cap (৳)</label>
+                <input class="form-input" id="repCap" type="number" placeholder="Unlimited">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Expiration Days (after delivery)</label>
+                <input class="form-input" id="repExpiryDays" type="number" placeholder="30">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Min Cart Value Requirement (৳)</label>
+                <input class="form-input" id="repMinSpend" type="number" placeholder="0">
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Additional Features</label>
+            <select class="form-select" id="repDelReward">
+                <option value="none">No Delivery Discount</option>
+                <option value="free">Free Delivery</option>
+            </select>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+            <button class="btn btn-primary btn-full" onclick="saveRepeatCustConfig()">💾 Save Configuration</button>
+            <button class="btn btn-ghost" onclick="closeRepeatModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+var allPromos = [], editingId = null, pActive = true, repActive = false;
+var allProducts = [], allCategories = [];
+var chipState = {};
+
+document.addEventListener('DOMContentLoaded', function() {
+    adminInit('promos', function() { loadData(); });
+});
+
+function loadData() {
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        Promise.all([
+            supabaseClient.from('categories').select('*').eq('is_active', true).order('sort_order'),
+            supabaseClient.from('products').select('*').eq('is_active', true).order('created_at'),
+            supabaseClient.from('promos').select('*').order('created_at', { ascending: false })
+        ]).then(function(results) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allCategories = results[0].data || [];
+            allProducts   = results[1].data || [];
+            allPromos     = results[2].data || [];
+            populateMultiSelects();
+            renderPromos();
+            checkRepeatCustPromo();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        Promise.all([
+            appwriteDatabases.listDocuments(APP_DB, 'categories', [AppwriteQuery.equal('is_active', true), AppwriteQuery.orderAsc('sort_order')]),
+            appwriteDatabases.listDocuments(APP_DB, 'products',   [AppwriteQuery.equal('is_active', true), AppwriteQuery.orderDesc('$createdAt')]),
+            appwriteDatabases.listDocuments(APP_DB, 'promos',     [AppwriteQuery.orderDesc('$createdAt'), AppwriteQuery.limit(500)])
+        ]).then(function(results) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allCategories = results[0].documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; });
+            allProducts   = results[1].documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; });
+            allPromos     = results[2].documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; });
+            populateMultiSelects();
+            renderPromos();
+            checkRepeatCustPromo();
+        }).catch(function(err) {
+            showToast('Load failed: ' + err.message, 'error');
+        });
+    }
+}
+
+// ── Checkbox Multi-Select System ──────────────────────────────
+function initChipSelect(key, options, selectedIds) {
+    chipState[key] = [];
+    var list = document.getElementById(key + 'List');
+    if (!list) return;
+    list.innerHTML = '';
+
+    if (!options.length) {
+        list.innerHTML = '<div class="chip-no-results">No items available</div>';
+        return;
+    }
+
+    options.forEach(function(opt) {
+        var isSel = selectedIds.indexOf(opt.id) > -1;
+        var label = document.createElement('label');
+        label.className = 'chip-checkbox-item' + (isSel ? ' selected' : '');
+        label.dataset.id    = opt.id;
+        label.dataset.label = opt.label;
+
+        var cb = document.createElement('input');
+        cb.type    = 'checkbox';
+        cb.checked = isSel;
+
+        // Prevent label's native click-from-propagating to checkbox change
+        // Use label click to drive toggleChip, checkbox just follows state
+        label.addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleChip(key, opt.id, opt.label, label, cb);
+        });
+
+        var txt = document.createElement('span');
+        txt.textContent = opt.label;
+
+        label.appendChild(cb);
+        label.appendChild(txt);
+        list.appendChild(label);
+
+        if (isSel) chipState[key].push({id: opt.id, label: opt.label});
+    });
+    renderChipTags(key);
+}
+
+function initFreeChipSelect(key, selectedValues) {
+    chipState[key] = selectedValues.map(function(v){ return {id:v, label:v}; });
+    var bdDistricts = ['Dhaka','Faridpur','Gazipur','Gopalganj','Jamalpur','Kishoreganj','Madaripur','Manikganj','Munshiganj','Mymensingh','Narayanganj','Narsingdi','Netrokona','Rajbari','Shariatpur','Sherpur','Tangail','Bogura','Joypurhat','Naogaon','Natore','Chapai Nawabganj','Pabna','Rajshahi','Sirajganj','Dinajpur','Gaibandha','Kurigram','Lalmonirhat','Nilphamari','Panchagarh','Rangpur','Thakurgaon','Barguna','Barishal','Bhola','Jhalokati','Patuakhali','Pirojpur','Bandarban','Brahmanbaria','Chandpur','Chattogram','Cumilla',"Cox's Bazar",'Feni','Khagrachhari','Lakshmipur','Noakhali','Rangamati','Habiganj','Moulvibazar','Sunamganj','Sylhet','Bagerhat','Chuadanga','Jashore','Jhenaidah','Khulna','Kushtia','Magura','Meherpur','Narail','Satkhira'];
+    var list = document.getElementById(key + 'List');
+    if (!list) return;
+    list.innerHTML = '';
+
+    bdDistricts.forEach(function(d) {
+        var isSel = selectedValues.indexOf(d) > -1;
+        var label = document.createElement('label');
+        label.className = 'chip-checkbox-item' + (isSel ? ' selected' : '');
+        label.dataset.id    = d;
+        label.dataset.label = d;
+
+        var cb = document.createElement('input');
+        cb.type    = 'checkbox';
+        cb.checked = isSel;
+
+        label.addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleChip(key, d, d, label, cb);
+        });
+
+        var txt = document.createElement('span');
+        txt.textContent = d;
+
+        label.appendChild(cb);
+        label.appendChild(txt);
+        list.appendChild(label);
+    });
+    renderChipTags(key);
+}
+
+function toggleChip(key, id, label, el, cb) {
+    if (!chipState[key]) chipState[key] = [];
+    var idx = chipState[key].findIndex(function(c){ return c.id === id; });
+    if (idx > -1) {
+        chipState[key].splice(idx, 1);
+        if (el) el.classList.remove('selected');
+        if (cb) cb.checked = false;
+    } else {
+        chipState[key].push({id: id, label: label});
+        if (el) el.classList.add('selected');
+        if (cb) cb.checked = true;
+    }
+    renderChipTags(key);
+}
+
+function addDistrictChip(e) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    var val = e.target.value.trim();
+    if (!val) return;
+    var key = 'pDistricts';
+    if (!chipState[key]) chipState[key] = [];
+    if (!chipState[key].find(function(c){ return c.id.toLowerCase() === val.toLowerCase(); })) {
+        // Add to list as a checkbox item dynamically
+        var list = document.getElementById(key + 'List');
+        if (list) {
+            var label = document.createElement('label');
+            label.className = 'chip-checkbox-item selected';
+            label.dataset.id = val; label.dataset.label = val;
+            var cb = document.createElement('input');
+            cb.type = 'checkbox'; cb.checked = true;
+            cb.addEventListener('change', function() { toggleChip(key, val, val, label, cb); });
+            var txt = document.createElement('span'); txt.textContent = val;
+            label.appendChild(cb); label.appendChild(txt);
+            list.insertBefore(label, list.firstChild); // add to top
+        }
+        chipState[key].push({id: val, label: val});
+        renderChipTags(key);
+    }
+    e.target.value = '';
+    filterChipOptions(key + 'List', ''); // reset filter
+}
+
+function removeChip(key, id) {
+    if (!chipState[key]) return;
+    chipState[key] = chipState[key].filter(function(c){ return c.id !== id; });
+    // Sync checkbox
+    var list = document.getElementById(key + 'List');
+    if (list) {
+        var item = list.querySelector('[data-id="' + CSS.escape(id) + '"]');
+        if (item) {
+            item.classList.remove('selected');
+            var cb = item.querySelector('input[type="checkbox"]');
+            if (cb) cb.checked = false;
+        }
+    }
+    renderChipTags(key);
+}
+
+function renderChipTags(key) {
+    var area = document.getElementById(key + 'Tags');
+    if (!area) return;
+    area.innerHTML = '';
+    (chipState[key] || []).forEach(function(c) {
+        var span = document.createElement('span');
+        span.className = 'chip-tag';
+        var lbl = document.createElement('span');
+        lbl.textContent = c.label;
+        var rm = document.createElement('span');
+        rm.className = 'chip-remove';
+        rm.textContent = '×';
+        rm.addEventListener('click', function(e) {
+            e.preventDefault(); e.stopPropagation();
+            removeChip(key, c.id);
+        });
+        span.appendChild(lbl);
+        span.appendChild(rm);
+        area.appendChild(span);
+    });
+}
+
+function getChipValues(key) {
+    return (chipState[key] || []).map(function(c){ return c.id; });
+}
+
+function filterChipOptions(listId, q) {
+    var list = document.getElementById(listId);
+    if (!list) return;
+    var noRes = list.querySelector('.chip-no-results');
+    var items = Array.from(list.querySelectorAll('.chip-checkbox-item'));
+    var visible = 0;
+    items.forEach(function(item) {
+        var match = !q || item.dataset.label.toLowerCase().includes(q.toLowerCase());
+        item.style.display = match ? '' : 'none';
+        if (match) visible++;
+    });
+    if (noRes) { noRes.style.display = visible ? 'none' : ''; }
+    else if (!visible && items.length) {
+        var nr = document.createElement('div');
+        nr.className = 'chip-no-results';
+        nr.textContent = 'No results for "' + q + '"';
+        list.appendChild(nr);
+    }
+}
+
+function populateMultiSelects() {
+    var prodOpts = allProducts.map(function(p){ return {id: p.id, label: p.name + ' (৳' + p.base_price + ')'}; });
+    var catOpts  = allCategories.map(function(c){ return {id: c.id, label: c.name}; });
+    var payOpts  = [{id:'COD',label:'Cash on Delivery'},{id:'Hybrid COD',label:'Hybrid COD'},{id:'bKash',label:'bKash'},{id:'Nagad',label:'Nagad'},{id:'Online',label:'Online Gateway'}];
+    initChipSelect('pProducts', prodOpts, []);
+    initChipSelect('pCategories', catOpts, []);
+    initChipSelect('pPayments', payOpts, []);
+    initFreeChipSelect('pDistricts', []);
+}
+
+function resetChipSelects(selProds, selCats, selPays, selDists) {
+    selProds  = selProds  || [];
+    selCats   = selCats   || [];
+    selPays   = selPays   || [];
+    selDists  = selDists  || [];
+    var prodOpts = allProducts.map(function(p){ return {id: p.id, label: p.name + ' (৳' + p.base_price + ')'}; });
+    var catOpts  = allCategories.map(function(c){ return {id: c.id, label: c.name}; });
+    var payOpts  = [{id:'COD',label:'Cash on Delivery'},{id:'Hybrid COD',label:'Hybrid COD'},{id:'bKash',label:'bKash'},{id:'Nagad',label:'Nagad'},{id:'Online',label:'Online Gateway'}];
+    initChipSelect('pProducts', prodOpts, selProds);
+    initChipSelect('pCategories', catOpts, selCats);
+    initChipSelect('pPayments', payOpts, selPays);
+    initFreeChipSelect('pDistricts', selDists);
+    ['pProductsSearch','pCategoriesSearch','pDistrictsSearch','pPaymentsSearch'].forEach(function(id){
+        var el = document.getElementById(id); if (el) el.value = '';
+    });
+}
+
+
+function checkRepeatCustPromo() {
+    var repRow = allPromos.find(function(p) { return p.is_repeated_config || (p.code && p.code.startsWith('REPEATED_CUSTOMER_CONFIG')); });
+    if (repRow && repRow.is_active) {
+        document.getElementById('repeatCustCard').style.display = 'block';
+        var val = repRow.rep_value || 0;
+        var type = repRow.rep_type || 'flat';
+        var summary = 'Value: ' + val + (type === 'percent' ? '%' : ' ৳') + 
+            (repRow.rep_min_spend ? ' | Min ৳' + repRow.rep_min_spend : '') + 
+            (repRow.rep_expiry_days ? ' | Valid: ' + repRow.rep_expiry_days + ' days' : '');
+        document.getElementById('repeatCustSummary').textContent = summary;
+    } else {
+        document.getElementById('repeatCustCard').style.display = 'none';
+    }
+}
+
+function renderPromos() {
+    var html = '';
+    var activeCount = 0, publicCount = 0;
+    var visiblePromos = allPromos.filter(function(p) {
+        return !p.is_repeated_config && !(p.code && p.code.startsWith('REPEATED_CUSTOMER_CONFIG'));
+    });
+
+    if (!visiblePromos.length) {
+        html = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#8E8E93;">No promo codes yet</td></tr>';
+    }
+
+    visiblePromos.forEach(function(p) {
+        // Support both new columns and old |v1| format
+        var cleanCode = p.code ? p.code.split('|v1|')[0] : '';
+        var type = p.type || 'public';
+        var discType = p.disc_type || 'flat';
+        var discVal  = p.disc_val || p.discount || 0;
+        var maxCap   = p.max_cap;
+        var minSpend = p.min_spend;
+        var delRew   = p.del_reward || 'none';
+        var delAmt   = p.del_disc_amount;
+        var appProds = p.applicable_products || [];
+        var appCats  = p.applicable_categories || [];
+        var appDists = p.applicable_districts || [];
+        var appPays  = p.applicable_payments || [];
+
+        if (p.is_active) activeCount++;
+        if (type === 'public') publicCount++;
+
+        var typeBadge = type === 'public' ? '<span class="badge badge-delivered">Public</span>' : '<span class="badge badge-pending">Private</span>';
+        var dVal  = discType === 'percent' ? discVal + '%' : '৳' + discVal;
+        var maxCapText = (discType === 'percent' && maxCap) ? '<div style="font-size:11px;color:#999;">Max ৳' + maxCap + '</div>' : '';
+
+        var rest = '';
+        if (minSpend) rest += '<div class="meta-tag">Min ৳' + minSpend + '</div>';
+        if (delRew === 'free') rest += '<div class="meta-tag" style="background:#E1F5FE;color:#0288D1;">Free Delivery</div>';
+        if (delRew === 'amount' && delAmt) rest += '<div class="meta-tag" style="background:#E1F5FE;color:#0288D1;">-৳' + delAmt + ' Del.</div>';
+        if (delRew === 'percent' && delAmt) rest += '<div class="meta-tag" style="background:#E1F5FE;color:#0288D1;">-' + delAmt + '% Del.</div>';
+        if (Array.isArray(appProds) && appProds.length) rest += '<div class="meta-tag">Fixed Products</div>';
+        if (Array.isArray(appCats) && appCats.length) rest += '<div class="meta-tag">Fixed Categories</div>';
+        if (Array.isArray(appDists) && appDists.length) rest += '<div class="meta-tag">Fixed Districts</div>';
+        if (Array.isArray(appPays) && appPays.length) rest += '<div class="meta-tag">Fixed Payment</div>';
+        if (!rest) rest = '<span style="color:#aaa;font-size:12px;">All Orders</span>';
+
+        html += '<tr>' +
+            '<td><code style="font-size:14px;font-weight:700;color:#BF5AF2;background:rgba(191,90,242,0.1);padding:3px 8px;border-radius:6px;">' + cleanCode + '</code></td>' +
+            '<td>' + typeBadge + '</td>' +
+            '<td style="font-weight:700;color:#34C759;">' + dVal + maxCapText + '</td>' +
+            '<td>' + (minSpend ? '৳' + minSpend : '—') + '</td>' +
+            '<td style="max-width:200px;">' + rest + '</td>' +
+            '<td style="font-size:12px;color:#8E8E93;">' + (p.expires_at ? formatDateShort(p.expires_at) : 'Never') + '<br>(' + (p.used_count||0) + '/' + (p.usage_limit||'∞') + ')</td>' +
+            '<td><span class="badge ' + (p.is_active ? 'badge-delivered' : 'badge-cancelled') + '">' + (p.is_active ? 'Active' : 'Inactive') + '</span></td>' +
+            '<td style="display:flex;gap:6px;">' +
+                '<button class="btn btn-ghost btn-sm" onclick=\'editPromo(' + JSON.stringify(p).replace(/'/g,"&apos;") + ')\'><i data-lucide="edit-3" class="lucide-icon"></i></button>' +
+                '<button class="btn btn-danger btn-sm" onclick="deletePromo(\'' + p.id + '\')"><i data-lucide="trash-2" class="lucide-icon icon-danger"></i></button>' +
+            '</td></tr>';
+    });
+
+    document.getElementById('promoBody').innerHTML = html;
+    document.getElementById('totalCoupons').textContent = visiblePromos.length;
+    document.getElementById('publicCouponsCount').textContent = publicCount;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function resetChipSelects(selProds, selCats, selPays, selDists) {
+    selProds  = selProds  || [];
+    selCats   = selCats   || [];
+    selPays   = selPays   || [];
+    selDists  = selDists  || [];
+    var prodOpts = allProducts.map(function(p){ return {id: p.id, label: p.name + ' (৳' + p.base_price + ')'}; });
+    var catOpts  = allCategories.map(function(c){ return {id: c.id, label: c.name}; });
+    var payOpts  = [{id:'COD',label:'Cash on Delivery'},{id:'Hybrid COD',label:'Hybrid COD'},{id:'bKash',label:'bKash'},{id:'Nagad',label:'Nagad'},{id:'Online',label:'Online Gateway'}];
+    initChipSelect('pProducts', prodOpts, selProds);
+    initChipSelect('pCategories', catOpts, selCats);
+    initChipSelect('pPayments', payOpts, selPays);
+    initFreeChipSelect('pDistricts', selDists);
+    ['pProductsSearch','pCategoriesSearch','pDistrictsSearch','pPaymentsSearch'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+}
+
+function openModal() {
+    editingId = null; pActive = true;
+    document.getElementById('promoModalTitle').textContent = 'Add Promo Code';
+    ['pCode','pDiscount','pMaxCap','pLimit','pExpiry','pMinSpend','pDelDiscAmount','pDelDiscCap'].forEach(function(id){
+        var el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('pType').value = 'public';
+    document.getElementById('pDiscType').value = 'flat';
+    document.getElementById('pDelReward').value = 'none';
+    resetChipSelects();
+    toggleDiscTypeFields();
+    toggleDelDiscountField();
+    setToggle('pActive', true);
+    document.getElementById('promoModal').classList.add('show');
+}
+
+function editPromo(p) {
+    editingId = p.id; pActive = p.is_active !== false;
+    document.getElementById('promoModalTitle').textContent = 'Edit Promo';
+    var cleanCode = p.code ? p.code.split('|v1|')[0] : '';
+    document.getElementById('pCode').value      = cleanCode;
+    document.getElementById('pType').value      = p.type || 'public';
+    document.getElementById('pDiscType').value  = p.disc_type || 'flat';
+    document.getElementById('pDiscount').value  = p.disc_val || p.discount || '';
+    document.getElementById('pMaxCap').value    = p.max_cap || '';
+    document.getElementById('pLimit').value     = p.usage_limit || '';
+    document.getElementById('pExpiry').value    = p.expires_at ? p.expires_at.substring(0,16) : '';
+    document.getElementById('pMinSpend').value  = p.min_spend || '';
+    document.getElementById('pDelReward').value = p.del_reward || 'none';
+    document.getElementById('pDelDiscAmount').value = p.del_disc_amount || '';
+    var capEl = document.getElementById('pDelDiscCap'); if (capEl) capEl.value = p.del_disc_cap || '';
+
+    resetChipSelects(
+        Array.isArray(p.applicable_products)   ? p.applicable_products   : [],
+        Array.isArray(p.applicable_categories) ? p.applicable_categories : [],
+        Array.isArray(p.applicable_payments)   ? p.applicable_payments   : [],
+        Array.isArray(p.applicable_districts)  ? p.applicable_districts  : []
+    );
+    toggleDiscTypeFields();
+    toggleDelDiscountField();
+    setToggle('pActive', pActive);
+    document.getElementById('promoModal').classList.add('show');
+}
+
+function setToggle(id, state) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (state) el.classList.add('on'); else el.classList.remove('on');
+}
+function togglePA()       { pActive = !pActive; setToggle('pActive', pActive); }
+function toggleRepActive() { repActive = !repActive; setToggle('repActive', repActive); }
+
+function toggleDiscTypeFields() {
+    var type = document.getElementById('pDiscType').value;
+    document.getElementById('maxCapWrap').style.display = type === 'percent' ? 'block' : 'none';
+    document.getElementById('discAmountLabel').textContent = type === 'percent' ? 'Value (%) *' : 'Value (৳) *';
+}
+
+function toggleDelDiscountField() {
+    var rw = document.getElementById('pDelReward').value;
+    var wrap    = document.getElementById('delDiscAmountWrap');
+    var capWrap = document.getElementById('delDiscCapWrap');
+    var lbl     = document.getElementById('delDiscLabel');
+    var inp     = document.getElementById('pDelDiscAmount');
+    if (rw === 'amount') {
+        wrap.style.display = 'block';
+        if (lbl) lbl.textContent = 'Delivery Discount Amount (৳)';
+        if (inp) inp.placeholder = 'e.g. 60';
+        if (capWrap) capWrap.style.display = 'none';
+    } else if (rw === 'percent') {
+        wrap.style.display = 'block';
+        if (lbl) lbl.textContent = 'Delivery Discount (%)';
+        if (inp) inp.placeholder = 'e.g. 50';
+        if (capWrap) capWrap.style.display = 'block';
+    } else {
+        wrap.style.display = 'none';
+    }
+}
+
+function savePromo() {
+    var rawCode = document.getElementById('pCode').value.trim().toUpperCase();
+    var val = parseInt(document.getElementById('pDiscount').value) || 0;
+    if (!rawCode || val <= 0) { showToast('Valid code and value required', 'error'); return; }
+
+    var payload = {
+        code:       rawCode,
+        discount:   document.getElementById('pDiscType').value === 'flat' ? val : 0,
+        is_active:  pActive,
+        usage_limit: parseInt(document.getElementById('pLimit').value) || null,
+        expires_at:  document.getElementById('pExpiry').value || null,
+        type:        document.getElementById('pType').value,
+        disc_type:   document.getElementById('pDiscType').value,
+        disc_val:    val,
+        max_cap:     parseInt(document.getElementById('pMaxCap').value)    || null,
+        min_spend:   parseInt(document.getElementById('pMinSpend').value)  || null,
+        del_reward:  document.getElementById('pDelReward').value,
+        del_disc_amount: parseInt(document.getElementById('pDelDiscAmount').value) || null,
+        del_disc_cap:    parseInt((document.getElementById('pDelDiscCap')||{}).value) || null,
+        applicable_products:   getChipValues('pProducts'),
+        applicable_categories: getChipValues('pCategories'),
+        applicable_districts:  getChipValues('pDistricts'),
+        applicable_payments:   getChipValues('pPayments')
+    };
+
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId ? supabaseClient.from('promos').update(payload).eq('id', editingId) : supabaseClient.from('promos').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('✅ Coupon saved!', 'success'); closeModal(); loadData();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        if (editingId) {
+            appwriteDatabases.updateDocument(APP_DB, 'promos', editingId, payload)
+            .then(function() {
+                showToast('\u2705 Coupon saved!', 'success');
+                closeModal();
+                loadData();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        } else {
+            var awPromoPayload = payload;
+            appwriteDatabases.createDocument(APP_DB, 'promos', AppwriteID.unique(), awPromoPayload)
+            .then(function() {
+                showToast('\u2705 Coupon saved!', 'success');
+                closeModal();
+                loadData();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        }
+    }
+}
+
+function deletePromo(id) {
+    if (!adminConfirm('Delete this promo code?')) return;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('promos').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Delete failed', 'error'); return; }
+            showToast('Deleted!', 'success'); loadData();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'promos', id)
+        .then(function() {
+            showToast('Deleted!', 'success');
+            loadData();
+        }).catch(function(err) {
+            showToast('Delete failed: ' + err.message, 'error');
+        });
+    }
+}
+
+function openRepeatSettings() {
+    var repRow = allPromos.find(function(p) { return p.is_repeated_config || (p.code && p.code.startsWith('REPEATED_CUSTOMER_CONFIG')); });
+    repActive = repRow ? repRow.is_active : false;
+    document.getElementById('repType').value       = repRow ? (repRow.rep_type || 'flat') : 'flat';
+    document.getElementById('repValue').value      = repRow ? (repRow.rep_value || '') : '';
+    document.getElementById('repCap').value        = repRow ? (repRow.rep_cap || '') : '';
+    document.getElementById('repExpiryDays').value = repRow ? (repRow.rep_expiry_days || '') : '';
+    document.getElementById('repMinSpend').value   = repRow ? (repRow.rep_min_spend || '') : '';
+    document.getElementById('repDelReward').value  = repRow ? (repRow.rep_del_reward || 'none') : 'none';
+    setToggle('repActive', repActive);
+    toggleRepDiscTypeFields();
+    document.getElementById('repeatModal').classList.add('show');
+}
+
+function toggleRepDiscTypeFields() {
+    var type = document.getElementById('repType').value;
+    document.getElementById('repCapWrap').style.display = type === 'percent' ? 'block' : 'none';
+}
+
+function saveRepeatCustConfig() {
+    var val = parseInt(document.getElementById('repValue').value) || 0;
+    if (val <= 0) { showToast('Valid value required', 'error'); return; }
+    var repRow = allPromos.find(function(p) { return p.is_repeated_config || (p.code && p.code.startsWith('REPEATED_CUSTOMER_CONFIG')); });
+    var payload = {
+        code: 'REPEAT_CUSTOMER_CONFIG',
+        discount: 0,
+        is_active: repActive,
+        is_repeated_config: true,
+        type: 'private',
+        rep_type:        document.getElementById('repType').value,
+        rep_value:       val,
+        rep_cap:         parseInt(document.getElementById('repCap').value) || null,
+        rep_expiry_days: parseInt(document.getElementById('repExpiryDays').value) || null,
+        rep_min_spend:   parseInt(document.getElementById('repMinSpend').value) || null,
+        rep_del_reward:  document.getElementById('repDelReward').value
+    };
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = repRow ? supabaseClient.from('promos').update(payload).eq('id', repRow.id) : supabaseClient.from('promos').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('✅ Repeat customer config saved!', 'success');
+            closeRepeatModal(); loadData();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var repRow2 = allPromos.find(function(p) { return p.is_repeated_config || (p.code && p.code.startsWith('REPEATED_CUSTOMER_CONFIG')); });
+        var awRepPayload = payload;
+        if (repRow2) {
+            appwriteDatabases.updateDocument(APP_DB, 'promos', repRow2.$id || repRow2.id, payload)
+            .then(function() {
+                showToast('\u2705 Repeat customer config saved!', 'success');
+                closeRepeatModal();
+                loadData();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        } else {
+            appwriteDatabases.createDocument(APP_DB, 'promos', AppwriteID.unique(), awRepPayload)
+            .then(function() {
+                showToast('\u2705 Repeat customer config saved!', 'success');
+                closeRepeatModal();
+                loadData();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        }
+    }
+}
+
+function closeModal()       { document.getElementById('promoModal').classList.remove('show'); }
+function closeRepeatModal() { document.getElementById('repeatModal').classList.remove('show'); }
+</script>
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+

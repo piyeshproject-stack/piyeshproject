@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product — Freelancing By Rifat</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
+    <script src="assets/js/appwrite-init.js"></script>
+    <style>
+        .product-page { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 24px 0; }
+        .gallery-main { position: relative; aspect-ratio: 1; border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-light); }
+        .gallery-main img, .gallery-main iframe { width: 100%; height: 100%; object-fit: cover; border: none; }
+        .gallery-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.8); border: none; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10; transition: var(--transition); }
+        .gallery-btn:hover { background: #fff; box-shadow: 0 6px 16px rgba(0,0,0,0.15); color: var(--primary); }
+        .prev-btn { left: 10px; }
+        .next-btn { right: 10px; }
+        .gallery-thumbs { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .gallery-thumb-wrap { position: relative; width: 70px; height: 70px; }
+        .gallery-thumb { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; cursor: pointer; border: 2px solid transparent; transition: var(--transition); }
+        .gallery-thumb.active { border-color: var(--primary); }
+        .color-swatches { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .color-swatch { width: 36px; height: 36px; border-radius: 50%; cursor: pointer; border: 3px solid transparent; transition: var(--transition); position: relative; }
+        .color-swatch.selected { border-color: var(--text-dark); box-shadow: 0 0 0 3px rgba(0,0,0,0.1); }
+        .color-swatch-label { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 10px; font-weight: 700; color: var(--text-dark); }
+        .size-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+        .size-btn { padding: 8px 16px; border: 2px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 700; background: #fff; cursor: pointer; transition: var(--transition); }
+        .size-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .size-btn.selected { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .size-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .qty-selector { display: flex; align-items: center; gap: 0; border: 2px solid var(--border); border-radius: 12px; overflow: hidden; width: fit-content; }
+        .qty-btn2 { width: 44px; height: 44px; border: none; background: var(--bg-light); font-size: 20px; cursor: pointer; transition: var(--transition); }
+        .qty-btn2:hover { background: var(--primary); color: #fff; }
+        .qty-num2 { width: 48px; text-align: center; font-size: 16px; font-weight: 800; border: none; outline: none; font-family: inherit; background: #fff; }
+        .price-tag { font-size: 32px; font-weight: 900; color: var(--primary); }
+        .price-old  { font-size: 16px; color: var(--text-muted); text-decoration: line-through; margin-left: 8px; }
+        @media (max-width: 768px) { .product-page { grid-template-columns: 1fr; gap: 20px; } }
+    </style>
+    <link rel="stylesheet" href="assets/css/premium-icons.css">
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" type="module"></script>
+</head>
+<body>
+<div class="page-loader" id="pageLoader">
+    <dotlottie-wc src="https://lottie.host/a9162a6d-bee0-4ebd-adda-d4a43f0bea2b/Nq6NiivYlE.lottie" autoplay loop></dotlottie-wc>
+    <div style="font-size:14px;color:#8B1A1A;font-weight:600;margin-top:-30px;" id="storeName">Loading...</div>
+</div>
+
+<nav class="navbar">
+    <a href="shop.html" class="nav-icon-btn">←</a>
+    <a href="index.html" class="navbar-brand"><span id="navBrand">Shop</span></a>
+    <div class="navbar-actions" style="margin-left:auto;">
+        <a href="cart.html" class="nav-icon-btn"><i data-lucide="shopping-cart" class="lucide-icon icon-bounce"></i><span class="cart-badge" id="cartBadge" style="display:none;">0</span></a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="product-page" id="productPage" style="display:none;">
+
+        <!-- Left: Gallery -->
+        <div>
+            <div class="gallery-main" id="galleryMain">
+                <button class="gallery-btn prev-btn" id="galleryPrev" style="display:none;" onclick="changeMedia(-1)"><i data-lucide="chevron-left" class="lucide-icon"></i></button>
+                <button class="gallery-btn next-btn" id="galleryNext" style="display:none;" onclick="changeMedia(1)"><i data-lucide="chevron-right" class="lucide-icon"></i></button>
+                <div id="mediaContainer" style="width:100%;height:100%;">
+                    <img id="mainImg" src="" alt="">
+                </div>
+            </div>
+            <div class="gallery-thumbs" id="thumbsRow"></div>
+        </div>
+
+        <!-- Right: Info -->
+        <div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;" id="breadcrumb">Home / Shop</div>
+            <h1 style="font-size:22px;font-weight:900;color:var(--text-dark);margin-bottom:6px;" id="pName">Loading...</h1>
+            <div id="pSkuWrap" style="font-size:11px;color:#888;margin-bottom:12px;display:none;background:var(--bg-subtle);padding:3px 8px;border-radius:6px;width:fit-content;border:1px solid var(--border-light);">SKU: <span id="pSkuVal" style="font-weight:700;color:var(--text-dark);"></span></div>
+
+            <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:16px;">
+                <span class="price-tag" id="currentPrice">৳0</span>
+                <span class="price-old" id="priceOld"></span>
+                <span id="saleLabel" style="display:none;font-size:12px;background:var(--primary);color:#fff;padding:3px 8px;border-radius:20px;font-weight:700;margin-left:6px;">SALE</span>
+            </div>
+
+            <!-- Reviews summary -->
+            <div id="reviewSummary" style="display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:13px;color:#888;cursor:pointer;" onclick="document.getElementById('reviewsSection').scrollIntoView({behavior:'smooth'})">
+                <span id="reviewStars" style="color:#FF9500;font-size:16px;">★★★★★</span>
+                <span id="reviewCount">0 reviews</span>
+            </div>
+
+            <!-- Color selector -->
+            <div id="colorSection" style="margin-bottom:24px;">
+                <div style="font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:14px;">
+                    Color: <span id="selectedColorLabel" style="color:var(--primary);">—</span>
+                </div>
+                <div class="color-swatches" id="colorSwatches"></div>
+            </div>
+
+            <!-- Size selector -->
+            <div id="sizeSection" style="margin-bottom:20px;">
+                <div style="font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:10px;">
+                    Size: <span id="selectedSizeLabel" style="color:var(--primary);">—</span>
+                    <span id="stockLabel" style="font-size:11px;color:#888;margin-left:8px;"></span>
+                </div>
+                <div class="size-btns" id="sizeBtns"></div>
+            </div>
+
+            <!-- Qty -->
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+                <div class="qty-selector">
+                    <button class="qty-btn2" onclick="changeQty(-1)">−</button>
+                    <input class="qty-num2" id="qtyInput" value="1" min="1" type="number" readonly>
+                    <button class="qty-btn2" onclick="changeQty(1)">+</button>
+                </div>
+                <div style="font-size:14px;color:#888;" id="stockInfo"></div>
+            </div>
+
+            <!-- Buttons -->
+            <div id="mainOrderButtons" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border-light);">
+                <button class="btn btn-primary btn-full btn-lg" id="addToCartBtn" onclick="addToCart()"><i data-lucide="shopping-cart" class="lucide-icon icon-bounce"></i> Add to Cart</button>
+                <button class="btn btn-outline btn-full" onclick="directOrder()">⚡ Buy Now</button>
+                <button class="btn btn-full" id="msgOrderBtn" style="display:none;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-weight:700;border:none;" onclick="openMsgSheet()">
+                    💬 Order by Message
+                </button>
+                <button class="btn btn-full" id="pickupBtn" style="display:none;background:linear-gradient(135deg,#FF9500,#FF6B00);color:#fff;font-weight:700;border:none;" onclick="pickupOrder()">
+                    🚶 Pickup from Store
+                </button>
+            </div>
+
+            <!-- Description -->
+            <h3 style="font-size:16px;font-weight:800;margin-bottom:12px;color:var(--text-dark);">Product Details</h3>
+            <div id="pDesc" class="product-description" style="font-size:14px;color:var(--text-body);line-height:1.75;margin-bottom:24px;"></div>
+
+            <!-- Product Meta -->
+            <div style="background:var(--bg-light);border-radius:12px;padding:14px;font-size:13px;">
+                <div style="display:flex;gap:20px;flex-wrap:wrap;">
+                    <div><i data-lucide="truck" class="lucide-icon icon-bounce"></i> Fast Delivery</div>
+                    <div>🔒 Secure Payment</div>
+                    <div>↩️ Easy Return</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="reviewsSection" style="background:#fff;border-radius:var(--radius-lg);padding:24px;margin-bottom:20px;border:1px solid #eee;">
+        <h2 style="font-size:18px;font-weight:800;margin-bottom:16px;"><i data-lucide="star" class="lucide-icon icon-warning"></i> Customer Reviews</h2>
+        <div id="reviewsList"></div>
+        <div id="reviewsViewMoreWrap" style="text-align:center;margin-top:16px;display:none;">
+            <button id="reviewsViewMoreBtn" onclick="showMoreReviews()" style="display:inline-flex;align-items:center;gap:8px;padding:10px 28px;border:1.5px solid var(--border-light);border-radius:30px;background:#fff;color:var(--text-main);font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.04);">📝 আরো রিভিউ দেখুন <span id="reviewsRemaining" style="font-size:11px;color:#888;"></span></button>
+        </div>
+        <hr style="margin:20px 0;border-color:#f0f0f0;">
+        <h3 style="font-size:15px;font-weight:700;margin-bottom:14px;">Write a Review</h3>
+        <div id="reviewForm">
+            <div class="form-row" style="margin-bottom:12px;">
+                <input class="form-input" id="rvName" placeholder="Your Name *">
+                <input class="form-input" id="rvPhone" placeholder="Phone (optional)">
+            </div>
+            <div style="margin-bottom:12px;">
+                <div style="font-size:13px;font-weight:700;margin-bottom:6px;">Rating *</div>
+                <div class="star-input" id="starInput">
+                    <label><input type="radio" name="star" value="5"><span>★</span></label>
+                    <label><input type="radio" name="star" value="4"><span>★</span></label>
+                    <label><input type="radio" name="star" value="3"><span>★</span></label>
+                    <label><input type="radio" name="star" value="2"><span>★</span></label>
+                    <label><input type="radio" name="star" value="1"><span>★</span></label>
+                </div>
+            </div>
+            <textarea class="form-textarea" id="rvText" placeholder="Describe your experience..." style="margin-bottom:12px;"></textarea>
+            <!-- Review Image Upload -->
+            <div id="rvImageWrap" style="margin-bottom:12px;">
+                <div style="font-size:13px;font-weight:700;margin-bottom:6px;">📷 Review Photo (optional)</div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input class="form-input" id="rvImage" placeholder="Image URL (optional)" style="flex:1;">
+                    <button type="button" id="rvUploadBtn" class="btn btn-ghost btn-sm" style="display:none;white-space:nowrap;" onclick="uploadReviewImage()">📤 Upload Photo</button>
+                </div>
+                <div id="rvImgPreview" style="margin-top:8px;display:none;">
+                    <img id="rvImgPreviewImg" src="" style="max-width:120px;max-height:120px;border-radius:10px;object-fit:cover;border:2px solid var(--border-light);" alt="preview">
+                    <button type="button" onclick="clearReviewImg()" style="background:none;border:none;color:#ff4444;cursor:pointer;font-size:12px;margin-left:8px;">✕ Remove</button>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="submitReview()">📤 Submit Review</button>
+        </div>
+    </div>
+
+    <!-- Related Products Section -->
+    <div id="relatedSection" style="margin-bottom:20px;display:none;">
+        <h2 style="font-size:18px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+            <i data-lucide="layout-grid" class="lucide-icon" style="color:var(--primary);"></i>
+            একই ক্যাটাগরির আরও পণ্য
+        </h2>
+        <div class="products-grid" id="relatedGrid"></div>
+        <div id="relatedLoadMoreWrap" style="text-align:center;padding:20px 0;display:none;">
+            <button class="btn btn-outline" onclick="loadMoreRelated()" id="relatedLoadMoreBtn"
+                style="padding:10px 30px;border-radius:30px;font-weight:700;font-size:14px;border:2px solid var(--primary);color:var(--primary);background:transparent;">
+                <i data-lucide="chevrons-down" class="lucide-icon"></i> আরও দেখুন
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Sticky Order Bar -->
+<div id="stickyOrderBar" style="position:fixed;bottom:-100px;left:0;right:0;background:#fff;padding:12px 20px;box-shadow:0 -4px 20px rgba(0,0,0,0.1);z-index:900;transition:bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);display:flex;align-items:center;justify-content:space-between;border-top:1px solid #eee;">
+    <div>
+        <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:2px;">Order Now</div>
+        <div style="font-size:16px;font-weight:900;color:var(--primary);" id="stickyPrice">৳0</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" style="padding:10px 20px;border-radius:12px;font-weight:700;" onclick="scrollToOrder()">⚡ Buy Now</button>
+    </div>
+</div>
+
+<!-- Messaging Bottom Sheet -->
+<div id="msgSheet" style="display:none;position:fixed;inset:0;z-index:9999;">
+    <div onclick="closeMsgSheet()" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);"></div>
+    <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;padding:24px 20px 32px;max-height:85vh;overflow-y:auto;animation:slideUp 0.3s ease;">
+        <div style="width:40px;height:4px;background:#ddd;border-radius:99px;margin:0 auto 16px;"></div>
+        <h3 style="font-size:16px;font-weight:800;margin-bottom:4px;text-align:center;">💬 Order by Message</h3>
+        <p style="font-size:13px;color:#888;text-align:center;margin-bottom:16px;">নিচে তথ্য দাও, তারপর পছন্দের অ্যাপে পাঠাও</p>
+
+        <!-- Customer Info Form -->
+        <div style="background:var(--bg-light);border-radius:14px;padding:16px;margin-bottom:16px;border:1px solid var(--border-light);">
+            <div style="font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:12px;">📋 তোমার তথ্য দাও</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                <input class="form-input" id="msgCustomerName" placeholder="তোমার নাম *" style="font-size:13px;padding:10px 12px;">
+                <input class="form-input" id="msgCustomerPhone" placeholder="মোবাইল নম্বর *" type="tel" style="font-size:13px;padding:10px 12px;">
+            </div>
+            <textarea class="form-textarea" id="msgCustomerAddress" placeholder="ডেলিভারি ঠিকানা লিখো — বাসা নং, এলাকা, জেলা *" style="font-size:13px;padding:10px 12px;min-height:70px;margin-bottom:0;"></textarea>
+        </div>
+
+        <!-- Order Summary Preview -->
+        <div id="msgOrderSummary" style="background:rgba(139,26,26,0.05);border:1px solid rgba(139,26,26,0.15);border-radius:12px;padding:12px;margin-bottom:16px;font-size:13px;line-height:1.8;"></div>
+
+        <!-- App Buttons -->
+        <div style="font-size:12px;font-weight:700;color:#888;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">👇 যেকোনো অ্যাপে পাঠাও</div>
+        <div id="msgAppsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;"></div>
+    </div>
+</div>
+<style>
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.msg-app-btn { display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid #eee;border-radius:12px;background:#fff;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#333; }
+.msg-app-btn:hover { border-color:#25D366;background:rgba(37,211,102,0.04);transform:translateY(-1px); }
+.msg-app-btn img { width:24px;height:24px;border-radius:6px; }
+.msg-app-btn span { font-size:13px;font-weight:600; }
+</style>
+
+<footer class="footer">
+    <div id="footerStoreLoc" style="display:none; text-align:center; padding: 20px 20px 0; max-width:400px; margin:0 auto;">
+        <a id="footerStoreLink" href="#" target="_blank" class="btn btn-outline btn-full btn-sm" style="border-color:#ddd; color:#555; background:#fff;"><i data-lucide="map-pin" class="lucide-icon text-primary"></i> <span style="font-weight:700;">Visit Our Store</span></a>
+    </div>
+    <div class="footer-bottom">
+        <span id="footerCopy">© 2025 Freelancing By Rifat</span>
+    </div>
+</footer>
+
+<script>
+var product = null, settings = {}, selectedColor = null, selectedSize = null, currentQty = 1;
+var allProdsForRelated = [], relatedProducts = [], relatedPage = 1;
+var RELATED_PAGE_SIZE = 10;
+var reviewImgbbKey = '';
+var totalReviewsCount = 0, reviewsShown = 0;
+var REVIEWS_PAGE_SIZE = 5;
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateCartBadge();
+    var id = new URLSearchParams(window.location.search).get('id');
+    if (!id) { window.location.href = '404.html'; return; }
+
+    var p1, p2, p3, p4, p5, p6;
+
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        p2 = fetch('/api/get-single-product?id=' + id).then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) && data.length ? data[0] : null }; });
+        p4 = fetch('/api/get-products-list?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(d){ return { data: Array.isArray(d) ? d : [] }; }).catch(function(){ return { data: [] }; });
+        p1 = supabaseClient.from('settings').select('*').eq('id',1).single();
+        p3 = supabaseClient.from('reviews').select('rating').eq('product_id', id).eq('is_approved', true);
+        p5 = supabaseClient.from('product_categories').select('*');
+        p6 = supabaseClient.from('reviews').select('*').eq('product_id', id).eq('is_approved', true).order('created_at', { ascending: false }).range(0, REVIEWS_PAGE_SIZE - 1);
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        p2 = fetch('/api/appwrite-get-single-product?id=' + id).then(function(r) { return r.json(); }).then(function(data) { return { data: (data && !data.error) ? data : null }; }).catch(function() { return { data: null }; });
+        p4 = fetch('/api/appwrite-get-products?t=' + Date.now()).then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; }).catch(function() { return { data: [] }; });
+        p1 = appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings').then(function(doc) { if (typeof doc.messaging_apps==='string') { try { doc.messaging_apps=JSON.parse(doc.messaging_apps); } catch(e){} } return { data: doc }; }).catch(function() { return { data: {} }; });
+        p3 = appwriteDatabases.listDocuments(APP_DB, 'reviews', [AppwriteQuery.equal('product_id', id), AppwriteQuery.equal('is_approved', true)]).then(function(res) { return { data: res.documents }; }).catch(function() { return { data: [] }; });
+        p5 = appwriteDatabases.listDocuments(APP_DB, 'product_categories', [AppwriteQuery.limit(5000)]).then(function(res) { return { data: res.documents.map(function(d){ d.id=d.$id; return d; }) }; }).catch(function() { return { data: [] }; });
+        p6 = appwriteDatabases.listDocuments(APP_DB, 'reviews', [AppwriteQuery.equal('product_id', id), AppwriteQuery.equal('is_approved', true), AppwriteQuery.orderDesc('$createdAt'), AppwriteQuery.limit(REVIEWS_PAGE_SIZE)]).then(function(res) { return { data: res.documents }; }).catch(function() { return { data: [] }; });
+    } else {
+        p1 = Promise.resolve({ data: {} });
+        p2 = Promise.resolve({ data: null });
+        p3 = Promise.resolve({ data: [] });
+        p4 = Promise.resolve({ data: [] });
+        p5 = Promise.resolve({ data: [] });
+        p6 = Promise.resolve({ data: [] });
+    }
+
+    Promise.all([p1, p2, p3, p4, p5, p6]).then(function(results) {
+        settings = results[0].data || {};
+        product  = results[1].data;
+        var ratings = results[2].data || [];
+        allProdsForRelated = results[3].data || [];
+        var prodCats = results[4].data || [];
+        var initialReviews = results[5].data || [];
+
+        // Attach category_ids to each product
+        allProdsForRelated.forEach(function(p) {
+            p.category_ids = prodCats.filter(function(x){ return x.product_id === p.id; }).map(function(x){ return x.category_id; });
+            if (p.category_id && !p.category_ids.includes(p.category_id)) p.category_ids.push(p.category_id);
+        });
+
+        // Also attach to current product
+        if (product) {
+            var pc = prodCats.filter(function(x){ return x.product_id === product.id; });
+            product.category_ids = pc.map(function(x){ return x.category_id; });
+            if (product.category_id && !product.category_ids.includes(product.category_id))
+                product.category_ids.push(product.category_id);
+        }
+
+        // Get review upload key
+        reviewImgbbKey = settings.review_imgbb_key || '';
+
+        // ═ MAINTENANCE MODE CHECK ═
+        if (settings.maintenance_mode === true) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.body.innerHTML = '<style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#0a0a0f;color:#f0f0f0;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;text-align:center;padding:24px;}.icon{font-size:72px;margin-bottom:24px;animation:float 3s ease-in-out infinite;}@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}.title{font-size:28px;font-weight:800;margin-bottom:12px;}.msg{font-size:15px;color:#888;max-width:420px;line-height:1.8;margin-bottom:28px;}.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:30px;font-size:12px;font-weight:700;background:rgba(255,77,77,0.08);color:#ff6b6b;border:1px solid rgba(255,77,77,0.2);}.dot{width:8px;height:8px;border-radius:50%;background:#ff4d4d;animation:pulse 1.5s ease-in-out infinite;}@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.3;transform:scale(0.6);}}</style><div class="icon">\ud83d\udd27</div><div class="title">Site Under Maintenance</div><div class="msg">' + (settings.maintenance_message || '\u0986\u09ae\u09b0\u09be \u09b6\u09c0\u0998\u09cd\u09b0\u0987 \u09ab\u09bf\u09b0\u09c7 \u0986\u09b8\u099b\u09bf\u0964') + '</div><div class="badge"><div class="dot"></div> Maintenance Mode Active</div>';
+            return;
+        }
+
+        if (!product) {
+            // Product not found or error — go to 404
+            document.getElementById('pageLoader').style.display = 'none';
+            window.location.href = '404.html';
+            return;
+        }
+
+        document.title = product.name + ' — ' + (settings.store_name || CONFIG.STORE_NAME);
+        document.getElementById('navBrand').textContent = settings.store_name || CONFIG.STORE_NAME;
+        document.getElementById('footerCopy').textContent = '© ' + new Date().getFullYear() + ' ' + (settings.store_name || CONFIG.STORE_NAME);
+        
+        if (settings.store_map_link) {
+            document.getElementById('footerStoreLink').href = settings.store_map_link;
+            document.getElementById('footerStoreLoc').style.display = 'block';
+        } else if (settings.store_address) {
+            document.getElementById('footerStoreLink').href = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(settings.store_address);
+            document.getElementById('footerStoreLoc').style.display = 'block';
+        }
+
+        try { renderProduct(product); } catch(e) { console.error('renderProduct error:', e); }
+        try { renderReviews(ratings, initialReviews); } catch(e) { console.error('renderReviews error:', e); }
+        try { setupStarInput(); } catch(e) {}
+        try { setupReviewUpload(); } catch(e) {}
+        try { loadRelatedProducts(); } catch(e) { console.error('related error:', e); }
+
+        if ((settings.allow_whatsapp_order || settings.allow_msg_order) && settings.messaging_apps) {
+            document.getElementById('msgOrderBtn').style.display = 'flex';
+        }
+
+        if (settings.allow_pickup) {
+            document.getElementById('pickupBtn').style.display = 'flex';
+        }
+
+        document.getElementById('pageLoader').style.display = 'none';
+        document.getElementById('productPage').style.display = 'grid';
+
+    }).catch(function(err) {
+        console.error('Product load error:', err);
+        document.getElementById('pageLoader').style.display = 'none';
+    });
+});
+
+// ── Related Products ──────────────────────────────────────────
+function loadRelatedProducts() {
+    if (!product || !product.category_ids || !product.category_ids.length) return;
+    var catIds = product.category_ids;
+    relatedProducts = allProdsForRelated.filter(function(p) {
+        if (p.id === product.id) return false;
+        return p.category_ids && p.category_ids.some(function(cid){ return catIds.includes(cid); });
+    });
+    relatedPage = 1;
+    if (!relatedProducts.length) return;
+    document.getElementById('relatedSection').style.display = 'block';
+    renderRelatedBatch();
+}
+
+function renderRelatedBatch() {
+    var grid = document.getElementById('relatedGrid');
+    var batch = relatedProducts.slice(0, relatedPage * RELATED_PAGE_SIZE);
+    grid.innerHTML = batch.map(productCardHtml).join('');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    var wrap = document.getElementById('relatedLoadMoreWrap');
+    wrap.style.display = batch.length < relatedProducts.length ? 'block' : 'none';
+}
+
+function loadMoreRelated() {
+    relatedPage++;
+    renderRelatedBatch();
+}
+
+// ── Product Card HTML (for related & sections) ──────────────────────────
+function productCardHtml(p) {
+    var variants = p.variants || [];
+    var imgUrl = '';
+    if (variants.length && variants[0].imageUrl) imgUrl = variants[0].imageUrl;
+    else if (p.gallery_images && p.gallery_images.length) imgUrl = p.gallery_images[0];
+    var price = p.flash_sale_price > 0 ? p.base_price - p.flash_sale_price : p.base_price;
+    var origPrice = p.flash_sale_price > 0 ? '<del style="font-size:12px;color:#999;">৳' + p.base_price + '</del>' : '';
+    var badge = p.flash_sale_price > 0 ? '<div style="position:absolute;top:8px;left:8px;background:#ff4444;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;">৳' + p.flash_sale_price + ' OFF</div>' : '';
+    return '<a href="product.html?id=' + p.id + '" style="text-decoration:none;color:inherit;">' +
+        '<div class="product-card" style="cursor:pointer;">' +
+            '<div class="product-img-wrap" style="position:relative;">' +
+                '<img class="product-img" src="' + (imgUrl || '') + '" alt="' + escHtmlP(p.name) + '" loading="lazy" onerror="this.src=\'\'">' +
+                badge +
+            '</div>' +
+            '<div class="product-info">' +
+                '<div class="product-name">' + escHtmlP(p.name) + '</div>' +
+                '<div class="product-price">' + origPrice + ' <strong>৳' + price + '</strong></div>' +
+            '</div>' +
+        '</div></a>';
+}
+function escHtmlP(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Review Image Upload ────────────────────────────────────────────────
+function setupReviewUpload() {
+    if (!reviewImgbbKey) return; // Key নেই — URL input দেখাবে (default)
+    // Key আছে — Upload button দেখাবে, URL input hide করব না (still works as fallback)
+    var btn = document.getElementById('rvUploadBtn');
+    var inp = document.getElementById('rvImage');
+    if (btn) {
+        btn.style.display = 'inline-flex';
+        inp.placeholder = 'বা Image URL paste করো';
+    }
+}
+
+function uploadReviewImage() {
+    if (!reviewImgbbKey) { showToast && showToast('⚠️ Review upload key set হয়নি', 'error'); return; }
+    var input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*';
+    input.onchange = function() {
+        var file = input.files[0];
+        if (!file) return;
+        var btn = document.getElementById('rvUploadBtn');
+        btn.disabled = true; btn.textContent = '⏳ Uploading...';
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var b64 = e.target.result.split(',')[1];
+            var fd = new FormData();
+            fd.append('key', reviewImgbbKey);
+            fd.append('image', b64);
+            fd.append('name', file.name.replace(/\.[^.]+$/, ''));
+            fetch('https://api.imgbb.com/1/upload', { method:'POST', body: fd })
+                .then(function(r){ return r.json(); })
+                .then(function(data) {
+                    btn.disabled = false; btn.textContent = '📤 Upload Photo';
+                    if (data.success) {
+                        document.getElementById('rvImage').value = data.data.url;
+                        document.getElementById('rvImgPreviewImg').src = data.data.url;
+                        document.getElementById('rvImgPreview').style.display = 'block';
+                    } else {
+                        alert('Upload failed: ' + (data.error ? data.error.message : 'Unknown'));
+                    }
+                })
+                .catch(function(err) {
+                    btn.disabled = false; btn.textContent = '📤 Upload Photo';
+                    alert('Network error: ' + err.message);
+                });
+        };
+        reader.readAsDataURL(file);
+    };
+    input.click();
+}
+
+function clearReviewImg() {
+    document.getElementById('rvImage').value = '';
+    document.getElementById('rvImgPreviewImg').src = '';
+    document.getElementById('rvImgPreview').style.display = 'none';
+}
+
+function renderProduct(p) {
+    document.getElementById('pName').textContent = p.name;
+    if (p.sku) {
+        document.getElementById('pSkuVal').textContent = p.sku;
+        document.getElementById('pSkuWrap').style.display = 'block';
+    }
+    document.getElementById('pDesc').innerHTML = p.description || '';
+
+    var variants = p.variants || [];
+    var gallery  = p.gallery_images || [];
+
+    // Set initial price
+    updatePrice(null);
+
+    // Media Gallery
+    var allMedia = [];
+    var allImages = [];
+    var imgToCodeMap = {};
+
+    if (variants.length) {
+        variants.forEach(function(v) {
+            if (v.imageUrl) {
+                if (!allImages.includes(v.imageUrl)) {
+                    allImages.push(v.imageUrl);
+                }
+                if (v.variantCode) {
+                    imgToCodeMap[v.imageUrl] = v.variantCode;
+                }
+            }
+        });
+    }
+
+    gallery.forEach(function(img) { if (!allImages.includes(img)) allImages.push(img); });
+    
+    allImages.forEach(function(img) { 
+        allMedia.push({type: 'image', src: img, code: imgToCodeMap[img] || ''}); 
+    });
+
+    // Process video URLs - auto-detect platform or use manual type
+    function parseVideoUrl(url, manualType) {
+        if (!url) return null;
+        var src = url.trim();
+        var detected = detectVideoPlatform(src);
+        var platform = (manualType && manualType !== 'auto') ? manualType : detected;
+        return buildVideoEmbed(src, platform);
+    }
+
+    function detectVideoPlatform(src) {
+        if (src.includes('youtube.com/watch') || src.includes('youtu.be/') || src.includes('youtube.com/embed/') || src.includes('youtube.com/shorts/')) return 'youtube';
+        if (src.includes('tiktok.com/')) return 'tiktok';
+        if (src.includes('facebook.com/') || src.includes('fb.com/') || src.includes('fb.watch')) return 'facebook';
+        if (src.includes('instagram.com/p/') || src.includes('instagram.com/reel/')) return 'instagram';
+        if (src.includes('vimeo.com/')) return 'vimeo';
+        if (src.includes('dailymotion.com/') || src.includes('dai.ly/')) return 'dailymotion';
+        if (src.includes('twitter.com/') || src.includes('x.com/')) return 'twitter';
+        if (src.includes('pinterest.com/pin/')) return 'pinterest';
+        if (src.includes('loom.com/share/')) return 'loom';
+        if (src.includes('streamable.com/')) return 'streamable';
+        if (src.match(/\.(mp4|webm|ogg|mov|m3u8)(\?|$)/i)) return 'direct';
+        return 'other';
+    }
+
+    function buildVideoEmbed(src, platform) {
+        switch (platform) {
+            case 'youtube':
+                var vid = '';
+                if (src.includes('v=')) vid = src.split('v=')[1].split('&')[0];
+                else if (src.includes('youtu.be/')) vid = src.split('youtu.be/')[1].split('?')[0];
+                else if (src.includes('/embed/')) vid = src.split('/embed/')[1].split('?')[0];
+                else if (src.includes('/shorts/')) vid = src.split('/shorts/')[1].split('?')[0];
+                if (!vid) return {type: 'video', embed: 'iframe', src: src, platform: 'youtube'};
+                return {type: 'video', embed: 'iframe', src: 'https://www.youtube.com/embed/' + vid + '?autoplay=0&rel=0', platform: 'youtube', thumb: 'https://img.youtube.com/vi/' + vid + '/hqdefault.jpg'};
+
+            case 'tiktok':
+                var parts = src.split('/video/');
+                var vid = parts.length > 1 ? parts[1].split('?')[0] : '';
+                if (vid) return {type: 'video', embed: 'iframe', src: 'https://www.tiktok.com/embed/v2/' + vid, platform: 'tiktok'};
+                return {type: 'video', embed: 'iframe', src: src, platform: 'tiktok'};
+
+            case 'facebook':
+                return {type: 'video', embed: 'iframe', src: 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(src) + '&show_text=0&autoplay=0', platform: 'facebook'};
+
+            case 'instagram':
+                var igParts = src.split('/p/')[1] || src.split('/reel/')[1];
+                var igId = igParts ? igParts.split('/')[0].split('?')[0] : '';
+                if (igId) return {type: 'video', embed: 'iframe', src: 'https://www.instagram.com/p/' + igId + '/embed/', platform: 'instagram'};
+                return {type: 'video', embed: 'iframe', src: src, platform: 'instagram'};
+
+            case 'vimeo':
+                var vid = src.split('vimeo.com/')[1].split('?')[0].split('/')[0];
+                return {type: 'video', embed: 'iframe', src: 'https://player.vimeo.com/video/' + vid + '?autoplay=0', platform: 'vimeo'};
+
+            case 'dailymotion':
+                var vid = '';
+                if (src.includes('dai.ly/')) vid = src.split('dai.ly/')[1].split('?')[0];
+                else vid = src.split('video/')[1] ? src.split('video/')[1].split('?')[0].split('_')[0] : '';
+                if (vid) return {type: 'video', embed: 'iframe', src: 'https://www.dailymotion.com/embed/video/' + vid + '?autoplay=0', platform: 'dailymotion'};
+                return {type: 'video', embed: 'iframe', src: src, platform: 'dailymotion'};
+
+            case 'twitter':
+                return {type: 'video', embed: 'iframe', src: 'https://twitframe.com/show?url=' + encodeURIComponent(src), platform: 'twitter'};
+
+            case 'pinterest':
+                return {type: 'video', embed: 'iframe', src: src, platform: 'pinterest'};
+
+            case 'loom':
+                var loomId = src.split('/share/')[1] ? src.split('/share/')[1].split('?')[0] : '';
+                if (loomId) return {type: 'video', embed: 'iframe', src: 'https://www.loom.com/embed/' + loomId, platform: 'loom'};
+                return {type: 'video', embed: 'iframe', src: src, platform: 'loom'};
+
+            case 'streamable':
+                var sId = src.split('streamable.com/')[1] ? src.split('streamable.com/')[1].split('?')[0] : '';
+                if (sId) return {type: 'video', embed: 'iframe', src: 'https://streamable.com/e/' + sId, platform: 'streamable'};
+                return {type: 'video', embed: 'iframe', src: src, platform: 'streamable'};
+
+            case 'direct':
+                return {type: 'video', embed: 'video', src: src, platform: 'direct'};
+
+            default: // 'other' — try iframe embed for any URL
+                return {type: 'video', embed: 'iframe', src: src, platform: 'other'};
+        }
+    }
+    
+    var videoData = parseVideoUrl(p.video_url, p.video_type || 'auto');
+    if (videoData) {
+        allMedia.push(videoData);
+    }
+
+    window.productMedia = allMedia;
+    
+    // Always default to FIRST image, NOT video - unless there are no images
+    var defaultIndex = 0;
+    // Find first image
+    for (var i = 0; i < allMedia.length; i++) {
+        if (allMedia[i].type === 'image') {
+            defaultIndex = i;
+            break;
+        }
+    }
+    window.currentMediaIndex = defaultIndex;
+
+    var thumbsHtml = allMedia.map(function(m, i) {
+        var thumbSrc = m.src;
+        if (m.type === 'video') {
+            if (m.thumb) {
+                thumbSrc = m.thumb;
+            } else {
+                var label = (m.platform || 'Video').charAt(0).toUpperCase() + (m.platform || 'video').slice(1);
+                thumbSrc = 'https://placehold.co/70x70/1a1a2e/fff?text=' + label;
+            }
+        }
+        
+        var iconStr = m.type === 'video' ? '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(139,26,26,0.9);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.2);"><i data-lucide="play" style="width:14px;height:14px;margin-left:2px;"></i></div>' : '';
+        return '<div style="position:relative;" class="gallery-thumb-wrap"><img src="' + thumbSrc + '" class="gallery-thumb' + (i===0?' active':'') + '" onclick="setMedia(' + i + ')" onerror="this.onerror=null;this.src=\'https://via.placeholder.com/70?text=Media\'">' + iconStr + '</div>';
+    }).join('');
+    
+    document.getElementById('thumbsRow').innerHTML = thumbsHtml;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+
+    if (allMedia.length > 0) setMedia(defaultIndex);
+    else document.getElementById('mediaContainer').innerHTML = '';
+
+    // Colors
+    if (variants.length) {
+        var colorHtml = variants.map(function(v, i) {
+            return '<div class="color-swatch' + (i===0?' selected':'') + '" style="background:' + (v.colorHex||'#888') + ';" title="' + v.colorName + '" onclick="selectColor(' + i + ')" data-vi="' + i + '">' +
+                '<span class="color-swatch-label">' + v.colorName + '</span></div>';
+        }).join('');
+        document.getElementById('colorSwatches').innerHTML = colorHtml;
+        selectColor(0);
+    } else {
+        document.getElementById('colorSection').style.display = 'none';
+        document.getElementById('sizeSection').style.display  = 'none';
+    }
+}
+
+function selectColor(vi) {
+    var variants = product.variants || [];
+    if (vi >= variants.length) return;
+    selectedColor = variants[vi];
+    selectedSize  = null;
+
+    document.getElementById('selectedColorLabel').textContent = selectedColor.colorName;
+    document.querySelectorAll('.color-swatch').forEach(function(el, i) { el.classList.toggle('selected', i === vi); });
+
+    // Update main image with color image
+    if (selectedColor.imageUrl && window.productMedia) {
+        var idx = window.productMedia.findIndex(function(m) { return m.src === selectedColor.imageUrl; });
+        if (idx !== -1) setMedia(idx);
+    }
+
+    // Render sizes
+    renderSizes(selectedColor.sizes || []);
+    updatePrice(null);
+}
+
+function renderSizes(sizes) {
+    var html = sizes.map(function(s, i) {
+        var outOfStock = s.stock <= 0;
+        return '<button class="size-btn' + (outOfStock?' disabled':'') + '" onclick="selectSize(' + i + ')" data-si="' + i + '"' + (outOfStock?' disabled':'') + '>' +
+            s.size + (outOfStock ? ' <span style="font-size:10px;"><i data-lucide="x-circle" class="lucide-icon icon-danger"></i></span>' : '') + '</button>';
+    }).join('');
+    document.getElementById('sizeBtns').innerHTML = html;
+    if (sizes.length > 0 && sizes[0].stock > 0) selectSize(0);
+}
+
+function selectSize(si) {
+    var sizes = selectedColor ? selectedColor.sizes || [] : [];
+    if (si >= sizes.length) return;
+    selectedSize = sizes[si];
+
+    document.getElementById('selectedSizeLabel').textContent = selectedSize.size;
+    document.getElementById('stockLabel').textContent = 'Stock: ' + selectedSize.stock;
+    document.querySelectorAll('.size-btn').forEach(function(el, i) { el.classList.toggle('selected', i === si); });
+    updatePrice(selectedSize);
+}
+
+function updatePrice(size) {
+    var base = product.base_price;
+    var extra = size ? (size.extraPrice || 0) : 0;
+    var flashDiscount = product.flash_sale_price || 0;
+    
+    var finalPrice = base - flashDiscount + extra;
+    document.getElementById('currentPrice').textContent = '৳' + finalPrice;
+
+    if (flashDiscount > 0) {
+        document.getElementById('priceOld').textContent = '৳' + (base + extra);
+        document.getElementById('saleLabel').style.display = 'inline-flex';
+    } else {
+        document.getElementById('priceOld').textContent = '';
+        document.getElementById('saleLabel').style.display = 'none';
+    }
+
+    var stickyPrice = document.getElementById('stickyPrice');
+    if(stickyPrice) stickyPrice.textContent = '৳' + finalPrice;
+}
+
+function setMedia(index) {
+    if (!window.productMedia || !window.productMedia.length) return;
+    window.currentMediaIndex = index;
+    var m = window.productMedia[index];
+    var container = document.getElementById('mediaContainer');
+    
+    var codeBadge = m.code ? '<div style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.7);color:#fff;padding:4px 12px;border-radius:8px;font-weight:800;font-size:14px;letter-spacing:1px;z-index:20;backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.2);">' + m.code + '</div>' : '';
+
+    if (m.type === 'image') {
+        container.innerHTML = '<img id="mainImg" src="' + m.src + '" alt="" loading="lazy" style="width:100%;height:100%;object-fit:contain;">' + codeBadge;
+    } else if (m.embed === 'video') {
+        container.innerHTML = '<video src="' + m.src + '" controls playsinline style="width:100%;height:100%;background:#000;object-fit:contain;"></video>';
+    } else {
+        container.innerHTML = '<iframe src="' + m.src + '" allowfullscreen style="width:100%;height:100%;border:none;background:#000;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>';
+    }
+
+    document.querySelectorAll('.gallery-thumb').forEach(function(t, i) {
+        t.classList.toggle('active', i === index);
+    });
+    
+    // Show/hide navigation buttons
+    var showNav = window.productMedia.length > 1;
+    document.getElementById('galleryPrev').style.display = showNav ? 'flex' : 'none';
+    document.getElementById('galleryNext').style.display = showNav ? 'flex' : 'none';
+}
+
+function changeMedia(delta) {
+    if (!window.productMedia) return;
+    var len = window.productMedia.length;
+    if (len <= 1) return;
+    var newIdx = (window.currentMediaIndex + delta + len) % len;
+    setMedia(newIdx);
+}
+
+function changeQty(delta) {
+    var max = selectedSize ? selectedSize.stock : 999;
+    currentQty = Math.max(1, Math.min(currentQty + delta, max));
+    document.getElementById('qtyInput').value = currentQty;
+}
+
+function addToCart() {
+    var variants = product.variants || [];
+    if (variants.length && !selectedColor) { alert('Please select a color'); return; }
+    if (selectedColor && selectedColor.sizes && selectedColor.sizes.length && !selectedSize) { alert('Please select a size'); return; }
+
+    var base = product.base_price;
+    var extra = selectedSize ? (selectedSize.extraPrice || 0) : 0;
+    var flashDiscount = product.flash_sale_price || 0;
+    var finalPrice = base - flashDiscount + extra;
+
+    var allImgs = product.gallery_images || [];
+    var img = (selectedColor && selectedColor.imageUrl) ? selectedColor.imageUrl : (allImgs.length ? allImgs[0] : '');
+    var color = selectedColor ? selectedColor.colorName : '';
+    var size  = selectedSize ? selectedSize.size : '';
+    var key   = product.id + '-' + color + '-' + size;
+
+    var cart = getCart();
+    var ex = cart.find(function(i) { return i.key === key; });
+    if (ex) ex.quantity += currentQty;
+    else cart.push({ key: key, productId: product.id, productName: product.name, price: finalPrice, color: color, size: size, quantity: currentQty, image: img });
+
+    saveCart(cart);
+    updateCartBadge();
+}
+
+function directOrder() {
+    var variants = product.variants || [];
+    if (variants.length && !selectedColor) { alert('Please select a color'); return; }
+    if (selectedColor && selectedColor.sizes && selectedColor.sizes.length && !selectedSize) { alert('Please select a size'); return; }
+
+    var base = product.base_price;
+    var extra = selectedSize ? (selectedSize.extraPrice || 0) : 0;
+    var flashDiscount = product.flash_sale_price || 0;
+    var finalPrice = base - flashDiscount + extra;
+
+    var allImgs = product.gallery_images || [];
+    var img = (selectedColor && selectedColor.imageUrl) ? selectedColor.imageUrl : (allImgs.length ? allImgs[0] : '');
+    var color = selectedColor ? selectedColor.colorName : '';
+    var size  = selectedSize ? selectedSize.size : '';
+    var key   = product.id + '-' + color + '-' + size;
+
+    // Direct Order — main cart এ হাত দেবে না, আলাদা key তে save করবে
+    var directItem = [{ 
+        key: key, 
+        productId: product.id, 
+        productName: product.name, 
+        price: finalPrice, 
+        color: color, 
+        size: size, 
+        quantity: currentQty, 
+        image: img 
+    }];
+
+    // Main cart untouched — direct order goes to its own temp key
+    localStorage.setItem(CONFIG.DIRECT_ORDER_KEY || 'fbr_direct_order', JSON.stringify(directItem));
+    
+    // সরাসরি Checkout এ যাও — direct=1 flag দিয়ে
+    window.location.href = 'checkout.html?direct=1';
+}
+
+
+function orderWhatsApp() {
+    addToCart();
+    var msg = buildOrderMsg();
+    var wanum = settings.whatsapp_number || '';
+    window.open('https://wa.me/' + wanum + '?text=' + encodeURIComponent(msg), '_blank');
+}
+
+function buildOrderMsg(customerName, customerPhone, customerAddress) {
+    var color = selectedColor ? selectedColor.colorName : '';
+    var size  = selectedSize ? selectedSize.size : '';
+    var base = product.base_price;
+    var extra = selectedSize ? (selectedSize.extraPrice || 0) : 0;
+    var flashDiscount = product.flash_sale_price || 0;
+    var price = base - flashDiscount + extra;
+
+    var msg = 'হ্যালো! আমি একটি অর্ডার করতে চাই:\n\n';
+    msg += '🛒 *অর্ডার বিস্তারিত:*\n';
+    msg += '🛍️ পণ্য: ' + product.name + '\n';
+    if (color) msg += '🎨 রঙ: ' + color + '\n';
+    if (size)  msg += '📏 সাইজ: ' + size + '\n';
+    msg += '🔢 পরিমাণ: ' + currentQty + '\n';
+    msg += '💰 দাম: ৳' + (price * currentQty) + '\n\n';
+    msg += '👤 *কাস্টমার তথ্য:*\n';
+    if (customerName)    msg += '👤 নাম: '    + customerName    + '\n';
+    if (customerPhone)   msg += '📞 ফোন: '   + customerPhone   + '\n';
+    if (customerAddress) msg += '📍 ঠিকানা: ' + customerAddress + '\n';
+    msg += '\n📦 অনুগ্রহ করে আমার অর্ডার কনফার্ম করুন।';
+    return msg;
+}
+
+
+// Messaging Apps URL patterns
+var MSG_URL_PATTERNS = {
+    whatsapp: 'https://wa.me/{contact}?text={msg}',
+    telegram: 'https://t.me/{contact}?text={msg}',
+    messenger: 'https://m.me/{contact}',
+    viber: 'viber://chat?number=%2B{contact}',
+    signal: 'https://signal.me/#p/{contact}',
+    imo: 'https://imo.im/{contact}',
+    line: 'https://line.me/R/ti/p/{contact}',
+    wechat: 'weixin://dl/chat?{contact}',
+    skype: 'skype:{contact}?chat',
+    discord: 'https://discord.com/users/{contact}',
+    snapchat: 'https://snapchat.com/add/{contact}',
+    instagram: 'https://ig.me/m/{contact}',
+    twitter: 'https://twitter.com/messages/compose?recipient_id={contact}',
+    tiktok: 'https://tiktok.com/@{contact}',
+    kakaotalk: 'https://open.kakao.com/o/{contact}',
+    email: 'mailto:{contact}?subject=Order%20Request&body={msg}',
+    sms: 'sms:{contact}?body={msg}'
+};
+
+var MSG_APP_ICONS = {
+    whatsapp: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/whatsapp.svg',
+    telegram: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/telegram.svg',
+    messenger: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/messenger.svg',
+    viber: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/viber.svg',
+    signal: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/signal.svg',
+    imo: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/imo.svg',
+    line: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/line.svg',
+    wechat: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/wechat.svg',
+    skype: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/skype.svg',
+    discord: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/discord.svg',
+    snapchat: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/snapchat.svg',
+    instagram: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/instagram.svg',
+    twitter: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/x.svg',
+    tiktok: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/tiktok.svg',
+    kakaotalk: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/kakaotalk.svg',
+    email: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/gmail.svg',
+    sms: 'https://cdn.jsdelivr.net/npm/simple-icons@v13/icons/imessage.svg'
+};
+
+function openMsgSheet() {
+    var variants = product.variants || [];
+    if (variants.length && !selectedColor) { alert('রঙ সিলেক্ট করো'); return; }
+    if (selectedColor && selectedColor.sizes && selectedColor.sizes.length && !selectedSize) { alert('সাইজ সিলেক্ট করো'); return; }
+
+    addToCart();
+
+    // Order summary preview
+    var color = selectedColor ? selectedColor.colorName : '';
+    var size  = selectedSize  ? selectedSize.size : '';
+    var base = product.base_price;
+    var extra = selectedSize ? (selectedSize.extraPrice || 0) : 0;
+    var flashDiscount = product.flash_sale_price || 0;
+    var price = base - flashDiscount + extra;
+
+    var summaryHtml = '<b>🛍️ ' + product.name + '</b><br>';
+    if (color) summaryHtml += '🎨 রঙ: ' + color + '<br>';
+    if (size)  summaryHtml += '📏 সাইজ: ' + size + '<br>';
+    summaryHtml += '🔢 পরিমাণ: ' + currentQty + '&nbsp;&nbsp;|&nbsp;&nbsp;<b style="color:var(--primary);">৳' + (price * currentQty) + '</b>';
+    document.getElementById('msgOrderSummary').innerHTML = summaryHtml;
+
+    // App buttons
+    var apps = settings.messaging_apps || [];
+    var enabled = apps.filter(function(a) { return a.enabled && a.contact; });
+    var list = document.getElementById('msgAppsList');
+    list.innerHTML = '';
+
+    if (!enabled.length) {
+        list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#999;">কোনো messaging app configure করা নেই</div>';
+    }
+
+    enabled.forEach(function(app) {
+        var icon = MSG_APP_ICONS[app.key] || '';
+        var btn = document.createElement('button');
+        btn.className = 'msg-app-btn';
+        btn.type = 'button';
+        btn.innerHTML = '<img src="' + icon + '" onerror="this.style.display=\'none\'"><span>' + (app.name || app.key) + '</span>';
+        btn.addEventListener('click', function() { sendMsgToApp(app); });
+        list.appendChild(btn);
+    });
+
+    document.getElementById('msgSheet').style.display = 'block';
+}
+
+function sendMsgToApp(app) {
+    var name    = (document.getElementById('msgCustomerName')    || {}).value || '';
+    var phone   = (document.getElementById('msgCustomerPhone')   || {}).value || '';
+    var address = (document.getElementById('msgCustomerAddress') || {}).value || '';
+
+    if (!name.trim())    { alert('নাম দাও'); document.getElementById('msgCustomerName').focus(); return; }
+    if (!phone.trim())   { alert('মোবাইল নম্বর দাও'); document.getElementById('msgCustomerPhone').focus(); return; }
+    if (!address.trim()) { alert('ডেলিভারি ঠিকানা দাও'); document.getElementById('msgCustomerAddress').focus(); return; }
+
+    var msg = buildOrderMsg(name.trim(), phone.trim(), address.trim());
+    var pattern = MSG_URL_PATTERNS[app.key] || 'https://wa.me/{contact}?text={msg}';
+    var url = pattern
+        .replace('{contact}', encodeURIComponent(app.contact))
+        .replace('{msg}', encodeURIComponent(msg))
+        .replace('{subject}', encodeURIComponent('Order: ' + product.name));
+    window.open(url, '_blank');
+}
+
+function closeMsgSheet() {
+    document.getElementById('msgSheet').style.display = 'none';
+}
+
+function pickupOrder() {
+    var variants = product.variants || [];
+    if (variants.length && !selectedColor) { alert('Please select a color'); return; }
+    if (selectedColor && selectedColor.sizes && selectedColor.sizes.length && !selectedSize) { alert('Please select a size'); return; }
+
+    var base = product.base_price;
+    var extra = selectedSize ? (selectedSize.extraPrice || 0) : 0;
+    var flashDiscount = product.flash_sale_price || 0;
+    var finalPrice = base - flashDiscount + extra;
+    var allImgs = product.gallery_images || [];
+    var img = (selectedColor && selectedColor.imageUrl) ? selectedColor.imageUrl : (allImgs.length ? allImgs[0] : '');
+    var color = selectedColor ? selectedColor.colorName : '';
+    var size  = selectedSize ? selectedSize.size : '';
+    var key   = product.id + '-' + color + '-' + size;
+
+    // Main cart touch করে না — direct key তে রাখো
+    var directItem = [{ key: key, productId: product.id, productName: product.name, price: finalPrice, color: color, size: size, quantity: currentQty, image: img }];
+    var dKey = (typeof CONFIG !== 'undefined' && CONFIG.DIRECT_ORDER_KEY) ? CONFIG.DIRECT_ORDER_KEY : 'fbr_direct_order';
+    localStorage.setItem(dKey, JSON.stringify(directItem));
+    window.location.href = 'checkout.html?pickup=1&direct=1';
+}
+
+// Reviews
+function renderReviews(ratings, initialReviews) {
+    var ratingsData = ratings || [];
+    var initialBatch = initialReviews || [];
+    
+    totalReviewsCount = ratingsData.length;
+    reviewsShown = 0;
+    
+    var avg = 0;
+    if (totalReviewsCount > 0) {
+        avg = ratingsData.reduce(function(s,r){return s+(r.rating||0);},0) / totalReviewsCount;
+        document.getElementById('reviewStars').textContent = '★'.repeat(Math.round(avg)) + '☆'.repeat(5-Math.round(avg));
+        document.getElementById('reviewCount').textContent = totalReviewsCount + ' review' + (totalReviewsCount>1?'s':'');
+    } else {
+        document.getElementById('reviewStars').textContent = '☆☆☆☆☆';
+        document.getElementById('reviewCount').textContent = '0 reviews';
+    }
+
+    var list = document.getElementById('reviewsList');
+    if (!initialBatch.length) {
+        list.innerHTML = '<div style="text-align:center;padding:30px;color:#999;font-size:14px;">No reviews yet. Be the first!</div>';
+        document.getElementById('reviewsViewMoreWrap').style.display = 'none';
+        return;
+    }
+
+    list.innerHTML = '';
+    var html = initialBatch.map(function(r) { return buildReviewCard(r); }).join('');
+    list.innerHTML = html;
+    reviewsShown = initialBatch.length;
+
+    var remaining = totalReviewsCount - reviewsShown;
+    var wrap = document.getElementById('reviewsViewMoreWrap');
+    var btn = document.getElementById('reviewsViewMoreBtn');
+    if (remaining > 0) {
+        wrap.style.display = 'block';
+        btn.innerHTML = '📝 আরো রিভিউ দেখুন <span id="reviewsRemaining" style="font-size:11px;color:#888;">(' + remaining + ' বাকি)</span>';
+    } else {
+        wrap.style.display = 'none';
+    }
+}
+
+function buildReviewCard(r) {
+    var stars = '★'.repeat(r.rating) + '☆'.repeat(5-r.rating);
+    return '<div class="review-card-user" style="animation:fadeInUp 0.3s ease;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">' +
+            '<div><b>' + (r.customer_name||'Anonymous') + '</b><div class="review-stars">' + stars + '</div></div>' +
+            '<div style="font-size:11px;color:#aaa;">' + new Date(r.created_at).toLocaleDateString() + '</div>' +
+        '</div>' +
+        (r.review_text ? '<p style="font-size:13.5px;line-height:1.6;">' + r.review_text + '</p>' : '') +
+        (r.review_image ? '<img src="' + r.review_image + '" style="width:80px;height:80px;border-radius:10px;object-fit:cover;margin-top:8px;cursor:pointer;" onclick="window.open(this.src)">' : '') +
+    '</div>';
+}
+
+function showMoreReviews() {
+    var btn = document.getElementById('reviewsViewMoreBtn');
+    btn.disabled = true;
+    var originalText = btn.innerHTML;
+    btn.textContent = '⏳ লোড হচ্ছে...';
+    
+    var id = new URLSearchParams(window.location.search).get('id');
+    var reviewsPromise;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        reviewsPromise = supabaseClient.from('reviews')
+          .select('*')
+          .eq('product_id', id)
+          .eq('is_approved', true)
+          .order('created_at', { ascending: false })
+          .range(reviewsShown, reviewsShown + REVIEWS_PAGE_SIZE - 1);
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var productId = id;
+        reviewsPromise = appwriteDatabases.listDocuments(APP_DB, 'reviews', [AppwriteQuery.equal('product_id', productId), AppwriteQuery.equal('is_approved', true), AppwriteQuery.orderDesc('$createdAt'), AppwriteQuery.limit(REVIEWS_PAGE_SIZE), AppwriteQuery.offset(reviewsShown)]).then(function(res) { return { data: res.documents, error: null }; }).catch(function(err) { return { data: [], error: err }; });
+    } else {
+        reviewsPromise = Promise.resolve({ data: [] });
+    }
+    reviewsPromise.then(function(res) {
+          btn.disabled = false;
+          var data = res.data || [];
+          if (data.length > 0) {
+              var list = document.getElementById('reviewsList');
+              var html = data.map(function(r) { return buildReviewCard(r); }).join('');
+              list.insertAdjacentHTML('beforeend', html);
+              reviewsShown += data.length;
+          }
+          
+          var remaining = totalReviewsCount - reviewsShown;
+          var wrap = document.getElementById('reviewsViewMoreWrap');
+          if (remaining > 0) {
+              wrap.style.display = 'block';
+              btn.innerHTML = '📝 আরো রিভিউ দেখুন <span id="reviewsRemaining" style="font-size:11px;color:#888;">(' + remaining + ' বাকি)</span>';
+          } else {
+              wrap.style.display = 'none';
+          }
+      }).catch(function(err) {
+          console.error('Error loading reviews:', err);
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+      });
+}
+
+function setupStarInput() {
+    var labels = document.querySelectorAll('.star-input label span');
+    var inputs = document.querySelectorAll('.star-input input');
+    inputs.forEach(function(inp, i) {
+        inp.addEventListener('change', function() {
+            var val = parseInt(inp.value);
+            labels.forEach(function(lbl, j) { lbl.style.color = (5-j) <= val ? '#FF9500' : '#ddd'; });
+        });
+    });
+}
+
+function submitReview() {
+    var name  = document.getElementById('rvName').value.trim();
+    var phone = document.getElementById('rvPhone').value.trim();
+    var text  = document.getElementById('rvText').value.trim();
+    var img   = document.getElementById('rvImage').value.trim();
+    var starEl = document.querySelector('.star-input input:checked');
+    var rating = starEl ? parseInt(starEl.value) : 0;
+
+    if (!name) { alert('Please enter your name'); return; }
+    if (!rating) { alert('Please select a rating'); return; }
+
+    var insPromise;
+    var rvData = {
+        product_id: product.id, customer_name: name, customer_phone: phone,
+        rating: rating, review_text: text, review_image: img || null, is_approved: false
+    };
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        insPromise = supabaseClient.from('reviews').insert([rvData]);
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var awRv = Object.assign({}, rvData); awRv.created_at = awRv.created_at || new Date().toISOString(); delete awRv.id;
+        insPromise = appwriteDatabases.createDocument(APP_DB, 'reviews', AppwriteID.unique(), awRv).then(function() { return { error: null }; }).catch(function(err) { return { error: err }; });
+    } else {
+        insPromise = Promise.resolve({ data: null, error: { message: 'Not implemented' } });
+    }
+    insPromise.then(function(r) {
+        if (r.error) {
+            console.error('Review submit error:', r.error);
+            alert('Failed to submit review.\nError: ' + r.error.message + '\n\nFix: Supabase SQL Editor এ reviews table এ public insert policy যোগ করো।');
+            return;
+        }
+        document.getElementById('reviewForm').innerHTML = '<div style="text-align:center;padding:24px;color:#22C55E;font-size:15px;font-weight:700;"><i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Review submitted! It will appear after admin approval.</div>';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+}
+
+
+function getCart()  { try { return JSON.parse(localStorage.getItem(CONFIG.CART_KEY)||'[]'); } catch(e){ return []; } }
+function saveCart(c){ localStorage.setItem(CONFIG.CART_KEY, JSON.stringify(c)); }
+function updateCartBadge() {
+    var cart = getCart(), count = cart.reduce(function(s,i){return s+(i.quantity||1);},0);
+    var b = document.getElementById('cartBadge');
+    if (b) { b.textContent = count; b.style.display = count > 0 ? 'flex' : 'none'; }
+}
+
+function scrollToOrder() {
+    var el = document.getElementById('colorSection') || document.getElementById('mainOrderButtons');
+    if(el) {
+        var y = el.getBoundingClientRect().top + window.scrollY - 80; // offset for nav
+        window.scrollTo({top: y, behavior: 'smooth'});
+    }
+}
+
+document.addEventListener('scroll', function() {
+    var buttonsEl = document.getElementById('mainOrderButtons');
+    var stickyBar = document.getElementById('stickyOrderBar');
+    if(!buttonsEl || !stickyBar) return;
+    
+    var rect = buttonsEl.getBoundingClientRect();
+    if(rect.bottom < 0) {
+        stickyBar.style.bottom = '0px';
+    } else {
+        stickyBar.style.bottom = '-100px';
+    }
+});
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="assets/js/offline-handler.js"></script>
+    <!-- Shared Custom Right Click / Long-Press Menu -->
+    <script src="assets/js/context-menu.js"></script>
+</body>
+</html>
+
+
+

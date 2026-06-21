@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banners — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <script src="../assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="../assets/js/appwrite-init.js"></script>
+    <script src="assets/js/admin-common.js?v=3"></script>
+    <script src="../assets/js/imgbb-uploader.js"></script>
+    <style>
+        .banner-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+        .banner-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+        .banner-img  { width: 100%; height: 150px; object-fit: cover; background: var(--bg-card); display: block; }
+        .banner-body { padding: 12px; }
+        .banner-footer { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); }
+    </style>
+    <link rel="stylesheet" href="../assets/css/premium-icons.css">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="spinner"></div></div>
+<main class="admin-main" id="adminMain" style="display:none;">
+    <header class="admin-header">
+        <div class="header-left">
+            <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+            <div><div class="page-title">Banners</div><div class="page-subtitle">Homepage slider</div></div>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-primary" onclick="openModal()">+ Add Banner</button>
+        </div>
+    </header>
+    <div class="admin-content">
+        <div class="banner-grid" id="bannerGrid">
+            <div style="grid-column:1/-1;text-align:center;padding:40px;color:#8E8E93;">Loading...</div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="bannerModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <div class="modal-title" id="bannerModalTitle">Add Banner</div>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="form-group"><label class="form-label">Banner Image *</label>
+            <div class="imgbb-upload-row" style="margin-bottom:8px;">
+                <input class="form-input" id="bImg" placeholder="https://...banner.jpg" oninput="updateBannerPreview()">
+                <button type="button" class="btn btn-ghost btn-sm imgbb-upload-btn" id="bannerImgUploadBtn">📤 Upload</button>
+            </div>
+            <div id="previewWrap" style="position:relative;width:100%;height:140px;border-radius:10px;margin-top:4px;display:none;overflow:hidden;border:1px solid var(--border);">
+                <img id="bPreview" src="" style="width:100%;height:100%;object-fit:cover;" alt="preview" onerror="this.parentElement.style.display='none'">
+                <div id="areaBox" style="position:absolute;top:0;left:0;width:100%;height:100%;border:2px dashed #00FF00;background:rgba(0,255,0,0.3);display:none;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,0.5);"></div>
+            </div>
+        </div>
+        <div class="form-group"><label class="form-label">Title (optional)</label>
+            <input class="form-input" id="bTitle" placeholder="Banner headline"></div>
+        <div class="form-group"><label class="form-label">Subtitle (optional)</label>
+            <input class="form-input" id="bSub" placeholder="Banner subtitle"></div>
+            
+        <div class="form-group"><label class="form-label">Link Type</label>
+            <select class="form-select" id="bLinkType" onchange="toggleAreaTools()">
+                <option value="full">Full Banner Link</option>
+                <option value="area">Specific Area Link</option>
+            </select>
+        </div>
+        <div class="form-group"><label class="form-label">Link URL (optional)</label>
+            <input class="form-input" id="bLink" placeholder="https://...shop.html"></div>
+            
+        <div id="areaTools" style="display:none;background:var(--bg-secondary);padding:14px;border-radius:10px;border:1px solid var(--border);margin-bottom:14px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text-dark);">Adjust Clickable Area</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div>
+                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Left: <span id="lblX">0</span>%</label>
+                    <input type="range" id="areaX" min="0" max="100" value="0" style="width:100%;" oninput="updateAreaPreview()">
+                </div>
+                <div>
+                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Top: <span id="lblY">0</span>%</label>
+                    <input type="range" id="areaY" min="0" max="100" value="0" style="width:100%;" oninput="updateAreaPreview()">
+                </div>
+                <div>
+                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Width: <span id="lblW">100</span>%</label>
+                    <input type="range" id="areaW" min="5" max="100" value="100" style="width:100%;" oninput="updateAreaPreview()">
+                </div>
+                <div>
+                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Height: <span id="lblH">100</span>%</label>
+                    <input type="range" id="areaH" min="5" max="100" value="100" style="width:100%;" oninput="updateAreaPreview()">
+                </div>
+            </div>
+        </div>
+        <div class="form-group"><label class="form-label">Sort Order</label>
+            <input class="form-input" id="bSort" type="number" value="0"></div>
+        <div class="toggle-wrap" onclick="toggleBActive()" style="margin-bottom:20px;">
+            <div><div class="toggle-label">Active (show on homepage)</div></div>
+            <button class="toggle-switch on" id="bActive" type="button"></button>
+        </div>
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary btn-full" onclick="saveBanner()">💾 Save</button>
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+var allBanners = [], editingId = null, bActive = true;
+
+document.addEventListener('DOMContentLoaded', function() {
+    adminInit('banners', function() { loadBanners(); });
+});
+
+function loadBanners() {
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('banners').select('*').order('sort_order').then(function(r) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allBanners = r.data || [];
+            renderBanners();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.listDocuments(APP_DB, 'banners', [
+            AppwriteQuery.orderAsc('sort_order')
+        ]).then(function(res) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allBanners = res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; });
+            renderBanners();
+        }).catch(function(err) {
+            showToast('Load failed: ' + err.message, 'error');
+        });
+    }
+}
+
+function renderBanners() {
+    var grid = document.getElementById('bannerGrid');
+    if (!allBanners.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#8E8E93;"><div style="font-size:40px;margin-bottom:12px;"><i data-lucide="image" class="lucide-icon icon-hover-pulse"></i></div><div>No banners yet</div></div>';
+        return;
+    }
+    grid.innerHTML = '';
+    allBanners.forEach(function(b) {
+        var card = document.createElement('div'); card.className = 'banner-card';
+        card.innerHTML =
+            '<img src="' + (b.image_url||'') + '" class="banner-img">' +
+            '<div class="banner-body">' +
+                '<div style="font-weight:700;">' + (b.title||'No title') + '</div>' +
+                '<div style="font-size:12px;color:#8E8E93;">' + (b.subtitle||'') + '</div>' +
+                '<div style="font-size:11px;color:#8E8E93;margin-top:4px;">Sort: ' + (b.sort_order||0) + ' | <span class="' + (b.is_active?'':'') + '" style="color:' + (b.is_active?'#34C759':'#FF3B30') + ';">' + (b.is_active?'Active':'Inactive') + '</span></div>' +
+            '</div>' +
+            '<div class="banner-footer">' +
+                '<button class="btn btn-ghost btn-sm" style="flex:1;" onclick=\'editBanner(' + JSON.stringify(b).replace(/'/g,"&apos;") + ')\'><i data-lucide="edit-3" class="lucide-icon icon-hover-pulse"></i> Edit</button>' +
+                '<button class="btn btn-danger btn-sm" onclick="deleteBanner(\'' + b.id + '\')"><i data-lucide="trash-2" class="lucide-icon icon-hover-shake icon-danger"></i></button>' +
+            '</div>';
+        grid.appendChild(card);
+    });
+}
+
+function updateBannerPreview() {
+    var url = parseImageInput(document.getElementById('bImg').value.trim());
+    var wrap = document.getElementById('previewWrap');
+    var prev = document.getElementById('bPreview');
+    if (url.previewUrl) {
+        prev.src = url.previewUrl;
+        wrap.style.display = 'block';
+    } else if (document.getElementById('bImg').value.trim()) {
+        // viewer URL — preview এ দেখানো যাবে না তবে block থাকবে
+        wrap.style.display = 'none';
+    } else {
+        wrap.style.display = 'none';
+    }
+    updateAreaPreview();
+}
+
+// Legacy alias
+function updatePreview() { updateBannerPreview(); }
+
+// parseImageInput — image-seyestem.md documented logic
+function parseImageInput(raw) {
+    if (!raw) return { previewUrl: null, saveUrl: null };
+    raw = raw.trim();
+    // HTML <img> tag
+    var imgTagMatch = raw.match(/<img[^>]+src=["']([^"']+)["']/i);
+    if (imgTagMatch) return { previewUrl: imgTagMatch[1], saveUrl: imgTagMatch[1] };
+    // BBCode [img]
+    var bbMatch = raw.match(/\[img\](.+?)\[\/img\]/i);
+    if (bbMatch) return { previewUrl: bbMatch[1], saveUrl: bbMatch[1] };
+    // Direct image link (i.ibb.co or extension)
+    if (/i\.ibb\.co|\.(jpg|jpeg|png|gif|webp|svg|bmp)(\?.*)?$/i.test(raw)) {
+        return { previewUrl: raw, saveUrl: raw };
+    }
+    // Viewer link (ibb.co/... but not i.ibb.co)
+    if (/^https?:\/\/(www\.)?ibb\.co\//.test(raw)) {
+        return { previewUrl: null, saveUrl: raw };
+    }
+    // Anything else — try as direct
+    return { previewUrl: raw, saveUrl: raw };
+}
+
+function toggleAreaTools() {
+    var type = document.getElementById('bLinkType').value;
+    document.getElementById('areaTools').style.display = type === 'area' ? 'block' : 'none';
+    document.getElementById('areaBox').style.display = type === 'area' ? 'block' : 'none';
+    updateAreaPreview();
+}
+
+function updateAreaPreview() {
+    var type = document.getElementById('bLinkType').value;
+    if (type !== 'area') return;
+    
+    var x = document.getElementById('areaX').value;
+    var y = document.getElementById('areaY').value;
+    var w = document.getElementById('areaW').value;
+    var h = document.getElementById('areaH').value;
+    
+    document.getElementById('lblX').textContent = x;
+    document.getElementById('lblY').textContent = y;
+    document.getElementById('lblW').textContent = w;
+    document.getElementById('lblH').textContent = h;
+    
+    var box = document.getElementById('areaBox');
+    box.style.left = x + '%';
+    box.style.top = y + '%';
+    box.style.width = w + '%';
+    box.style.height = h + '%';
+}
+
+function openModal() {
+    editingId = null; bActive = true;
+    document.getElementById('bannerModalTitle').textContent = 'Add Banner';
+    ['bImg','bTitle','bSub','bLink'].forEach(function(id) { document.getElementById(id).value = ''; });
+    document.getElementById('bSort').value = 0;
+    document.getElementById('previewWrap').style.display = 'none';
+    
+    document.getElementById('bLinkType').value = 'full';
+    document.getElementById('areaX').value = 0; document.getElementById('areaY').value = 0;
+    document.getElementById('areaW').value = 100; document.getElementById('areaH').value = 100;
+    toggleAreaTools();
+    
+    setToggle('bActive', true);
+    document.getElementById('bannerModal').classList.add('show');
+
+    // imgbb upload button setup
+    setupBannerImgUpload();
+}
+
+var bannerImgUploadSetup = false;
+function setupBannerImgUpload() {
+    if (bannerImgUploadSetup) return;
+    bannerImgUploadSetup = true;
+    var btn = document.getElementById('bannerImgUploadBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+        var apiKey = getImgbbKey();
+        if (!apiKey) { showToast('⚠️ ImgBB API Key সেট করো নাই! Settings থেকে দাও।', 'warning'); return; }
+        var input = document.createElement('input');
+        input.type = 'file'; input.accept = 'image/*';
+        input.onchange = function() {
+            if (!input.files[0]) return;
+            var origText = btn.textContent;
+            btn.textContent = '⏳ Uploading...';
+            btn.disabled = true;
+            imgbbUpload(input.files[0], apiKey)
+                .then(function(r) {
+                    document.getElementById('bImg').value = r.url;
+                    updateBannerPreview();
+                    btn.textContent = '✅ Done';
+                    setTimeout(function(){ btn.textContent=origText; btn.disabled=false; }, 1500);
+                    showToast('✅ Banner image আপলোড সফল!', 'success');
+                })
+                .catch(function(e) { showToast('❌ ' + e.message, 'error'); btn.textContent=origText; btn.disabled=false; });
+        };
+        input.click();
+    });
+}
+
+function editBanner(b) {
+    editingId = b.id; bActive = b.is_active !== false;
+    document.getElementById('bannerModalTitle').textContent = 'Edit Banner';
+    document.getElementById('bImg').value   = b.image_url || '';
+    document.getElementById('bTitle').value = b.title || '';
+    document.getElementById('bSub').value   = b.subtitle || '';
+    document.getElementById('bSort').value  = b.sort_order || 0;
+    
+    var rawLink = (b.link_url || '').trim();
+    var linkData = null;
+    if (rawLink.startsWith('{') && rawLink.endsWith('}')) {
+        try { linkData = JSON.parse(rawLink); } catch(e){}
+    }
+    
+    if (linkData && linkData.type === 'area') {
+        document.getElementById('bLinkType').value = 'area';
+        document.getElementById('bLink').value = linkData.url || '';
+        document.getElementById('areaX').value = linkData.x || 0;
+        document.getElementById('areaY').value = linkData.y || 0;
+        document.getElementById('areaW').value = linkData.w || 100;
+        document.getElementById('areaH').value = linkData.h || 100;
+    } else {
+        document.getElementById('bLinkType').value = 'full';
+        document.getElementById('bLink').value = rawLink;
+        document.getElementById('areaX').value = 0; document.getElementById('areaY').value = 0;
+        document.getElementById('areaW').value = 100; document.getElementById('areaH').value = 100;
+    }
+    
+    toggleAreaTools();
+    setToggle('bActive', bActive);
+    updateBannerPreview();
+    document.getElementById('bannerModal').classList.add('show');
+    setupBannerImgUpload();
+}
+
+function setToggle(id, state) {
+    var el = document.getElementById(id);
+    if (state) el.classList.add('on'); else el.classList.remove('on');
+}
+function toggleBActive() { bActive = !bActive; setToggle('bActive', bActive); }
+
+function saveBanner() {
+    var raw = document.getElementById('bImg').value.trim();
+    if (!raw) { showToast('Image URL required', 'error'); return; }
+    var parsed = parseImageInput(raw);
+    var img = parsed.saveUrl || raw;  // clean URL সেভ করো
+    
+    var type = document.getElementById('bLinkType').value;
+    var userLink = document.getElementById('bLink').value.trim();
+    var finalLink = userLink;
+    
+    if (type === 'area') {
+        var x = parseInt(document.getElementById('areaX').value) || 0;
+        var y = parseInt(document.getElementById('areaY').value) || 0;
+        var w = parseInt(document.getElementById('areaW').value) || 100;
+        var h = parseInt(document.getElementById('areaH').value) || 100;
+        finalLink = JSON.stringify({ url: userLink, type: 'area', x: x, y: y, w: w, h: h });
+    }
+    
+    var payload = { image_url: img, title: document.getElementById('bTitle').value.trim(), subtitle: document.getElementById('bSub').value.trim(), link_url: finalLink, sort_order: parseInt(document.getElementById('bSort').value)||0, is_active: bActive };
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId ? supabaseClient.from('banners').update(payload).eq('id', editingId) : supabaseClient.from('banners').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success'); closeModal(); loadBanners();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        if (editingId) {
+            appwriteDatabases.updateDocument(APP_DB, 'banners', editingId, payload)
+            .then(function() {
+                showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+                closeModal();
+                loadBanners();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        } else {
+            appwriteDatabases.createDocument(APP_DB, 'banners', AppwriteID.unique(), payload)
+            .then(function() {
+                showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+                closeModal();
+                loadBanners();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        }
+    }
+}
+
+function deleteBanner(id) {
+    if (!adminConfirm('Delete this banner?')) return;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('banners').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Delete failed', 'error'); return; }
+            showToast('Deleted!', 'success'); loadBanners();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'banners', id)
+        .then(function() {
+            showToast('Deleted!', 'success');
+            loadBanners();
+        }).catch(function(err) {
+            showToast('Delete failed: ' + err.message, 'error');
+        });
+    }
+}
+function closeModal() { document.getElementById('bannerModal').classList.remove('show'); }
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+

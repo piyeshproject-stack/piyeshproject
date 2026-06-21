@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage Sections — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <script src="../assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="../assets/js/appwrite-init.js"></script>
+    <script src="assets/js/admin-common.js?v=3"></script>
+    <link rel="stylesheet" href="../assets/css/premium-icons.css">
+    <style>
+        /* ── Section Cards Grid ── */
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+        .section-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .section-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-hover));
+            border-radius: 99px 99px 0 0;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .section-card.active::before { opacity: 1; }
+        .section-card:hover {
+            border-color: rgba(255,77,77,0.25);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        .section-card.inactive {
+            opacity: 0.55;
+        }
+        .section-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .section-type-icon {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+        .type-icon-category  { background: rgba(0,122,255,0.12); }
+        .type-icon-custom    { background: rgba(88,86,214,0.12); }
+        .type-icon-all       { background: rgba(255,149,0,0.12); }
+        .section-card-meta {
+            flex: 1; min-width: 0;
+        }
+        .section-card-title {
+            font-size: 15px; font-weight: 800;
+            color: var(--text-primary);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+        .section-card-desc {
+            font-size: 12px; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 6px;
+            flex-wrap: wrap;
+        }
+        .section-chip {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px; font-weight: 600;
+        }
+        .chip-category { background: rgba(0,122,255,0.1); color: #007AFF; }
+        .chip-custom   { background: rgba(88,86,214,0.1); color: #5856D6; }
+        .chip-all      { background: rgba(255,149,0,0.1); color: #FF9500; }
+        .chip-active   { background: rgba(52,199,89,0.1); color: #34C759; }
+        .chip-inactive { background: rgba(142,142,147,0.1); color: #8E8E93; }
+
+        .section-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border);
+        }
+        .section-order-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 12px; font-weight: 700; color: var(--text-secondary);
+        }
+
+        /* ── Empty State ── */
+        .sections-empty {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-secondary);
+        }
+        .sections-empty .empty-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            opacity: 0.4;
+        }
+        .sections-empty h3 {
+            font-size: 18px; font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .sections-empty p {
+            font-size: 14px; margin-bottom: 20px;
+        }
+
+        /* ── Modal fields ── */
+        .type-fields { display: none; }
+        .type-fields.show { display: block; }
+
+        /* product multi-select search */
+        .product-search-wrap {
+            position: relative;
+        }
+        .product-dropdown {
+            position: absolute;
+            top: 100%; left: 0; right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            max-height: 220px;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            display: none;
+        }
+        .product-dropdown.show { display: block; }
+        .product-drop-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.15s;
+        }
+        .product-drop-item:hover { background: var(--bg-hover); }
+        .product-drop-item.selected { background: rgba(255,77,77,0.08); }
+        .product-drop-img {
+            width: 32px; height: 32px;
+            border-radius: 8px; object-fit: cover;
+            background: var(--bg-subtle);
+            flex-shrink: 0;
+        }
+        .product-drop-name { flex: 1; font-weight: 600; }
+        .product-drop-price { font-size: 12px; color: var(--primary); font-weight: 700; }
+
+        /* selected products chips */
+        .selected-products-wrap {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            margin-top: 8px;
+            min-height: 32px;
+        }
+        .sel-prod-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 10px;
+            background: rgba(255,77,77,0.08);
+            border: 1px solid rgba(255,77,77,0.2);
+            border-radius: 20px;
+            font-size: 12px; font-weight: 600;
+            color: var(--primary);
+        }
+        .sel-prod-chip button {
+            background: none; border: none;
+            color: var(--primary); cursor: pointer;
+            font-size: 14px; line-height: 1;
+            padding: 0; opacity: 0.7;
+        }
+        .sel-prod-chip button:hover { opacity: 1; }
+
+        /* top bar */
+        .sections-top-bar {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .sections-count {
+            font-size: 13px; font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* drag handle */
+        .drag-hint {
+            font-size: 11px; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="spinner"></div></div>
+<main class="admin-main" id="adminMain" style="display:none;">
+    <header class="admin-header">
+        <div class="header-left">
+            <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+            <div>
+                <div class="page-title">Homepage Sections</div>
+                <div class="page-subtitle">Manage homepage product sections</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-primary" onclick="openModal()">
+                <i data-lucide="plus" class="lucide-icon"></i> Add Section
+            </button>
+        </div>
+    </header>
+
+    <div class="admin-content">
+        <div class="sections-top-bar">
+            <div class="sections-count" id="sectionsCount">Loading...</div>
+            <div class="drag-hint">
+                <i data-lucide="info" class="lucide-icon" style="width:13px;height:13px;"></i>
+                Sort Order নম্বর দিয়ে section গুলো সাজানো যাবে
+            </div>
+        </div>
+
+        <div class="sections-grid" id="sectionsGrid">
+            <!-- Cards rendered here -->
+            <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-secondary);">
+                <div class="spinner" style="margin:0 auto 12px;"></div>
+                <div>Loading sections...</div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- ═══ ADD / EDIT MODAL ═══ -->
+<div class="modal-overlay" id="sectionModal">
+    <div class="modal-box" style="max-width:560px;">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">Add Section</div>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+
+        <!-- Section Title -->
+        <div class="form-group">
+            <label class="form-label">Section Title *</label>
+            <input class="form-input" id="sTitle" placeholder="e.g. টি-শার্ট কালেকশন, Best Sellers...">
+        </div>
+
+        <!-- Section Type -->
+        <div class="form-group">
+            <label class="form-label">Section Type *</label>
+            <select class="form-select" id="sType" onchange="onTypeChange()">
+                <option value="category">📂 Category — একটি category র products দেখাবে</option>
+                <option value="custom">🛍️ Custom — নিজে products বেছে নাও</option>
+                <option value="all_products">🌟 All Products — সব products</option>
+            </select>
+        </div>
+
+        <!-- Category fields -->
+        <div class="type-fields" id="fieldCategory">
+            <div class="form-group">
+                <label class="form-label">Category *</label>
+                <select class="form-select" id="sCategoryId">
+                    <option value="">— Loading categories... —</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Custom products fields -->
+        <div class="type-fields" id="fieldCustom">
+            <div class="form-group">
+                <label class="form-label">Products বেছে নাও *</label>
+                <div class="product-search-wrap">
+                    <input class="form-input" id="productSearch"
+                        placeholder="🔍 Product name টাইপ করো..."
+                        oninput="searchProducts(this.value)"
+                        onfocus="showDropdown()"
+                        autocomplete="off">
+                    <div class="product-dropdown" id="productDropdown"></div>
+                </div>
+                <div class="selected-products-wrap" id="selectedProdsWrap">
+                    <div style="color:var(--text-secondary);font-size:12px;padding:4px 0;">এখনো কোনো product সিলেক্ট করা হয়নি</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Max products -->
+        <div class="form-group">
+            <label class="form-label">Max Products to Show</label>
+            <input class="form-input" id="sMaxProducts" type="number" min="1" max="50" value="10" placeholder="10">
+            <div class="form-hint">Homepage এ এই section এ সর্বোচ্চ কতটি product দেখাবে (1-50)</div>
+        </div>
+
+        <!-- Sort order -->
+        <div class="form-group">
+            <label class="form-label">Sort Order</label>
+            <input class="form-input" id="sSortOrder" type="number" value="0" placeholder="0">
+            <div class="form-hint">ছোট number আগে দেখাবে। 0 মানে সবার শেষে।</div>
+        </div>
+
+        <!-- Active toggle -->
+        <div class="toggle-wrap" onclick="toggleSectionActive()" style="margin-bottom:20px;">
+            <div>
+                <div class="toggle-label">Active (Homepage এ দেখাবে)</div>
+                <div class="toggle-desc">OFF করলে section টা hidden থাকবে</div>
+            </div>
+            <button class="toggle-switch on" id="sActive" type="button"></button>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display:flex;gap:10px;">
+            <button class="btn btn-primary btn-full" onclick="saveSection()">
+                <i data-lucide="save" class="lucide-icon"></i> Save Section
+            </button>
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+var allSections = [], allCats = [], allProducts = [], editingId = null, sActive = true;
+var selectedProductIds = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    adminInit('sections', function() {
+        loadAll();
+    });
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.product-search-wrap')) {
+            document.getElementById('productDropdown').classList.remove('show');
+        }
+    });
+});
+
+function loadAll() {
+    // Load sections + categories + products in parallel
+    var p1, p2;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        p1 = supabaseClient.from('home_sections').select('*, categories(name)').order('sort_order');
+        p2 = supabaseClient.from('categories').select('id, name').eq('is_active', true).order('sort_order');
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        p1 = appwriteDatabases.listDocuments(APP_DB, 'home_sections', [AppwriteQuery.orderAsc('sort_order')])
+            .then(function(res) {
+                return { data: res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; }) };
+            });
+        p2 = appwriteDatabases.listDocuments(APP_DB, 'categories', [AppwriteQuery.equal('is_active', true), AppwriteQuery.orderAsc('sort_order')])
+            .then(function(res) {
+                return { data: res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; }) };
+            });
+    }
+    var p3 = fetch('/api/get-products-list').then(function(r){ return r.json(); }).then(function(d){ return { data: Array.isArray(d) ? d : [] }; }).catch(function(){ return { data: [] }; });
+
+    Promise.all([p1, p2, p3]).then(function(results) {
+        allSections = results[0].data || [];
+        allCats = results[1].data || [];
+        allProducts = results[2].data || [];
+
+        renderSections();
+        populateCategoryDropdown();
+
+        document.getElementById('pageLoader').style.display = 'none';
+        document.getElementById('adminMain').style.display  = 'flex';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+}
+
+function populateCategoryDropdown() {
+    var sel = document.getElementById('sCategoryId');
+    sel.innerHTML = '<option value="">— Category বেছে নাও —</option>' +
+        allCats.map(function(c) {
+            return '<option value="' + c.id + '">' + c.name + '</option>';
+        }).join('');
+}
+
+function renderSections() {
+    var grid = document.getElementById('sectionsGrid');
+    var count = allSections.length;
+    document.getElementById('sectionsCount').textContent = count + ' section' + (count !== 1 ? 's' : '') + ' configured';
+
+    if (!count) {
+        grid.innerHTML = '<div class="sections-empty"><div class="empty-icon">🗂️</div>' +
+            '<h3>কোনো section নেই</h3>' +
+            '<p>Homepage এ product section দেখাতে "+ Add Section" এ click করুন</p>' +
+            '<button class="btn btn-primary" onclick="openModal()"><i data-lucide="plus" class="lucide-icon"></i> Add First Section</button></div>';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        return;
+    }
+
+    var html = '';
+    allSections.forEach(function(s) {
+        var typeInfo = getTypeInfo(s.type);
+        var catName = '';
+        if (s.type === 'category' && s.categories) catName = s.categories.name || '';
+
+        var descParts = [];
+        descParts.push('<span class="section-chip ' + typeInfo.chip + '">' + typeInfo.label + '</span>');
+        if (catName) descParts.push('<span style="color:var(--text-secondary);">' + catName + '</span>');
+        if (s.type === 'custom') {
+            var cnt = (s.product_ids || []).length;
+            descParts.push('<span style="color:var(--text-secondary);">' + cnt + ' products selected</span>');
+        }
+        descParts.push('<span class="section-chip ' + (s.is_active ? 'chip-active' : 'chip-inactive') + '">' + (s.is_active ? '● Active' : '○ Hidden') + '</span>');
+
+        html += '<div class="section-card ' + (s.is_active ? 'active' : 'inactive') + '">' +
+            '<div class="section-card-header">' +
+                '<div class="section-type-icon ' + typeInfo.iconClass + '">' + typeInfo.emoji + '</div>' +
+                '<div class="section-card-meta">' +
+                    '<div class="section-card-title">' + escHtml(s.title) + '</div>' +
+                    '<div class="section-card-desc">' + descParts.join('') + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div style="font-size:12px;color:var(--text-secondary);display:flex;align-items:center;gap:6px;">' +
+                '<i data-lucide="layout-grid" class="lucide-icon" style="width:13px;height:13px;"></i>' +
+                'Max <b style="color:var(--text-primary);">' + (s.max_products || 10) + '</b> products' +
+            '</div>' +
+            '<div class="section-card-footer">' +
+                '<div class="section-order-badge"><i data-lucide="arrow-up-down" class="lucide-icon" style="width:13px;height:13px;"></i> Order: ' + (s.sort_order || 0) + '</div>' +
+                '<div style="display:flex;gap:6px;">' +
+                    '<button class="btn btn-ghost btn-sm" onclick=\'editSection(' + JSON.stringify(s).replace(/'/g,"&apos;") + ')\'>' +
+                        '<i data-lucide="edit-3" class="lucide-icon icon-hover-pulse"></i> Edit' +
+                    '</button>' +
+                    '<button class="btn btn-sm" style="' + (s.is_active ? 'background:rgba(142,142,147,0.1);color:#8E8E93;' : 'background:rgba(52,199,89,0.1);color:#34C759;') + 'border:none;" onclick="toggleActive(\'' + s.id + '\',' + !s.is_active + ')">' +
+                        (s.is_active ? '<i data-lucide="eye-off" class="lucide-icon"></i> Hide' : '<i data-lucide="eye" class="lucide-icon"></i> Show') +
+                    '</button>' +
+                    '<button class="btn btn-danger btn-sm" onclick="deleteSection(\'' + s.id + '\')">' +
+                        '<i data-lucide="trash-2" class="lucide-icon icon-hover-shake icon-danger"></i>' +
+                    '</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    });
+
+    grid.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function getTypeInfo(type) {
+    var map = {
+        'category':    { emoji: '📂', label: 'Category',     chip: 'chip-category',  iconClass: 'type-icon-category' },
+        'custom':      { emoji: '🛍️', label: 'Custom',       chip: 'chip-custom',    iconClass: 'type-icon-custom' },
+        'all_products':{ emoji: '🌟', label: 'All Products',  chip: 'chip-all',       iconClass: 'type-icon-all' },
+    };
+    return map[type] || map['category'];
+}
+
+function openModal() {
+    editingId = null; sActive = true; selectedProductIds = [];
+    document.getElementById('modalTitle').textContent = 'Add Section';
+    document.getElementById('sTitle').value = '';
+    document.getElementById('sType').value = 'category';
+    document.getElementById('sCategoryId').value = '';
+    document.getElementById('sMaxProducts').value = 10;
+    document.getElementById('sSortOrder').value = allSections.length;
+    document.getElementById('productSearch').value = '';
+    setToggle('sActive', true);
+    onTypeChange();
+    renderSelectedProds();
+    document.getElementById('sectionModal').classList.add('show');
+}
+
+function editSection(s) {
+    editingId = s.id;
+    sActive = s.is_active !== false;
+    selectedProductIds = Array.isArray(s.product_ids) ? s.product_ids.slice() : [];
+
+    document.getElementById('modalTitle').textContent = 'Edit Section';
+    document.getElementById('sTitle').value = s.title || '';
+    document.getElementById('sType').value = s.type || 'category';
+    document.getElementById('sCategoryId').value = s.category_id || '';
+    document.getElementById('sMaxProducts').value = s.max_products || 10;
+    document.getElementById('sSortOrder').value = s.sort_order || 0;
+    document.getElementById('productSearch').value = '';
+    setToggle('sActive', sActive);
+    onTypeChange();
+    renderSelectedProds();
+    document.getElementById('sectionModal').classList.add('show');
+}
+
+function closeModal() {
+    document.getElementById('sectionModal').classList.remove('show');
+    document.getElementById('productDropdown').classList.remove('show');
+}
+
+function setToggle(id, state) {
+    var el = document.getElementById(id);
+    if (state) el.classList.add('on'); else el.classList.remove('on');
+}
+function toggleSectionActive() { sActive = !sActive; setToggle('sActive', sActive); }
+
+function onTypeChange() {
+    var type = document.getElementById('sType').value;
+    document.getElementById('fieldCategory').classList.toggle('show', type === 'category');
+    document.getElementById('fieldCustom').classList.toggle('show', type === 'custom');
+}
+
+// ── Product Search ────────────────────────────────────────────
+function showDropdown() {
+    searchProducts(document.getElementById('productSearch').value);
+}
+
+function searchProducts(q) {
+    q = (q || '').toLowerCase();
+    var dropdown = document.getElementById('productDropdown');
+    var results = allProducts.filter(function(p) {
+        return !q || (p.name || '').toLowerCase().includes(q);
+    }).slice(0, 30);
+
+    if (!results.length) {
+        dropdown.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-secondary);font-size:13px;">কোনো product পাওয়া যায়নি</div>';
+        dropdown.classList.add('show');
+        return;
+    }
+
+    dropdown.innerHTML = results.map(function(p) {
+        var img = '';
+        var variants = p.variants || [];
+        if (variants.length && variants[0].imageUrl) img = variants[0].imageUrl;
+        else if (p.gallery_images && p.gallery_images.length) img = p.gallery_images[0];
+
+        var isSelected = selectedProductIds.indexOf(p.id) !== -1;
+        var price = p.flash_sale_price > 0 ? (p.base_price - p.flash_sale_price) : p.base_price;
+
+        return '<div class="product-drop-item' + (isSelected ? ' selected' : '') + '" onclick="toggleProduct(\'' + p.id + '\',\'' + escHtml(p.name).replace(/'/g,"&apos;") + '\')">' +
+            (img ? '<img class="product-drop-img" src="' + img + '" onerror="this.style.display=\'none\'">' : '<div class="product-drop-img" style="background:var(--bg-subtle);border-radius:8px;"></div>') +
+            '<span class="product-drop-name">' + escHtml(p.name) + '</span>' +
+            '<span class="product-drop-price">৳' + price + '</span>' +
+            (isSelected ? '<i data-lucide="check" class="lucide-icon" style="width:14px;height:14px;color:#34C759;"></i>' : '') +
+        '</div>';
+    }).join('');
+    dropdown.classList.add('show');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+function toggleProduct(id, name) {
+    var idx = selectedProductIds.indexOf(id);
+    if (idx !== -1) selectedProductIds.splice(idx, 1);
+    else selectedProductIds.push(id);
+    renderSelectedProds();
+    searchProducts(document.getElementById('productSearch').value);
+}
+
+function renderSelectedProds() {
+    var wrap = document.getElementById('selectedProdsWrap');
+    if (!selectedProductIds.length) {
+        wrap.innerHTML = '<div style="color:var(--text-secondary);font-size:12px;padding:4px 0;">এখনো কোনো product সিলেক্ট করা হয়নি</div>';
+        return;
+    }
+    wrap.innerHTML = selectedProductIds.map(function(id) {
+        var p = allProducts.find(function(x){ return x.id === id; });
+        var name = p ? p.name : id;
+        return '<div class="sel-prod-chip">' + escHtml(name.substring(0,25)) + (name.length>25?'…':'') +
+            '<button onclick="toggleProduct(\'' + id + '\',\'\')" title="Remove">✕</button></div>';
+    }).join('');
+}
+
+// ── Save ──────────────────────────────────────────────────────
+function saveSection() {
+    var title = document.getElementById('sTitle').value.trim();
+    var type  = document.getElementById('sType').value;
+    var catId = document.getElementById('sCategoryId').value || null;
+    var maxP  = parseInt(document.getElementById('sMaxProducts').value) || 10;
+    var sortO = parseInt(document.getElementById('sSortOrder').value) || 0;
+
+    if (!title) { showToast('Section title দাও', 'error'); return; }
+    if (type === 'category' && !catId) { showToast('Category বেছে নাও', 'error'); return; }
+    if (type === 'custom' && !selectedProductIds.length) { showToast('অন্তত একটি product সিলেক্ট করো', 'error'); return; }
+
+    var payload = {
+        title: title,
+        type: type,
+        category_id: type === 'category' ? catId : null,
+        product_ids: type === 'custom' ? selectedProductIds : [],
+        max_products: Math.min(Math.max(maxP, 1), 50),
+        sort_order: sortO,
+        is_active: sActive
+    };
+
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId
+            ? supabaseClient.from('home_sections').update(payload).eq('id', editingId)
+            : supabaseClient.from('home_sections').insert([payload]);
+
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+            closeModal();
+            loadAll();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var req;
+        if (editingId) {
+            req = appwriteDatabases.updateDocument(APP_DB, 'home_sections', editingId, payload);
+        } else {
+            req = appwriteDatabases.createDocument(APP_DB, 'home_sections', AppwriteID.unique(), payload);
+        }
+        req.then(function() {
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+            closeModal();
+            loadAll();
+        }).catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+// ── Toggle Active ─────────────────────────────────────────────
+function toggleActive(id, newState) {
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('home_sections').update({ is_active: newState }).eq('id', id).then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast(newState ? '✅ Section এখন Active' : '🙈 Section Hidden হয়েছে', 'success');
+            loadAll();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.updateDocument(APP_DB, 'home_sections', id, { is_active: newState })
+            .then(function() {
+                showToast(newState ? '✅ Section এখন Active' : '🙈 Section Hidden হয়েছে', 'success');
+                loadAll();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+// ── Delete ────────────────────────────────────────────────────
+function deleteSection(id) {
+    if (!adminConfirm('এই section টা delete করবেন?')) return;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('home_sections').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Delete failed', 'error'); return; }
+            showToast('🗑️ Section deleted!', 'success');
+            loadAll();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'home_sections', id)
+            .then(function() {
+                showToast('🗑️ Section deleted!', 'success');
+                loadAll();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function escHtml(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+

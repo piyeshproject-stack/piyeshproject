@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <script src="../assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="../assets/js/appwrite-init.js"></script>
+    <script src="assets/js/admin-common.js?v=3"></script>
+    <style>
+        .order-detail-row { padding: 20px; background: var(--bg-card); border-radius: var(--radius-md); }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .detail-block label { font-size: 11px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .detail-block span  { font-size: 14px; font-weight: 600; }
+        .order-items-list { margin-top: 12px; }
+        .order-item-row {
+            display: flex; gap: 10px; align-items: center;
+            padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px; margin-bottom: 8px;
+        }
+        .order-item-img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--bg-card); flex-shrink: 0; }
+        @media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr 1fr; } }
+    </style>
+    <link rel="stylesheet" href="../assets/css/premium-icons.css">
+</head>
+<body>
+    <div class="page-loader" id="pageLoader"><div class="spinner"></div></div>
+
+    <main class="admin-main" id="adminMain" style="display:none;">
+        <header class="admin-header">
+            <div class="header-left">
+                <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+                <div>
+                    <div class="page-title">Orders</div>
+                    <div class="page-subtitle" id="orderCountSub">Loading...</div>
+            </div>
+        </header>
+
+        <div class="admin-content">
+            <!-- Filter Bar -->
+            <div class="filter-bar" id="ordersFilterBar">
+                <div class="search-box">
+                    <span><i data-lucide="search" class="lucide-icon"></i></span>
+                    <input type="text" id="searchInput" placeholder="Search Order ID, Name, Phone..." oninput="filterOrders()">
+                </div>
+                <!-- Mobile filter toggle button (shown on small screens) -->
+                <button class="filter-toggle-btn" id="orderFilterToggle" onclick="toggleOrderFilters()">
+                    <i data-lucide="sliders-horizontal" class="lucide-icon"></i> Filters
+                    <span class="filter-count" id="orderFilterCount">0</span>
+                </button>
+                <!-- Inline filters (hidden on mobile, shown via panel) -->
+                <select class="form-select filter-inline" id="statusFilter" onchange="filterOrders();updateFilterCount()" style="width:auto;min-width:160px;">
+                    <option value="">All Status</option>
+                    <option value="Pending">⏛ Pending</option>
+                    <option value="Confirmed">✅ Confirmed</option>
+                    <option value="Processing">🔄 Processing</option>
+                    <option value="Shipped">🚚 Shipped</option>
+                    <option value="Delivered">🎉 Delivered</option>
+                    <option value="Cancelled">❌ Cancelled</option>
+                </select>
+                <select class="form-select filter-inline" id="payFilter" onchange="filterOrders();updateFilterCount()" style="width:auto;min-width:150px;">
+                    <option value="">All Payment</option>
+                    <option value="Unpaid">Unpaid</option>
+                    <option value="Advance Paid">Advance Paid</option>
+                    <option value="Paid">Paid</option>
+                </select>
+                <select class="form-select filter-inline" id="sortFilter" onchange="filterOrders()" style="width:auto;min-width:150px;">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="highest">Highest Amount</option>
+                </select>
+                <select class="form-select filter-inline" id="typeFilter" onchange="filterOrders();updateFilterCount()" style="width:auto;min-width:140px;">
+                    <option value="">All Types</option>
+                    <option value="delivery">🚚 Delivery</option>
+                    <option value="pickup">🚶 Pickup</option>
+                </select>
+                <label class="filter-inline" style="display:flex; align-items:center; gap:6px; cursor:pointer; color:var(--text-secondary); font-size:13px; font-weight:600; padding:0 10px; white-space:nowrap;">
+                    <input type="checkbox" id="failedFilter" onchange="filterOrders();updateFilterCount()" style="width:16px;height:16px;cursor:pointer;accent-color:#ff3b30;">
+                    <span>Show Failed/Unconfirmed</span>
+                </label>
+            </div>
+
+            <!-- Collapsible Filter Panel (mobile) -->
+            <div class="filter-panel" id="orderFilterPanel">
+                <div class="filter-panel-row">
+                    <select class="form-select" id="statusFilterM" onchange="syncMobileFilter('statusFilter','statusFilterM');filterOrders();updateFilterCount()">
+                        <option value="">All Status</option>
+                        <option value="Pending">⏛ Pending</option>
+                        <option value="Confirmed">✅ Confirmed</option>
+                        <option value="Processing">🔄 Processing</option>
+                        <option value="Shipped">🚚 Shipped</option>
+                        <option value="Delivered">🎉 Delivered</option>
+                        <option value="Cancelled">❌ Cancelled</option>
+                    </select>
+                    <select class="form-select" id="payFilterM" onchange="syncMobileFilter('payFilter','payFilterM');filterOrders();updateFilterCount()">
+                        <option value="">All Payment</option>
+                        <option value="Unpaid">Unpaid</option>
+                        <option value="Advance Paid">Advance Paid</option>
+                        <option value="Paid">Paid</option>
+                    </select>
+                </div>
+                <div class="filter-panel-row">
+                    <select class="form-select" id="sortFilterM" onchange="syncMobileFilter('sortFilter','sortFilterM');filterOrders()">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="highest">Highest Amount</option>
+                    </select>
+                    <select class="form-select" id="typeFilterM" onchange="syncMobileFilter('typeFilter','typeFilterM');filterOrders();updateFilterCount()">
+                        <option value="">All Types</option>
+                        <option value="delivery">🚚 Delivery</option>
+                        <option value="pickup">🚶 Pickup</option>
+                    </select>
+                </div>
+                <div class="filter-panel-row">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;">
+                        <input type="checkbox" id="failedFilterM" onchange="document.getElementById('failedFilter').checked=this.checked;filterOrders();updateFilterCount()" style="width:16px;height:16px;cursor:pointer;accent-color:#ff3b30;">
+                        <span>Show Failed/Unconfirmed (Auto Payment)</span>
+                    </label>
+                </div>
+                <div class="filter-panel-actions">
+                    <button class="btn btn-ghost btn-sm" onclick="resetOrderFilters()">Reset Filters</button>
+                    <button class="btn btn-primary btn-sm" onclick="toggleOrderFilters()">Done</button>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="card" style="padding:0;">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Amount</th>
+                                <th>Payment</th>
+                                <th>Method</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersBody">
+                            <tr><td colspan="8" style="text-align:center;padding:40px;color:#8E8E93;">Loading orders...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Order Detail Modal -->
+    <div class="modal-overlay" id="orderModal">
+        <div class="modal-box modal-box-lg">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title"><i data-lucide="package" class="lucide-icon icon-bounce"></i> Order Details</div>
+                    <div style="font-size:12px;color:#8E8E93;" id="modalOrderId">—</div>
+                </div>
+                <button class="modal-close" onclick="closeModal('orderModal')">✕</button>
+            </div>
+            <div id="orderModalContent"></div>
+        </div>
+    </div>
+
+    <script>
+    var allOrders = [];
+
+    // ── Mobile Filter Panel helpers ──────────────────────────
+    function toggleOrderFilters() {
+        var panel = document.getElementById('orderFilterPanel');
+        panel.classList.toggle('open');
+        // Sync mobile selects to current main values when opening
+        if (panel.classList.contains('open')) {
+            document.getElementById('statusFilterM').value = document.getElementById('statusFilter').value;
+            document.getElementById('payFilterM').value    = document.getElementById('payFilter').value;
+            document.getElementById('sortFilterM').value   = document.getElementById('sortFilter').value;
+            document.getElementById('typeFilterM').value   = document.getElementById('typeFilter').value;
+            document.getElementById('failedFilterM').checked = document.getElementById('failedFilter').checked;
+        }
+    }
+
+    function syncMobileFilter(mainId, mobileId) {
+        document.getElementById(mainId).value = document.getElementById(mobileId).value;
+    }
+
+    function updateFilterCount() {
+        var count = 0;
+        if (document.getElementById('statusFilter').value) count++;
+        if (document.getElementById('payFilter').value) count++;
+        if (document.getElementById('typeFilter').value) count++;
+        if (document.getElementById('failedFilter').checked) count++;
+        var badge = document.getElementById('orderFilterCount');
+        if (badge) {
+            badge.textContent = count;
+            if (count > 0) badge.classList.add('has-filters');
+            else badge.classList.remove('has-filters');
+        }
+    }
+
+    function resetOrderFilters() {
+        ['statusFilter','payFilter','typeFilter'].forEach(function(id) {
+            var el = document.getElementById(id); if (el) el.value = '';
+        });
+        ['statusFilterM','payFilterM','typeFilterM'].forEach(function(id) {
+            var el = document.getElementById(id); if (el) el.value = '';
+        });
+        document.getElementById('sortFilter').value = 'newest';
+        document.getElementById('failedFilter').checked = false;
+        filterOrders();
+        updateFilterCount();
+        document.getElementById('orderFilterPanel').classList.remove('open');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        adminInit('orders', function() {
+            // Check for ?id= in URL
+            var urlId = new URLSearchParams(window.location.search).get('id');
+
+            if (CONFIG.DB_PROVIDER === 'supabase') {
+                supabaseClient.from('orders').select('*').order('created_at', { ascending: false }).then(function(r) {
+                    document.getElementById('pageLoader').style.display = 'none';
+                    document.getElementById('adminMain').style.display  = 'flex';
+
+                    if (r.error) { showToast('Failed to load orders', 'error'); return; }
+                    allOrders = r.data || [];
+                    document.getElementById('orderCountSub').textContent = allOrders.length + ' total orders';
+                    filterOrders();
+
+                    if (urlId) {
+                        var found = allOrders.find(function(o) { return o.id === urlId; });
+                        if (found) openOrderModal(found);
+                    }
+
+                    autoCleanupOrders();
+                });
+            } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                appwriteDatabases.listDocuments(APP_DB, 'orders', [
+                    AppwriteQuery.orderDesc('$createdAt'),
+                    AppwriteQuery.limit(5000)
+                ]).then(function(res) {
+                    document.getElementById('pageLoader').style.display = 'none';
+                    document.getElementById('adminMain').style.display  = 'flex';
+                    allOrders = res.documents.map(function(doc) {
+                        doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } }
+                        // items is stored as JSON string in Appwrite
+                        if (typeof doc.items === 'string') {
+                            try { doc.items = JSON.parse(doc.items); } catch(e) { doc.items = []; }
+                        }
+                        return doc;
+                    });
+                    document.getElementById('orderCountSub').textContent = allOrders.length + ' total orders';
+                    filterOrders();
+
+                    if (urlId) {
+                        var found = allOrders.find(function(o) { return o.id === urlId; });
+                        if (found) openOrderModal(found);
+                    }
+
+                    autoCleanupOrders();
+                }).catch(function(err) {
+                    document.getElementById('pageLoader').style.display = 'none';
+                    document.getElementById('adminMain').style.display  = 'flex';
+                    showToast('Failed to load orders: ' + err.message, 'error');
+                });
+            }
+        });
+    });
+
+    function autoCleanupOrders() {
+        var thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        var dateStr = thirtyDaysAgo.toISOString();
+        
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('orders').delete()
+              .in('status', ['Delivered', 'Cancelled'])
+              .lt('created_at', dateStr)
+              .then(function(r) {
+                  if (r.error) {
+                      console.error('Auto cleanup failed:', r.error);
+                  }
+              });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            // Appwrite: filter and delete old delivered/cancelled orders
+            var thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            var oldOrders = allOrders.filter(function(o) {
+                return (o.status === 'Delivered' || o.status === 'Cancelled') &&
+                       o.created_at && new Date(o.created_at) < thirtyDaysAgo;
+            });
+            oldOrders.forEach(function(o) {
+                appwriteDatabases.deleteDocument(APP_DB, 'orders', o.$id || o.id)
+                .catch(function(err) { console.error('Auto cleanup error:', err.message); });
+            });
+        }
+    }
+
+    function deleteOrder(id) {
+        if (!confirm('Are you sure you want to permanently delete order ' + id + '?')) return;
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('orders').delete().eq('id', id).then(function(r) {
+                if (r.error) { showToast('Failed to delete: ' + r.error.message, 'error'); return; }
+                showToast('Order deleted successfully!', 'success');
+                allOrders = allOrders.filter(function(o) { return o.id !== id; });
+                filterOrders();
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.deleteDocument(APP_DB, 'orders', id)
+            .then(function() {
+                showToast('Order deleted successfully!', 'success');
+                allOrders = allOrders.filter(function(o) { return o.id !== id; });
+                filterOrders();
+            }).catch(function(err) {
+                showToast('Failed to delete: ' + err.message, 'error');
+            });
+        }
+    }
+
+
+    function filterOrders() {
+        var q      = document.getElementById('searchInput').value.toLowerCase();
+        var status = document.getElementById('statusFilter').value;
+        var pay    = document.getElementById('payFilter').value;
+        var sort   = document.getElementById('sortFilter').value;
+        var oType  = document.getElementById('typeFilter').value;
+        var showFailed = document.getElementById('failedFilter').checked;
+
+        var filtered = allOrders.filter(function(o) {
+            var cleanQ = q.replace(/-/g, '');
+            var cleanId = (o.id || '').toLowerCase().replace(/-/g, '');
+            var matchQ = !q || cleanId.includes(cleanQ) ||
+                         (o.customer_name  || '').toLowerCase().includes(q) ||
+                         (o.customer_phone || '').toLowerCase().includes(q);
+            var matchS = !status || o.status === status;
+            var matchP = !pay    || o.payment_status === pay;
+            var matchT = !oType  || (o.order_type || 'delivery') === oType;
+            
+            // Logic to identify failed/unconfirmed auto-payments
+            var isManual = false;
+            if (o.payment_method) {
+                var pm = o.payment_method.toLowerCase();
+                if (pm.includes('bkash') || pm.includes('nagad') || pm.includes('rocket') || pm.includes('cod') || pm.includes('cash') || pm.includes('manual')) {
+                    isManual = true;
+                }
+            }
+            
+            // It's unconfirmed/failed auto payment if NOT manual, and status is Pending/Cancelled, and not Paid
+            var isFailedOrUnconfirmedAuto = !isManual && (o.status === 'Pending' || o.status === 'Cancelled' || o.status === 'Failed') && (o.payment_status === 'Unpaid' || o.payment_status === 'Failed');
+            
+            var matchFailedShow = showFailed ? true : !isFailedOrUnconfirmedAuto;
+
+            return matchQ && matchS && matchP && matchT && matchFailedShow;
+        });
+
+        if (sort === 'oldest')  filtered.sort(function(a,b) { return new Date(a.created_at) - new Date(b.created_at); });
+        if (sort === 'highest') filtered.sort(function(a,b) { return (b.grand_total||0) - (a.grand_total||0); });
+
+        // Update count text
+        var countText = filtered.length + ' orders';
+        if (filtered.length !== allOrders.length) countText += ' (filtered from ' + allOrders.length + ')';
+        document.getElementById('orderCountSub').textContent = countText;
+
+        renderOrders(filtered);
+    }
+
+    function renderOrders(orders) {
+        var tbody = document.getElementById('ordersBody');
+        if (!orders.length) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:#8E8E93;">No orders found</td></tr>';
+            return;
+        }
+        var html = '';
+        orders.forEach(function(o) {
+            var itemCount = Array.isArray(o.items) ? o.items.length : '?';
+            var typeBadge = (o.order_type === 'pickup') ? '<span class="badge" style="background:rgba(255,149,0,0.15);color:#FF9500;font-size:10px;padding:2px 6px;">🚶 Pickup</span>' : '';
+            html += '<tr>' +
+                '<td><code style="color:#007AFF;font-size:12px;">' + o.id + '</code> ' + typeBadge + '</td>' +
+                '<td>' +
+                    '<div style="font-weight:600;">' + (o.customer_name || '—') + '</div>' +
+                    '<div style="font-size:12px;color:#8E8E93;">' + (o.customer_phone || '') + '</div>' +
+                '</td>' +
+                '<td style="font-weight:700;">' + formatMoney(o.grand_total) + '</td>' +
+                '<td>' + payBadge(o.payment_status) + '</td>' +
+                '<td style="font-size:12px;color:#8E8E93;">' + (o.payment_method || '—') + '</td>' +
+                '<td>' + statusBadge(o.status) + '</td>' +
+                '<td style="font-size:12px;color:#8E8E93;">' + formatDate(o.created_at) + '</td>' +
+                '<td>' +
+                    '<div style="display:flex;gap:6px;align-items:center;">' +
+                        '<button class="btn btn-ghost btn-sm" onclick="openOrderModal(' + JSON.stringify(o).replace(/"/g,'&quot;') + ')">View</button>' +
+                        '<button class="btn btn-ghost btn-sm" style="color:var(--danger);padding:4px 8px;" onclick="deleteOrder(\'' + o.id + '\')" title="Delete Order"><i data-lucide="trash-2" class="lucide-icon" style="width:16px;height:16px;"></i></button>' +
+                    '</div>' +
+                '</td>' +
+            '</tr>';
+        });
+        tbody.innerHTML = html;
+    }
+
+    function openOrderModal(o) {
+        document.getElementById('modalOrderId').textContent = 'ID: ' + o.id + ' | ' + formatDate(o.created_at);
+
+        var items = Array.isArray(o.items) ? o.items : [];
+        var itemsHtml = items.map(function(item) {
+            return '<div class="order-item-row">' +
+                '<img src="' + (item.image || '') + '" class="order-item-img" onerror="this.style.display=\'none\'">' +
+                '<div style="flex:1;">' +
+                    '<div style="font-weight:600;">' + (item.productName || item.name || '—') + '</div>' +
+                    '<div style="font-size:12px;color:#8E8E93;">Color: ' + (item.color||'—') + ' | Size: ' + (item.size||'—') + ' | Qty: ' + (item.quantity||1) + '</div>' +
+                '</div>' +
+                '<div style="font-weight:700;">' + formatMoney((item.price||0) * (item.quantity||1)) + '</div>' +
+            '</div>';
+        }).join('');
+
+        var content =
+            '<div class="detail-grid">' +
+                '<div class="detail-block"><label>Customer</label><span>' + (o.customer_name||'—') + '</span></div>' +
+                '<div class="detail-block"><label>Phone</label><span>' + (o.customer_phone||'—') + '</span></div>' +
+                '<div class="detail-block"><label>Email</label><span>' + (o.customer_email||'—') + '</span></div>' +
+                '<div class="detail-block"><label>Division</label><span>' + (o.division||'—') + '</span></div>' +
+                '<div class="detail-block"><label>District</label><span>' + (o.district||'—') + '</span></div>' +
+            '<div class="detail-block"><label>Upazila</label><span>' + (o.upazila||'—') + '</span></div>' +
+                '<div class="detail-block"><label>Order Type</label><span style="font-weight:700;color:' + (o.order_type === 'pickup' ? '#FF9500' : '#007AFF') + ';">' + ((o.order_type === 'pickup') ? '🚶 Pickup from Store' : '🚚 Delivery') + '</span></div>' +
+                '<div class="detail-block" style="grid-column:1/-1"><label>Address</label><span>' + (o.address||'—') + '</span></div>' +
+            '</div>' +
+
+            '<div class="order-items-list">' + itemsHtml + '</div>' +
+
+            (o.addons && o.addons !== 'None' ? '<div style="background:rgba(255,149,0,0.08);border:1.5px solid rgba(255,149,0,0.25);border-radius:12px;padding:12px;margin-top:12px;font-size:13px;"><b style="color:#FF9500;">🎁 Selected Add-ons & Add-Once:</b><div style="font-weight:600;margin-top:4px;color:#eee;">' + o.addons + '</div></div>' : '') +
+
+            '<div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:14px;margin-top:12px;">' +
+                '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span>Subtotal</span><span>' + formatMoney(o.subtotal) + '</span></div>' +
+                (o.addon_total > 0 ? '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span>Add-ons</span><span>' + formatMoney(o.addon_total) + '</span></div>' : '') +
+                '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span>Delivery</span><span>' + formatMoney(o.delivery_charge) + '</span></div>' +
+                (o.promo_discount > 0 ? '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;color:#34C759;"><span>Discount (' + o.promo_code + ')</span><span>-' + formatMoney(o.promo_discount) + '</span></div>' : '') +
+                '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;margin-top:6px;"><span>Total</span><span>' + formatMoney(o.grand_total) + '</span></div>' +
+                (o.advance_payable > 0 ? '<div style="display:flex;justify-content:space-between;font-size:13px;color:#FF9500;margin-top:6px;"><span>Advance Paid</span><span>' + formatMoney(o.advance_payable) + '</span></div>' : '') +
+            '</div>' +
+
+            '<div style="background:rgba(0,122,255,0.08);border:1px solid rgba(0,122,255,0.15);border-radius:12px;padding:14px;margin-top:12px;">' +
+                '<div style="font-size:12px;font-weight:700;color:#007AFF;margin-bottom:8px;"><i data-lucide="credit-card" class="lucide-icon icon-bounce"></i> Payment Info</div>' +
+                '<div style="font-size:13px;"><b>Method:</b> ' + (o.payment_method||'—') + ' | <b>Status:</b> ' + (o.payment_status||'—') + '</div>' +
+                (o.payment_sender ? '<div style="font-size:13px;margin-top:4px;"><b>Sender:</b> <code>' + o.payment_sender + '</code></div>' : '') +
+                (o.payment_trx_id ? '<div style="font-size:13px;margin-top:4px;"><b>TrxID:</b> <code>' + o.payment_trx_id + '</code></div>' : '') +
+            '</div>' +
+
+            // Tracking section
+            '<div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:12px;">' +
+                '<div style="font-size:12px;font-weight:700;color:#8E8E93;margin-bottom:10px;"><i data-lucide="truck" class="lucide-icon icon-bounce"></i> Tracking & Status Update</div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">' +
+                    '<select class="form-select" id="updateStatus">' +
+                    ['Pending','Confirmed','Processing','Shipped','Delivered','Cancelled'].map(function(s) {
+                        return '<option value="' + s + '"' + (o.status===s?' selected':'') + '>' + s + '</option>';
+                    }).join('') +
+                    '</select>' +
+                    '<select class="form-select" id="updatePayStatus">' +
+                    ['Unpaid','Advance Paid','Paid'].map(function(s) {
+                        return '<option value="' + s + '"' + (o.payment_status===s?' selected':'') + '>' + s + '</option>';
+                    }).join('') +
+                    '</select>' +
+                    '<input class="form-input" id="updateCourier" placeholder="Courier Name (e.g. Pathao)" value="' + (o.courier_name||'') + '">' +
+                    '<input class="form-input" id="updateTrackNum" placeholder="Tracking Number" value="' + (o.tracking_number||'') + '">' +
+                '</div>' +
+                '<input class="form-input" id="updateTrackUrl" placeholder="Tracking URL (optional)" value="' + (o.tracking_url||'') + '" style="margin-bottom:10px;">' +
+                '<input class="form-input" id="updateNote" placeholder="Admin note (private)" value="' + (o.admin_note||'') + '" style="margin-bottom:10px;">' +
+                '<button class="btn btn-primary btn-full" onclick="updateOrder(\'' + o.id + '\')">💾 Update Order</button>' +
+            '</div>';
+
+        document.getElementById('orderModalContent').innerHTML = content;
+        document.getElementById('orderModal').classList.add('show');
+    }
+
+    function updateOrder(orderId) {
+        var payload = {
+            status:          document.getElementById('updateStatus').value,
+            payment_status:  document.getElementById('updatePayStatus').value,
+            courier_name:    document.getElementById('updateCourier').value.trim(),
+            tracking_number: document.getElementById('updateTrackNum').value.trim(),
+            tracking_url:    document.getElementById('updateTrackUrl').value.trim(),
+            admin_note:      document.getElementById('updateNote').value.trim(),
+        };
+
+        var currentOrder = allOrders.find(function(o) { return o.id === orderId; });
+
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('orders').update(payload).eq('id', orderId).then(function(r) {
+                if (r.error) { showToast('Update failed: ' + r.error.message, 'error'); return; }
+
+                // Trigger repeated customer personal coupon generation
+                if (payload.status === 'Delivered' && currentOrder && currentOrder.customer_phone) {
+                    var phone = currentOrder.customer_phone.trim();
+                    supabaseClient.from('promos').select('*').then(function(res) {
+                        var promosList = res.data || [];
+                        var repConfig = promosList.find(function(p) { return p.code && p.code.startsWith('REPEATED_CUSTOMER_CONFIG'); });
+                        
+                        var existingCoupon = promosList.find(function(p) {
+                            return p.code && p.code.split('|v1|')[0] === phone;
+                        });
+
+                        if (repConfig && repConfig.is_active && !existingCoupon) {
+                            try {
+                                var meta = JSON.parse(repConfig.code.split('|v1|')[1]);
+                                var expiry = null;
+                                if (meta.repExpiryDays) {
+                                    var d = new Date(); d.setDate(d.getDate() + parseInt(meta.repExpiryDays));
+                                    expiry = d.toISOString();
+                                }
+
+                                var newPromoMeta = {
+                                    type: 'private',
+                                    disc_type: meta.repType || 'flat',
+                                    disc_val: parseFloat(meta.repValue) || 0,
+                                    max_cap: parseFloat(meta.repCap) || null,
+                                    min_spend: parseFloat(meta.repMinSpend) || null,
+                                    del_reward: meta.repDelReward || 'none',
+                                    is_repeated_cust: true
+                                };
+
+                                var fullCode = phone + '|v1|' + JSON.stringify(newPromoMeta);
+                                var newPromoPayload = {
+                                    code: fullCode,
+                                    discount: meta.repType === 'flat' ? parseFloat(meta.repValue) : 0,
+                                    is_active: true,
+                                    expires_at: expiry
+                                };
+
+                                supabaseClient.from('promos').insert([newPromoPayload]).then(function(insertRes) {
+                                    if (insertRes.error) { console.error('Error generating repeated customer coupon:', insertRes.error); }
+                                    else { showToast('🎉 Personal coupon created for customer: ' + phone, 'success'); }
+                                });
+                            } catch (e) {
+                                console.error('Error parsing repeated customer promo config:', e);
+                            }
+                        }
+                    });
+                }
+
+                showToast('Order updated!', 'success');
+                closeModal('orderModal');
+
+                // Update local data
+                var idx = allOrders.findIndex(function(o) { return o.id === orderId; });
+                if (idx > -1) Object.assign(allOrders[idx], payload);
+                filterOrders();
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.updateDocument(APP_DB, 'orders', orderId, payload)
+            .then(function() {
+                // Trigger repeated customer personal coupon if status = Delivered
+                if (payload.status === 'Delivered' && currentOrder && currentOrder.customer_phone) {
+                    var phone = currentOrder.customer_phone.trim();
+                    appwriteDatabases.listDocuments(APP_DB, 'promos', [AppwriteQuery.limit(500)])
+                    .then(function(promosRes) {
+                        var promosList = promosRes.documents;
+                        var repConfig = promosList.find(function(p) { return p.code && p.code.startsWith('REPEATED_CUSTOMER_CONFIG'); });
+                        var existingCoupon = promosList.find(function(p) { return p.code && p.code.split('|v1|')[0] === phone; });
+
+                        if (repConfig && repConfig.is_active && !existingCoupon) {
+                            try {
+                                var meta = JSON.parse(repConfig.code.split('|v1|')[1]);
+                                var expiry = null;
+                                if (meta.repExpiryDays) {
+                                    var d = new Date(); d.setDate(d.getDate() + parseInt(meta.repExpiryDays));
+                                    expiry = d.toISOString();
+                                }
+                                var newPromoMeta = {
+                                    type: 'private',
+                                    disc_type: meta.repType || 'flat',
+                                    disc_val: parseFloat(meta.repValue) || 0,
+                                    max_cap: parseFloat(meta.repCap) || null,
+                                    min_spend: parseFloat(meta.repMinSpend) || null,
+                                    del_reward: meta.repDelReward || 'none',
+                                    is_repeated_cust: true
+                                };
+                                var fullCode = phone + '|v1|' + JSON.stringify(newPromoMeta);
+                                var newPromoPayload = {
+                                    code: fullCode,
+                                    discount: meta.repType === 'flat' ? parseFloat(meta.repValue) || 0 : 0,
+                                    is_active: true,
+                                    expires_at: expiry,
+                                    type: 'private',
+                                    disc_type: meta.repType || 'flat',
+                                    disc_val: parseFloat(meta.repValue) || 0,
+                                    max_cap: parseInt(meta.repCap) || null,
+                                    min_spend: parseInt(meta.repMinSpend) || null,
+                                    del_reward: meta.repDelReward || 'none',
+                                    created_at: new Date().toISOString()
+                                };
+                                appwriteDatabases.createDocument(APP_DB, 'promos', AppwriteID.unique(), newPromoPayload)
+                                .then(function() {
+                                    showToast('🎉 Personal coupon created for: ' + phone, 'success');
+                                }).catch(function(e) { console.error('Coupon gen error:', e.message); });
+                            } catch (e) { console.error('Repeat config parse error:', e); }
+                        }
+                    }).catch(function(e) { console.error('Promos load error:', e.message); });
+                }
+
+                showToast('Order updated!', 'success');
+                closeModal('orderModal');
+                var idx = allOrders.findIndex(function(o) { return o.id === orderId; });
+                if (idx > -1) Object.assign(allOrders[idx], payload);
+                filterOrders();
+            }).catch(function(err) {
+                showToast('Update failed: ' + err.message, 'error');
+            });
+        }
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('show');
+    }
+    </script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+

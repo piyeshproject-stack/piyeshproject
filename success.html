@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed — Freelancing By Rifat</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
+    <script src="assets/js/appwrite-init.js"></script>
+    <style>
+        body { background: linear-gradient(135deg, #f0fff4, #e8f5e9); min-height: 100vh; }
+        .success-container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .success-hero { text-align: center; padding: 40px 20px 24px; }
+        .checkmark-circle { width: 80px; height: 80px; background: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 16px; box-shadow: 0 8px 30px rgba(34,197,94,0.3); animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes bounceIn { from { opacity:0; transform: scale(0.5); } to { opacity:1; transform: scale(1); } }
+        .info-card { background: #fff; border-radius: var(--radius-lg); padding: 20px; margin-bottom: 14px; border: 1px solid rgba(34,197,94,0.15); }
+        .info-label { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        .info-value { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-top: 2px; }
+        .invoice-table { width: 100%; border-collapse: collapse; }
+        .invoice-table th { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; padding: 8px 0; border-bottom: 1px solid #eee; text-align: left; }
+        .invoice-table td { padding: 10px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+    </style>
+    <link rel="stylesheet" href="assets/css/premium-icons.css">
+</head>
+<body>
+<div class="page-loader" id="pageLoader"><div class="spinner"></div></div>
+
+<nav class="navbar" style="background:rgba(255,255,255,0.9);">
+    <a href="index.html" class="navbar-brand"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> <span id="navBrand">Home</span></a>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="downloadPDF()">📥 Download Invoice</button>
+        <a href="track.html" class="btn btn-ghost btn-sm"><i data-lucide="package" class="lucide-icon icon-bounce"></i> Track Order</a>
+    </div>
+</nav>
+
+<div class="success-container" id="invoiceContent">
+    <div class="success-hero">
+        <div class="checkmark-circle">✓</div>
+        <h1 style="font-size:26px;font-weight:900;color:var(--text-dark);margin-bottom:6px;">Order Confirmed! 🎉</h1>
+        <p style="color:#666;font-size:15px;">Thank you! Your order has been placed successfully.</p>
+        <div style="margin-top:12px;background:rgba(34,197,94,0.1);border-radius:12px;padding:12px 20px;display:inline-block;">
+            <div style="font-size:11px;color:#888;margin-bottom:2px;">Order ID</div>
+            <div style="font-size:22px;font-weight:900;color:var(--text-dark);" id="displayOrderId">—</div>
+        </div>
+    </div>
+
+    <div id="orderDetails"></div>
+
+    <div style="display:flex;gap:10px;margin-bottom:20px;">
+        <button class="btn btn-primary btn-full" onclick="downloadPDF()">📥 Download Invoice</button>
+        <a href="shop.html" class="btn btn-outline btn-full"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> Continue Shopping</a>
+    </div>
+
+    <div style="text-align:center;margin-bottom:20px;">
+        <a href="track.html?id=" id="trackLink" class="btn btn-ghost"><i data-lucide="package" class="lucide-icon icon-bounce"></i> Track Your Order</a>
+    </div>
+</div>
+
+<!-- Hidden Invoice Template for PDF -->
+<div id="pdfContainer" style="display:none; padding: 20px; background: #fff; width: 790px;">
+    <div id="pdfInvoice" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px;">
+            <div>
+                <h1 style="margin: 0; color: #111; font-size: 32px; letter-spacing: 1px;">INVOICE</h1>
+                <p style="margin: 8px 0 0; color: #666; font-size: 14px;">Order ID: <b id="pdfOrderId"></b></p>
+                <p style="margin: 4px 0 0; color: #666; font-size: 14px;">Date: <b id="pdfOrderDate"></b></p>
+            </div>
+            <div style="text-align: right;">
+                <h2 style="margin: 0; color: #111; font-size: 24px;" id="pdfStoreName">Store Name</h2>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px;">
+            <div style="width: 48%;">
+                <h3 style="margin: 0 0 10px; color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Billed To:</h3>
+                <p style="margin: 0; font-weight: bold; font-size: 16px;" id="pdfCusName"></p>
+                <p style="margin: 6px 0 0;" id="pdfCusPhone"></p>
+                <p style="margin: 6px 0 0; line-height: 1.5;" id="pdfCusAddress"></p>
+            </div>
+            <div style="width: 48%; text-align: right;">
+                <h3 style="margin: 0 0 10px; color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Payment Info:</h3>
+                <p style="margin: 0;">Method: <b id="pdfPayMethod"></b></p>
+                <p style="margin: 6px 0 0;">Status: <b id="pdfPayStatus"></b></p>
+                <p style="margin: 6px 0 0;" id="pdfTrxRow"></p>
+            </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 14px;">
+            <thead>
+                <tr style="background: #f8f9fa;">
+                    <th style="padding: 12px; text-align: left; border-bottom: 2px solid #ddd; color: #444;">Product</th>
+                    <th style="padding: 12px; text-align: center; border-bottom: 2px solid #ddd; color: #444; width: 80px;">Qty</th>
+                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid #ddd; color: #444; width: 120px;">Price</th>
+                    <th style="padding: 12px; text-align: right; border-bottom: 2px solid #ddd; color: #444; width: 120px;">Total</th>
+                </tr>
+            </thead>
+            <tbody id="pdfItemsBody">
+            </tbody>
+        </table>
+
+        <div style="display: flex; justify-content: flex-end; font-size: 14px;">
+            <div style="width: 320px;" id="pdfTotalsArea">
+            </div>
+        </div>
+        
+        <div style="margin-top: 60px; text-align: center; color: #888; font-size: 12px; border-top: 1px solid #eee; padding-top: 20px;">
+            Thank you for shopping with us!
+        </div>
+    </div>
+</div>
+
+<script>
+var orderId = new URLSearchParams(window.location.search).get('id');
+var currentOrderData = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (!orderId) { window.location.href = 'index.html'; return; }
+    document.getElementById('displayOrderId').textContent = orderId;
+    document.getElementById('trackLink').href = 'track.html?id=' + orderId;
+
+    var p1, p2;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        p1 = supabaseClient.from('settings').select('*').eq('id',1).single();
+        p2 = supabaseClient.from('orders').select('*').eq('id', orderId).single();
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        p1 = appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings').then(function(doc) { return { data: doc }; }).catch(function() { return { data: {} }; });
+        p2 = appwriteDatabases.getDocument(APP_DB, 'orders', orderId).then(function(doc) { doc.id=doc.$id; if (typeof doc.items==='string') { try { doc.items=JSON.parse(doc.items); } catch(e){ doc.items=[]; } } return { data: doc }; }).catch(function() { return { data: null }; });
+    } else {
+        p1 = Promise.resolve({ data: {} });
+        p2 = Promise.resolve({ data: null });
+    }
+
+    Promise.all([p1, p2]).then(function(results) {
+        document.getElementById('pageLoader').style.display = 'none';
+        var settings = results[0].data || {};
+        var rOrder = results[1];
+        
+        if (settings.store_name) {
+            document.getElementById('navBrand').textContent = settings.store_name;
+        }
+
+        if (rOrder.error || !rOrder.data) {
+            document.getElementById('orderDetails').innerHTML = '<div style="text-align:center;padding:30px;color:#999;">Could not load order details.</div>';
+            return;
+        }
+        renderOrder(rOrder.data, settings);
+    });
+});
+
+function renderOrder(order, settings) {
+    var items = Array.isArray(order.items) ? order.items : [];
+
+    var itemsHtml = items.map(function(item) {
+        return '<tr>' +
+            '<td>' + item.productName + (item.color?' <span style="color:#888;font-size:12px;">(' + item.color + '/' + item.size + ')</span>':'') + '</td>' +
+            '<td style="text-align:center;">' + (item.quantity||1) + '</td>' +
+            '<td style="text-align:right;">৳' + item.price + '</td>' +
+            '<td style="text-align:right;font-weight:700;">৳' + (item.price*(item.quantity||1)) + '</td>' +
+        '</tr>';
+    }).join('');
+
+    var payIndicator = order.payment_method === 'COD' ? '💵 Cash on Delivery' :
+                       order.payment_method === 'Hybrid COD' ? '💵 Hybrid COD (Partial Advance)' :
+                       order.payment_method === 'bKash' ? '💜 bKash' :
+                       order.payment_method === 'Nagad' ? '🧡 Nagad' : '<i data-lucide="globe" class="lucide-icon icon-spin"></i> Online Payment';
+
+    var pickupCard = '';
+    if (order.delivery_type === 'pickup' && (settings.store_address || settings.store_map_link)) {
+        var mapUrl = settings.store_map_link ? settings.store_map_link : 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(settings.store_address);
+        pickupCard = '<div class="info-card" style="background:linear-gradient(135deg,#fff8e1,#fff3cd);border:1px solid rgba(255,149,0,0.2);">' +
+            '<div style="font-size:14px;font-weight:800;color:#d97706;margin-bottom:8px;"><i data-lucide="store" class="lucide-icon icon-bounce"></i> Store Pickup Location</div>' +
+            (settings.store_address ? '<div style="font-size:13px;color:#555;margin-bottom:12px;line-height:1.6;"><b>Address:</b> ' + settings.store_address + '</div>' : '') +
+            '<a href="' + mapUrl + '" target="_blank" class="btn btn-outline btn-full btn-sm" style="background:#fff;border-color:#d97706;color:#d97706;font-weight:700;"><i data-lucide="map" class="lucide-icon"></i> Get Store Direction</a>' +
+        '</div>';
+    }
+
+    var html =
+        '<div class="info-card">' +
+            '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">' +
+                '<div><div class="info-label">Name</div><div class="info-value">' + order.customer_name + '</div></div>' +
+                '<div><div class="info-label">Phone</div><div class="info-value">' + order.customer_phone + '</div></div>' +
+                '<div><div class="info-label">Location</div><div class="info-value">' + order.district + ', ' + order.division + '</div></div>' +
+                '<div><div class="info-label">Payment</div><div class="info-value">' + payIndicator + '</div></div>' +
+            '</div>' +
+            (order.address ? '<div style="margin-top:12px;"><div class="info-label">Address</div><div class="info-value">' + order.address + '</div></div>' : '') +
+            (order.payment_trx_id ? '<div style="margin-top:10px;background:rgba(0,0,0,0.04);border-radius:8px;padding:8px 12px;font-size:13px;"><b>TrxID:</b> <code>' + order.payment_trx_id + '</code></div>' : '') +
+        '</div>' +
+        
+        pickupCard +
+
+        '<div class="info-card">' +
+            '<div style="font-size:14px;font-weight:800;margin-bottom:14px;"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> Order Items</div>' +
+            '<table class="invoice-table">' +
+                '<thead><tr><th>Product</th><th style="text-align:center;">Qty</th><th style="text-align:right;">Price</th><th style="text-align:right;">Total</th></tr></thead>' +
+                '<tbody>' + itemsHtml + '</tbody>' +
+            '</table>' +
+            '<div style="margin-top:12px;">' +
+                '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span>Subtotal</span><span>৳' + order.subtotal + '</span></div>' +
+                (order.addon_total > 0 ? '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span>Add-ons</span><span>৳' + order.addon_total + '</span></div>' : '') +
+                '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span>Delivery</span><span>৳' + order.delivery_charge + '</span></div>' +
+                (order.promo_discount > 0 ? '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;color:#22C55E;"><span>Discount</span><span>-৳' + order.promo_discount + '</span></div>' : '') +
+                '<div style="display:flex;justify-content:space-between;border-top:2px solid #eee;padding-top:10px;margin-top:6px;font-size:17px;font-weight:900;"><span>Grand Total</span><span style="color:var(--primary);">৳' + order.grand_total + '</span></div>' +
+                (order.advance_payable > 0 ? '<div style="display:flex;justify-content:space-between;margin-top:6px;font-size:13px;color:#FF9500;"><span>Advance Paid</span><span>৳' + order.advance_payable + '</span></div>' : '') +
+            '</div>' +
+        '</div>' +
+
+        '<div class="info-card" style="text-align:center;background:linear-gradient(135deg,rgba(0,122,255,0.05),rgba(0,122,255,0.02));">' +
+            '<div style="font-size:14px;font-weight:700;margin-bottom:8px;"><i data-lucide="package" class="lucide-icon icon-bounce"></i> What happens next?</div>' +
+            '<div style="font-size:13px;color:#666;line-height:1.7;">' +
+                (order.payment_status === 'Unpaid' ? '1. <i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Your order is confirmed\n2. <i data-lucide="search" class="lucide-icon"></i> Our team is reviewing it\n3. <i data-lucide="package" class="lucide-icon icon-bounce"></i> We\'ll call you before pickup/shipping\n4. <i data-lucide="truck" class="lucide-icon icon-bounce"></i> Processed in 2-5 business days' : '1. <i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Payment received\n2. <i data-lucide="package" class="lucide-icon icon-bounce"></i> We\'re preparing your order\n3. <i data-lucide="truck" class="lucide-icon icon-bounce"></i> Processed in 2-5 business days') +
+            '</div>' +
+        '</div>';
+
+    currentOrderData = order;
+
+    document.getElementById('orderDetails').innerHTML = html;
+}
+
+function downloadPDF() {
+    if (!currentOrderData) return;
+    var order = currentOrderData;
+    
+    // Populate PDF Template
+    document.getElementById('pdfOrderId').textContent = order.id;
+    document.getElementById('pdfOrderDate').textContent = new Date(order.created_at).toLocaleDateString();
+    document.getElementById('pdfStoreName').textContent = document.getElementById('navBrand').textContent;
+    document.getElementById('pdfCusName').textContent = order.customer_name;
+    document.getElementById('pdfCusPhone').textContent = order.customer_phone;
+    document.getElementById('pdfCusAddress').textContent = (order.address || '') + '\n' + order.district + ', ' + order.division;
+    
+    document.getElementById('pdfPayMethod').textContent = order.payment_method;
+    document.getElementById('pdfPayStatus').textContent = order.payment_status;
+    document.getElementById('pdfTrxRow').innerHTML = order.payment_trx_id ? 'TrxID: <code>' + order.payment_trx_id + '</code>' : '';
+
+    var items = Array.isArray(order.items) ? order.items : [];
+    var itemsHtml = items.map(function(item) {
+        return '<tr>' +
+            '<td style="padding: 12px; border-bottom: 1px solid #eee;">' + item.productName + (item.color?' <span style="color:#888;font-size:12px;">(' + item.color + '/' + item.size + ')</span>':'') + '</td>' +
+            '<td style="padding: 12px; border-bottom: 1px solid #eee; text-align:center;">' + (item.quantity||1) + '</td>' +
+            '<td style="padding: 12px; border-bottom: 1px solid #eee; text-align:right;">৳' + item.price + '</td>' +
+            '<td style="padding: 12px; border-bottom: 1px solid #eee; text-align:right; font-weight:bold;">৳' + (item.price*(item.quantity||1)) + '</td>' +
+        '</tr>';
+    }).join('');
+    document.getElementById('pdfItemsBody').innerHTML = itemsHtml;
+
+    var totalsHtml = 
+        '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;"><span>Subtotal</span><span>৳' + order.subtotal + '</span></div>' +
+        (order.addon_total > 0 ? '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;"><span>Add-ons</span><span>৳' + order.addon_total + '</span></div>' : '') +
+        '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;"><span>Delivery Charge</span><span>৳' + order.delivery_charge + '</span></div>' +
+        (order.promo_discount > 0 ? '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;color:#22C55E;"><span>Discount</span><span>-৳' + order.promo_discount + '</span></div>' : '') +
+        '<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:2px solid #eee;font-size:18px;font-weight:bold;"><span>Grand Total</span><span>৳' + order.grand_total + '</span></div>' +
+        (order.advance_payable > 0 ? '<div style="display:flex;justify-content:space-between;padding:8px 0;color:#FF9500;"><span>Advance Paid</span><span>৳' + order.advance_payable + '</span></div>' : '');
+    document.getElementById('pdfTotalsArea').innerHTML = totalsHtml;
+
+    // Generate PDF from the hidden container
+    var element = document.getElementById('pdfInvoice');
+    var opt = {
+        margin: 10,
+        filename: 'Invoice_' + order.id + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, windowWidth: 830 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    // Temporarily append container to body so html2canvas renders it fully without cutting
+    var container = document.getElementById('pdfContainer');
+    document.body.appendChild(container);
+    container.style.display = 'block';
+    container.style.position = 'absolute';
+    container.style.left = '0';
+    container.style.top = '-9999px';
+    container.style.zIndex = '-9999';
+
+    html2pdf().set(opt).from(element).save().then(function() {
+        container.style.display = 'none';
+        container.style.position = 'static';
+    });
+}
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="assets/js/offline-handler.js"></script>
+    <!-- Shared Custom Right Click / Long-Press Menu -->
+    <script src="assets/js/context-menu.js"></script></body>
+</html>
+
+
+

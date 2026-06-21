@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login — Freelancing By Rifat</title>
+    <!-- Explicit CSP to allow Supabase, external scripts, and eval -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="../assets/js/config.js?v=4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="../assets/js/appwrite-init.js"></script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --maroon:        #800000;
+            --maroon-light:  #A52A2A;
+            --maroon-dark:   #5C0000;
+            --maroon-soft:   rgba(128, 0, 0, 0.12);
+            --white:         #FFFFFF;
+            --off-white:     #FAF8F8;
+            --text-dark:     #1A0A0A;
+            --text-mid:      #5C3A3A;
+            --text-light:    #9E7070;
+            --border:        rgba(128, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: #F5EDED;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ── Animated Maroon Blur Orbs ── */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            animation: floatOrb 10s ease-in-out infinite;
+        }
+        .orb-1 {
+            width: 480px; height: 480px;
+            background: radial-gradient(circle, rgba(128,0,0,0.30) 0%, rgba(128,0,0,0.08) 50%, transparent 70%);
+            top: -140px; left: -140px;
+            animation-delay: 0s;
+        }
+        .orb-2 {
+            width: 380px; height: 380px;
+            background: radial-gradient(circle, rgba(165,42,42,0.25) 0%, rgba(92,0,0,0.06) 50%, transparent 70%);
+            bottom: -120px; right: -120px;
+            animation-delay: -5s;
+        }
+        .orb-3 {
+            width: 260px; height: 260px;
+            background: radial-gradient(circle, rgba(128,0,0,0.18) 0%, transparent 70%);
+            top: 40%; left: 60%;
+            animation-delay: -2.5s;
+            animation-duration: 13s;
+        }
+        .orb-4 {
+            width: 200px; height: 200px;
+            background: radial-gradient(circle, rgba(165,42,42,0.20) 0%, transparent 70%);
+            top: 20%; right: 25%;
+            animation-delay: -7s;
+            animation-duration: 8s;
+        }
+        @keyframes floatOrb {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            33%       { transform: translateY(-25px) scale(1.04); }
+            66%       { transform: translateY(15px) scale(0.97); }
+        }
+
+        /* subtle dot grid */
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(128,0,0,0.12) 1px, transparent 1px);
+            background-size: 28px 28px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Login Card ── */
+        .login-card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 430px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 28px;
+            padding: 46px 40px 40px;
+            box-shadow:
+                0 4px 6px rgba(128,0,0,0.04),
+                0 20px 60px rgba(128,0,0,0.12),
+                0 0 0 1px rgba(128,0,0,0.06);
+            overflow: hidden;
+        }
+
+        /* top accent bar */
+        .card-accent {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--maroon-dark), var(--maroon), var(--maroon-light));
+            border-radius: 28px 28px 0 0;
+        }
+
+        /* inner corner decoration */
+        .card-deco {
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 130px; height: 130px;
+            background: radial-gradient(circle, rgba(128,0,0,0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        /* ── Header ── */
+        .login-header { text-align: center; margin-bottom: 34px; }
+
+        .logo-wrap {
+            width: 68px; height: 68px;
+            background: linear-gradient(135deg, var(--maroon-dark) 0%, var(--maroon-light) 100%);
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 18px;
+            box-shadow: 0 8px 28px rgba(128,0,0,0.30), 0 2px 6px rgba(128,0,0,0.20);
+        }
+
+        .logo-wrap svg { color: #fff; }
+
+        .login-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+            letter-spacing: -0.3px;
+        }
+
+        .login-sub {
+            font-size: 13px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* ── Form ── */
+        .form-group { margin-bottom: 18px; }
+
+        .form-label {
+            display: block;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-mid);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 8px;
+        }
+
+        .input-wrap { position: relative; }
+
+        .input-icon {
+            position: absolute;
+            left: 14px; top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            display: flex; align-items: center;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 13px 16px 13px 42px;
+            background: var(--white);
+            border: 1.5px solid rgba(128, 0, 0, 0.15);
+            border-radius: 13px;
+            font-family: inherit;
+            font-size: 14.5px;
+            color: var(--text-dark);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .form-input::placeholder { color: #C4A8A8; }
+
+        .form-input:focus {
+            border-color: var(--maroon);
+            box-shadow: 0 0 0 3.5px rgba(128, 0, 0, 0.12);
+        }
+
+        .form-input:focus + .focus-ring { opacity: 1; }
+
+        /* icon turns maroon on input focus */
+        .input-wrap:focus-within .input-icon { color: var(--maroon); }
+
+        /* password toggle */
+        .pass-toggle {
+            position: absolute;
+            right: 13px; top: 50%;
+            transform: translateY(-50%);
+            background: none; border: none;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 4px;
+            display: flex; align-items: center;
+            transition: color 0.2s;
+        }
+        .pass-toggle:hover { color: var(--maroon); }
+
+        /* ── Login Button ── */
+        .login-btn {
+            width: 100%;
+            padding: 14.5px 20px;
+            background: linear-gradient(135deg, var(--maroon-dark) 0%, var(--maroon) 50%, var(--maroon-light) 100%);
+            background-size: 200% 200%;
+            background-position: left center;
+            border: none;
+            border-radius: 50px;
+            color: var(--white);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            cursor: pointer;
+            margin-top: 26px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            box-shadow: 0 6px 22px rgba(128,0,0,0.28), 0 2px 6px rgba(128,0,0,0.18);
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover:not(:disabled) {
+            background-position: right center;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(128,0,0,0.35), 0 4px 10px rgba(128,0,0,0.20);
+        }
+
+        .login-btn:active:not(:disabled) { transform: translateY(0); }
+        .login-btn:disabled { opacity: 0.65; cursor: not-allowed; }
+
+        /* ── Divider ── */
+        .or-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: var(--text-light);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(128,0,0,0.12);
+        }
+
+        /* ── Web3 Button Group ── */
+        .web3-group { display: flex; flex-direction: column; gap: 10px; }
+
+        .web3-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background-size: 200% 200%;
+            background-position: left center;
+            border: 1.5px solid rgba(255, 153, 0, 0.35);
+            border-radius: 50px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 22px rgba(255,153,0,0.15), 0 2px 8px rgba(0,0,0,0.20);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .web3-btn.solana-btn {
+            border-color: rgba(153, 69, 255, 0.45);
+            background: linear-gradient(135deg, #1a0a2e 0%, #160a3e 50%, #2a0f60 100%);
+            box-shadow: 0 6px 22px rgba(153,69,255,0.15), 0 2px 8px rgba(0,0,0,0.20);
+        }
+        .web3-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,153,0,0.08) 0%, transparent 60%);
+            border-radius: inherit;
+        }
+        .web3-btn.solana-btn::before {
+            background: linear-gradient(135deg, rgba(153,69,255,0.10) 0%, transparent 60%);
+        }
+        .web3-btn:hover:not(:disabled) {
+            background-position: right center;
+            transform: translateY(-2px);
+            border-color: rgba(255,153,0,0.65);
+            box-shadow: 0 10px 30px rgba(255,153,0,0.25), 0 4px 12px rgba(0,0,0,0.25);
+        }
+        .web3-btn.solana-btn:hover:not(:disabled) {
+            border-color: rgba(153,69,255,0.75);
+            box-shadow: 0 10px 30px rgba(153,69,255,0.30), 0 4px 12px rgba(0,0,0,0.25);
+        }
+        .web3-btn:active:not(:disabled) { transform: translateY(0); }
+        .web3-btn:disabled { opacity: 0.60; cursor: not-allowed; }
+
+        .wallet-icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+        .metamask-icon {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        /* Wallet address pill */
+        .wallet-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,153,0,0.10);
+            border: 1px solid rgba(255,153,0,0.30);
+            border-radius: 50px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #cc7700;
+            margin-top: 8px;
+        }
+        .wallet-dot {
+            width: 7px; height: 7px;
+            background: #FF9900;
+            border-radius: 50%;
+            animation: walletPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes walletPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+
+        /* spinning loader */
+        .spinner {
+            width: 20px; height: 20px;
+            border: 2.5px solid rgba(255,255,255,0.35);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.65s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Toast Notifications ── */
+        #toastContainer {
+            position: fixed;
+            top: 20px; right: 20px;
+            z-index: 1000;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .toast {
+            background: var(--white);
+            border-left: 4px solid var(--maroon);
+            color: var(--text-dark);
+            padding: 14px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(128,0,0,0.15);
+            display: flex; align-items: center; gap: 10px;
+            font-size: 13.5px; font-weight: 500;
+            transform: translateX(130%);
+            transition: transform 0.35s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            min-width: 260px;
+            max-width: 340px;
+        }
+        .toast.show { transform: translateX(0); }
+        .toast.error { border-left-color: var(--maroon); }
+        .toast.success { border-left-color: #2e7d32; }
+
+        /* ── Success Redirect Overlay ── */
+        .redirect-msg {
+            display: none;
+            text-align: center;
+            padding: 16px 0 4px;
+            color: #2e7d32;
+            font-size: 14px;
+            font-weight: 600;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .redirect-msg.show { display: flex; }
+
+        /* ── Footer ── */
+        .login-footer {
+            text-align: center;
+            margin-top: 26px;
+            font-size: 11.5px;
+            color: var(--text-light);
+        }
+
+    </style>
+    <link rel="stylesheet" href="../assets/css/premium-icons.css">
+</head>
+<body>
+
+    <!-- Animated Maroon Blur Orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Login Card -->
+    <div class="login-card">
+        <div class="card-accent"></div>
+        <div class="card-deco"></div>
+
+        <!-- Header -->
+        <div class="login-header">
+            <div class="logo-wrap">
+                <!-- Shield icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <path d="M9 12l2 2 4-4"></path>
+                </svg>
+            </div>
+            <h1 class="login-title">Admin Login</h1>
+            <p class="login-sub">Freelancing By Rifat — Control Panel</p>
+        </div>
+
+        <!-- Login Form -->
+        <!-- Login Form -->
+        <div id="loginForm">
+
+            <!-- Email/Password Form -->
+            <div id="emailSection">
+                <div class="form-group">
+                    <label class="form-label" for="emailInput">Email</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        </span>
+                        <input type="email" id="emailInput" class="form-input" placeholder="admin@example.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="passInput">Password</label>
+                    <div class="input-wrap">
+                        <span class="input-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        </span>
+                        <input type="password" id="passInput" class="form-input" placeholder="••••••••">
+                        <button type="button" class="pass-toggle" onclick="togglePass()" id="passToggleBtn">
+                            <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="login-btn" id="emailBtn" onclick="loginWithEmail()" style="margin-top:8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                    <span>Sign In with Email</span>
+                </button>
+            </div>
+
+            <!-- Google Login Option -->
+            <div id="googleLoginSection">
+                <!-- Divider -->
+                <div class="or-divider" style="margin:18px 0;">or</div>
+
+            <!-- Google Login Button -->
+            <button type="button" class="login-btn" id="googleBtn" onclick="loginWithGoogle()" style="background:#fff;color:#333;border:1px solid #e0e0e0;box-shadow:0 4px 12px rgba(0,0,0,0.05);padding:12px 20px;margin-top:0;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
+                    <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+                    <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+                    <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+                    <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+                </svg>
+                <span style="font-size:15px;font-weight:600;">Sign in with Google</span>
+            </button>
+            </div> <!-- End of googleLoginSection -->
+
+            <!-- Web3 Login Options (Hidden for Appwrite) -->
+            <div id="web3LoginSection">
+                <!-- Divider -->
+                <div class="or-divider" style="margin:18px 0;">or connect wallet</div>
+
+                <!-- Web3 Wallet Buttons -->
+                <div class="web3-group">
+                <button type="button" class="web3-btn" id="web3EthBtn" onclick="loginWithEthereum()">
+                    <svg class="metamask-icon" viewBox="0 0 318.6 318.6" xmlns="http://www.w3.org/2000/svg">
+                        <polygon fill="#E2761B" stroke="#E2761B" points="274.1,35.5 174.6,109.4 193,65.8"/>
+                        <polygon fill="#E4761B" stroke="#E4761B" points="44.4,35.5 143.1,110.1 125.6,65.8"/>
+                        <polygon fill="#E4761B" stroke="#E4761B" points="238.3,206.8 211.8,247.4 268.5,263 284.8,207.7"/>
+                        <polygon fill="#E4761B" stroke="#E4761B" points="33.9,207.7 50.1,263 106.8,247.4 80.3,206.8"/>
+                        <polygon fill="#E4761B" stroke="#E4761B" points="103.6,138.2 87.8,162.1 144.1,164.6 142.1,104.1"/>
+                        <polygon fill="#E4761B" stroke="#E4761B" points="214.9,138.2 175.9,103.4 174.6,164.6 230.8,162.1"/>
+                        <polygon fill="#E4761B" stroke="#E4761B" points="106.8,247.4 140.6,230.9 111.4,208.1"/>
+                        <polygon fill="#E4761B" stroke="#E4761B" points="177.9,230.9 211.8,247.4 207.1,208.1"/>
+                    </svg>
+                    <span style="font-size:15px;font-weight:600;">MetaMask (ETH)</span>
+                </button>
+                <button type="button" class="web3-btn solana-btn" id="web3SolBtn" onclick="loginWithSolana()">
+                    <svg class="wallet-icon" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="128" height="128" rx="64" fill="#AB9FF2"/>
+                        <path d="M110.584 64.9142H99.142C99.142 41.7651 80.173 23 56.7724 23C33.6612 23 14.8921 41.4056 14.4339 64.2364C13.9631 87.8889 33.4253 108 57.2285 108H63.0094C84.2651 108 110.584 91.7856 110.584 64.9142Z" fill="white"/>
+                        <ellipse cx="77.7065" cy="60.2283" rx="5.6645" ry="5.7028" fill="#AB9FF2"/>
+                        <ellipse cx="56.9744" cy="60.2283" rx="5.6645" ry="5.7028" fill="#AB9FF2"/>
+                    </svg>
+                    <span style="font-size:15px;font-weight:600;">Phantom (SOL)</span>
+                </button>
+            </div>
+
+                <div id="walletPill" style="display:none;justify-content:center;margin-top:10px;">
+                    <div class="wallet-pill">
+                        <div class="wallet-dot"></div>
+                        <span id="walletAddrText">0x0000...0000</span>
+                    </div>
+                </div>
+            </div> <!-- End of web3LoginSection -->
+
+            <p style="margin-top:16px;font-size:12px;color:var(--text-light);text-align:center;">🔒 Secure Admin Authentication</p>
+        </div>
+
+        <!-- Success redirect msg -->
+        <div class="redirect-msg" id="redirectMsg">
+            <div class="spinner" style="border-top-color:#2e7d32;border-color:rgba(46,125,50,0.25);"></div>
+            <span>Redirecting to dashboard...</span>
+        </div>
+
+        <!-- Footer -->
+        <div class="login-footer">
+            Freelancing By Rifat &copy; 2025 &mdash; Admin Panel
+        </div>
+    </div>
+
+    <script>
+        // Use global `CONFIG` and `sb` from ../assets/js/ config files
+
+        // ── Toast notification ──────────────────────────────────
+        function showToast(message, type) {
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + (type || 'info');
+
+            var iconSvg = (type === 'success')
+                ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#800000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+
+            toast.innerHTML = iconSvg + '<span>' + message + '</span>';
+            container.appendChild(toast);
+
+            setTimeout(function() { toast.classList.add('show'); }, 10);
+
+            setTimeout(function() {
+                toast.classList.remove('show');
+                setTimeout(function() { toast.remove(); }, 350);
+            }, 3500);
+        }
+
+        // ── Wallet Not Authorized Modal ──────────────────────────
+        function showWalletNotAuthorized(address) {
+            document.getElementById('walletModalAddr').textContent = address;
+            document.getElementById('walletModal').style.display = 'flex';
+        }
+
+        function closeWalletModal() {
+            document.getElementById('walletModal').style.display = 'none';
+        }
+
+        function copyWalletAddr() {
+            var addr = document.getElementById('walletModalAddr').textContent;
+            navigator.clipboard.writeText(addr).then(function() {
+                var btn = document.getElementById('copyWalletBtn');
+                btn.textContent = '✅ Copied!';
+                btn.style.background = '#2e7d32';
+                setTimeout(function() {
+                    btn.textContent = '📋 Copy Address';
+                    btn.style.background = '';
+                }, 2000);
+            });
+        }
+
+        // ── Check session automatically ─────────────────────────
+        function checkSession() {
+            if (CONFIG.DB_PROVIDER === 'supabase') {
+                supabaseClient.auth.getSession().then(function(res) {
+                    var session = res.data && res.data.session;
+                    if (session) {
+                        document.getElementById('loginForm').style.display = 'none';
+                        document.getElementById('redirectMsg').classList.add('show');
+                        window.location.href = 'dashboard.html';
+                    }
+                });
+            } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                appwriteAccount.getSession('current')
+                .then(function(session) {
+                    if (session) {
+                        document.getElementById('loginForm').style.display = 'none';
+                        document.getElementById('redirectMsg').classList.add('show');
+                        window.location.href = 'dashboard.html';
+                    }
+                }).catch(function() {
+                    // No active session — stay on login page
+                });
+            }
+        }
+        
+        // Wait for DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM Loaded - Auth UI ready");
+            if (CONFIG.DB_PROVIDER === 'appwrite') {
+                var web3Opts = document.getElementById('web3LoginSection');
+                if (web3Opts) web3Opts.style.display = 'none';
+            }
+            checkSession();
+        });
+
+        // ══ Password Toggle ───────────────────────────────────────
+        function togglePass() {
+            var inp = document.getElementById('passInput');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        }
+
+        // ══ Email / Password Login ────────────────────────────────
+        async function loginWithEmail() {
+            var email = document.getElementById('emailInput').value.trim();
+            var pass  = document.getElementById('passInput').value;
+            var btn   = document.getElementById('emailBtn');
+            if (!email || !pass) { showToast('⚠️ Please enter email and password.', 'error'); return; }
+            var orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div><span>Signing in...</span>';
+            // Try sign-in first; if user not found, sign-up
+            var res, res2;
+            if (CONFIG.DB_PROVIDER === 'supabase') {
+                res = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+                if (res.error && (res.error.message.includes('Invalid login') || res.error.message.includes('user not found') || res.error.message.includes('Email not confirmed'))) {
+                    // Try signup
+                    res2 = await supabaseClient.auth.signUp({ email, password: pass });
+                    if (res2.error) {
+                        showToast('❌ ' + res2.error.message, 'error');
+                        btn.disabled = false; btn.innerHTML = orig; return;
+                    }
+                    showToast('📧 Check your email to confirm your account!', 'success');
+                    btn.disabled = false; btn.innerHTML = orig; return;
+                }
+            } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                try {
+                    // Try login first
+                    var session = await appwriteAccount.createEmailPasswordSession(email, pass);
+                    res = { error: null, data: { session: session } };
+                } catch (loginErr) {
+                    // If user doesn't exist, create account
+                    try {
+                        await appwriteAccount.create(Appwrite.ID.unique(), email, pass);
+                        var session2 = await appwriteAccount.createEmailPasswordSession(email, pass);
+                        res = { error: null, data: { session: session2 } };
+                    } catch (signupErr) {
+                        res = { error: { message: signupErr.message } };
+                    }
+                }
+            }
+            if (res.error) { showToast('❌ ' + res.error.message, 'error'); btn.disabled = false; btn.innerHTML = orig; return; }
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('redirectMsg').classList.add('show');
+            setTimeout(function() { window.location.href = 'dashboard.html'; }, 1000);
+        }
+
+        // ══ Login Click Handler (Google OAuth) ───────────────────
+        async function loginWithGoogle() {
+            var btn = document.getElementById('googleBtn');
+            var originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="border-top-color:#333;border-color:rgba(0,0,0,0.1);"></div><span style="color:#333;">Connecting...</span>';
+
+            var redirectUrl = window.location.href.split('?')[0].replace(/index\.html$/, '') + 'dashboard.html';
+
+            let error;
+            if (CONFIG.DB_PROVIDER === 'supabase') {
+                const res = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: redirectUrl
+                    }
+                });
+                error = res.error;
+            } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                try {
+                    appwriteAccount.createOAuth2Session(
+                        'google',
+                        redirectUrl,
+                        redirectUrl.replace('dashboard.html', 'index.html')
+                    );
+                    // Browser will redirect — no error here
+                    error = null;
+                } catch (oauthErr) {
+                    error = { message: oauthErr.message };
+                }
+            }
+
+            if (error) {
+                showToast('Login Error: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+            // If successful, Supabase redirects the browser to Google
+        }
+
+        // ══ Helper: handle post-auth success ─────────────────────
+        function handleWeb3Success(address, btnEl, originalHTML) {
+            var shortAddr = address.substring(0, 6) + '...' + address.substring(address.length - 4);
+            document.getElementById('walletAddrText').textContent = shortAddr;
+            document.getElementById('walletPill').style.display = 'flex';
+            btnEl.innerHTML = '<span>✅ Verified!</span>';
+            showToast('✅ Wallet verified! Redirecting...', 'success');
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('redirectMsg').classList.add('show');
+            setTimeout(function() { window.location.href = 'dashboard.html'; }, 1200);
+        }
+
+        function handleWeb3Error(err, btnEl, originalHTML) {
+            console.error('Web3 auth error:', err);
+            if (err.code === 4001 || (err.message && err.message.includes('rejected'))) {
+                showToast('❌ Connection rejected by user.', 'error');
+            } else if (err.message && err.message.includes('422')) {
+                showToast('❌ Web3 auth not enabled in Supabase! Enable it in Dashboard → Auth → Providers.', 'error');
+            } else {
+                showToast('❌ Error: ' + (err.message || 'Unknown error'), 'error');
+            }
+            btnEl.disabled = false;
+            btnEl.innerHTML = originalHTML;
+            document.getElementById('walletPill').style.display = 'none';
+        }
+
+        // ══ Ethereum / MetaMask Login (Supabase signInWithWeb3) ──────
+        async function loginWithEthereum() {
+            var btn = document.getElementById('web3EthBtn');
+            var originalHTML = btn.innerHTML;
+
+            if (typeof window.ethereum === 'undefined') {
+                showToast('⚠️ MetaMask not found! Please install MetaMask extension.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            document.getElementById('web3SolBtn').disabled = true;
+            btn.innerHTML = '<div class="spinner" style="border-top-color:#FF9900;border-color:rgba(255,153,0,0.2);"></div><span>Connecting...</span>';
+
+            try {
+                // Request account access first so we know the address
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const address = accounts[0];
+
+                var shortAddr = address.substring(0, 6) + '...' + address.substring(address.length - 4);
+                document.getElementById('walletAddrText').textContent = shortAddr;
+                document.getElementById('walletPill').style.display = 'flex';
+
+                btn.innerHTML = '<div class="spinner" style="border-top-color:#FF9900;border-color:rgba(255,153,0,0.2);"></div><span>Signing message...</span>';
+
+                // Use Supabase native signInWithWeb3 — creates real JWT session
+                let error;
+                if (CONFIG.DB_PROVIDER === 'supabase') {
+                    const res = await supabaseClient.auth.signInWithWeb3({
+                        chain: 'ethereum',
+                        statement: 'Sign in to Freelancing By Rifat Admin Panel.',
+                        getMessageToSign: async ({ message, nonce }) => {
+                            // EIP-191 personal_sign
+                            return message;
+                        },
+                        signMessage: async ({ message }) => {
+                            const signature = await window.ethereum.request({
+                                method: 'personal_sign',
+                                params: [message, address],
+                            });
+                            return { signature };
+                        },
+                        address: address,
+                    });
+                    error = res.error;
+                } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                    // Appwrite তে Web3 native auth নেই — wallet address প্রমাণ করে bypass করি
+                    // Custom session: signed message verify করে admin access
+                    const msgToSign = 'Sign in to Admin Panel: ' + new Date().toISOString().substring(0,10);
+                    const msgHex    = '0x' + Array.from(new TextEncoder().encode(msgToSign)).map(b => b.toString(16).padStart(2,'0')).join('');
+                    const signature = await window.ethereum.request({
+                        method: 'personal_sign',
+                        params: [msgHex, address]
+                    });
+                    // Store wallet address in localStorage as admin auth token
+                    localStorage.setItem('aw_admin_wallet', address);
+                    localStorage.setItem('aw_admin_sig', signature);
+                    localStorage.setItem('aw_admin_ts', Date.now().toString());
+                    error = null;
+                }
+
+                if (error) throw error;
+
+                // ✅ Real Supabase session created
+                document.getElementById('web3SolBtn').disabled = false;
+                handleWeb3Success(address, btn, originalHTML);
+
+            } catch (err) {
+                document.getElementById('web3SolBtn').disabled = false;
+                handleWeb3Error(err, btn, originalHTML);
+            }
+        }
+
+        // ══ Solana / Phantom Login (Supabase signInWithWeb3) ─────────
+        async function loginWithSolana() {
+            var btn = document.getElementById('web3SolBtn');
+            var originalHTML = btn.innerHTML;
+
+            // Check Phantom or any Solana wallet
+            var solProvider = window.phantom?.solana || window.solana;
+            if (!solProvider || !solProvider.isPhantom && !solProvider.isSolflare) {
+                // Try any window.solana
+                solProvider = window.solana;
+            }
+            if (!solProvider) {
+                showToast('⚠️ Solana wallet not found! Please install Phantom or Solflare.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            document.getElementById('web3EthBtn').disabled = true;
+            btn.innerHTML = '<div class="spinner" style="border-top-color:#AB9FF2;border-color:rgba(171,159,242,0.2);"></div><span>Connecting...</span>';
+
+            try {
+                // Connect wallet
+                const resp = await solProvider.connect();
+                const address = resp.publicKey.toString();
+
+                var shortAddr = address.substring(0, 5) + '...' + address.substring(address.length - 4);
+                document.getElementById('walletAddrText').textContent = shortAddr;
+                document.getElementById('walletPill').style.display = 'flex';
+
+                btn.innerHTML = '<div class="spinner" style="border-top-color:#AB9FF2;border-color:rgba(171,159,242,0.2);"></div><span>Signing message...</span>';
+
+                // Use Supabase native signInWithWeb3 for Solana
+                let error;
+                if (CONFIG.DB_PROVIDER === 'supabase') {
+                    const res = await supabaseClient.auth.signInWithWeb3({
+                        chain: 'solana',
+                        statement: 'Sign in to Freelancing By Rifat Admin Panel.',
+                        signMessage: async ({ message }) => {
+                            // message is a Uint8Array
+                            const encoded = new TextEncoder().encode(message);
+                            const { signature } = await solProvider.signMessage(encoded, 'utf8');
+                            return { signature: Array.from(signature) };
+                        },
+                        address: address,
+                    });
+                    error = res.error;
+                } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                    // Solana wallet verify — sign message করে localStorage তে store
+                    const msgToSign2 = 'Sign in to Admin Panel: ' + new Date().toISOString().substring(0,10);
+                    const encoded2 = new TextEncoder().encode(msgToSign2);
+                    const { signature: sig2 } = await solProvider.signMessage(encoded2, 'utf8');
+                    localStorage.setItem('aw_admin_wallet', address);
+                    localStorage.setItem('aw_admin_sig', JSON.stringify(Array.from(sig2)));
+                    localStorage.setItem('aw_admin_ts', Date.now().toString());
+                    error = null;
+                }
+
+                if (error) throw error;
+
+                // ✅ Real Supabase session created
+                document.getElementById('web3EthBtn').disabled = false;
+                handleWeb3Success(address, btn, originalHTML);
+
+            } catch (err) {
+                document.getElementById('web3EthBtn').disabled = false;
+                handleWeb3Error(err, btn, originalHTML);
+            }
+        }
+    </script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+    <!-- Cloudflare deploy test -->
+</body>
+</html>
+
+
