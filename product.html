@@ -4,7 +4,7 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product — Freelancing By Rifat</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <script src="assets/js/config.js?v=4"></script>
+    <script src="assets/js/config.js?v=1782024132023"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var id = new URLSearchParams(window.location.search).get('id');
     if (!id) { window.location.href = '404.html'; return; }
 
-    var p1, p2, p3, p4, p5, p6;
+    var p1, p2, p3, p4, p5, p6, p7;
 
     if (CONFIG.DB_PROVIDER === 'supabase') {
         p2 = fetch('/api/get-single-product?id=' + id).then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) && data.length ? data[0] : null }; });
@@ -274,7 +274,9 @@ document.addEventListener('DOMContentLoaded', function() {
         p3 = supabaseClient.from('reviews').select('rating').eq('product_id', id).eq('is_approved', true);
         p5 = supabaseClient.from('product_categories').select('*');
         p6 = supabaseClient.from('reviews').select('*').eq('product_id', id).eq('is_approved', true).order('created_at', { ascending: false }).range(0, REVIEWS_PAGE_SIZE - 1);
+        p7 = supabaseClient.from('devtools').select('*').eq('id', 1).single().then(function(r){return r;}).catch(function(){return {data:{}};});
     } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        p7 = Promise.resolve({ data: {} });
         p2 = fetch('/api/appwrite-get-single-product?id=' + id).then(function(r) { return r.json(); }).then(function(data) { return { data: (data && !data.error) ? data : null }; }).catch(function() { return { data: null }; });
         p4 = fetch('/api/appwrite-get-products').then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; }).catch(function() { return { data: [] }; });
         p1 = appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings').then(function(doc) { if (typeof doc.messaging_apps==='string') { try { doc.messaging_apps=JSON.parse(doc.messaging_apps); } catch(e){} } return { data: doc }; }).catch(function() { return { data: {} }; });
@@ -288,15 +290,17 @@ document.addEventListener('DOMContentLoaded', function() {
         p4 = Promise.resolve({ data: [] });
         p5 = Promise.resolve({ data: [] });
         p6 = Promise.resolve({ data: [] });
+        p7 = Promise.resolve({ data: {} });
     }
 
-    Promise.all([p1, p2, p3, p4, p5, p6]).then(function(results) {
+    Promise.all([p1, p2, p3, p4, p5, p6, p7]).then(function(results) {
         settings = results[0].data || {};
         product  = results[1].data;
         var ratings = results[2].data || [];
         allProdsForRelated = results[3].data || [];
         var prodCats = results[4].data || [];
         var initialReviews = results[5].data || [];
+        var devtools = (results[6] && results[6].data) ? results[6].data : settings;
 
         // Attach category_ids to each product
         allProdsForRelated.forEach(function(p) {
@@ -316,9 +320,9 @@ document.addEventListener('DOMContentLoaded', function() {
         reviewImgbbKey = settings.review_imgbb_key || '';
 
         // ═ MAINTENANCE MODE CHECK ═
-        if (settings.maintenance_mode === true) {
+        if (devtools.maintenance_mode === true) {
             document.getElementById('pageLoader').style.display = 'none';
-            document.body.innerHTML = '<style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#0a0a0f;color:#f0f0f0;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;text-align:center;padding:24px;}.icon{font-size:72px;margin-bottom:24px;animation:float 3s ease-in-out infinite;}@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}.title{font-size:28px;font-weight:800;margin-bottom:12px;}.msg{font-size:15px;color:#888;max-width:420px;line-height:1.8;margin-bottom:28px;}.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:30px;font-size:12px;font-weight:700;background:rgba(255,77,77,0.08);color:#ff6b6b;border:1px solid rgba(255,77,77,0.2);}.dot{width:8px;height:8px;border-radius:50%;background:#ff4d4d;animation:pulse 1.5s ease-in-out infinite;}@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.3;transform:scale(0.6);}}</style><div class="icon">\ud83d\udd27</div><div class="title">Site Under Maintenance</div><div class="msg">' + (settings.maintenance_message || '\u0986\u09ae\u09b0\u09be \u09b6\u09c0\u0998\u09cd\u09b0\u0987 \u09ab\u09bf\u09b0\u09c7 \u0986\u09b8\u099b\u09bf\u0964') + '</div><div class="badge"><div class="dot"></div> Maintenance Mode Active</div>';
+            document.body.innerHTML = '<style>*{margin:0;padding:0;box-sizing:border-box;}body{background:#0a0a0f;color:#f0f0f0;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;text-align:center;padding:24px;}.icon{font-size:72px;margin-bottom:24px;animation:float 3s ease-in-out infinite;}@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-12px);}}.title{font-size:28px;font-weight:800;margin-bottom:12px;}.msg{font-size:15px;color:#888;max-width:420px;line-height:1.8;margin-bottom:28px;}.badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:30px;font-size:12px;font-weight:700;background:rgba(255,77,77,0.08);color:#ff6b6b;border:1px solid rgba(255,77,77,0.2);}.dot{width:8px;height:8px;border-radius:50%;background:#ff4d4d;animation:pulse 1.5s ease-in-out infinite;}@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.3;transform:scale(0.6);}}</style><div class="icon">\ud83d\udd27</div><div class="title">Site Under Maintenance</div><div class="msg">' + (devtools.maintenance_message || '\u0986\u09ae\u09b0\u09be \u09b6\u09c0\u0998\u09cd\u09b0\u0987 \u09ab\u09bf\u09b0\u09c7 \u0986\u09b8\u099b\u09bf\u0964') + '</div><div class="badge"><div class="dot"></div> Maintenance Mode Active</div>';
             return;
         }
 

@@ -1,0 +1,89 @@
+{
+  "worktrees": {
+    "wt-1776958817970-1": {
+      "branch": "wealthy-bergamot",
+      "path": "c:\\Users\\PC NET\\Downloads\\e-commarce\\.kilo\\worktrees\\wealthy-bergamot",
+      "parentBranch": "main",
+      "createdAt": "2026-04-23T15:40:17.970Z",
+      "remote": "origin"
+    },
+    "wt-1777894553213-1": {
+      "branch": "maroon-leopon",
+      "path": "c:\\Users\\PC NET\\Downloads\\e-commarce\\.kilo\\worktrees\\maroon-leopon",
+      "parentBranch": "main",
+      "createdAt": "2026-05-04T11:35:53.213Z",
+      "remote": "origin"
+    },
+    "wt-1777894553957-2": {
+      "branch": "fluorescent-stinger",
+      "path": "c:\\Users\\PC NET\\Downloads\\e-commarce\\.kilo\\worktrees\\fluorescent-stinger",
+      "parentBranch": "main",
+      "createdAt": "2026-05-04T11:35:53.957Z",
+      "remote": "origin"
+    },
+    "wt-1777894566546-3": {
+      "branch": "regular-fog",
+      "path": "c:\\Users\\PC NET\\Downloads\\e-commarce\\.kilo\\worktrees\\regular-fog",
+      "parentBranch": "main",
+      "createdAt": "2026-05-04T11:36:06.546Z",
+      "remote": "origin"
+    },
+    "wt-1781010951135-1": {
+      "branch": "brassy-shrine",
+      "path": "c:\\Users\\PC NET\\Downloads\\e-commarce\\.kilo\\worktrees\\brassy-shrine",
+      "parentBranch": "main",
+      "createdAt": "2026-06-09T13:15:51.135Z",
+      "remote": "demo-shop"
+    },
+    "wt-1781010956783-2": {
+      "branch": "everlasting-tadpole",
+      "path": "c:\\Users\\PC NET\\Downloads\\e-commarce\\.kilo\\worktrees\\everlasting-tadpole",
+      "parentBranch": "main",
+      "createdAt": "2026-06-09T13:15:56.783Z",
+      "remote": "demo-shop"
+    }
+  },
+  "sessions": {
+    "ses_245003856ffeUXahOXUJRgsevi": {
+      "worktreeId": "wt-1776958817970-1",
+      "createdAt": "2026-04-23T15:40:18.225Z"
+    },
+    "ses_244fc7260ffexzHVC9ZY6Sl4jT": {
+      "worktreeId": "wt-1776958817970-1",
+      "createdAt": "2026-04-23T15:44:25.515Z"
+    },
+    "ses_20d3a0888ffed77j25VLWPq7Pi": {
+      "worktreeId": "wt-1777894553213-1",
+      "createdAt": "2026-05-04T11:35:53.466Z"
+    },
+    "ses_20d3a05c4ffe3RgBdRwH7BiWWA": {
+      "worktreeId": "wt-1777894553957-2",
+      "createdAt": "2026-05-04T11:35:54.175Z"
+    },
+    "ses_20d39d489ffeJlYSpanVHy4SaS": {
+      "worktreeId": "wt-1777894566546-3",
+      "createdAt": "2026-05-04T11:36:06.782Z"
+    },
+    "ses_1537992c3ffeHmzCBWxfb17TPp": {
+      "worktreeId": "wt-1781010951135-1",
+      "createdAt": "2026-06-09T13:15:51.498Z"
+    },
+    "ses_153797c82ffeh6KVVdJ6e9xi1T": {
+      "worktreeId": "wt-1781010956783-2",
+      "createdAt": "2026-06-09T13:15:57.197Z"
+    }
+  },
+  "tabOrder": {
+    "local": [
+      "pending:1"
+    ]
+  },
+  "worktreeOrder": [
+    "wt-1776958817970-1",
+    "wt-1777894553213-1",
+    "wt-1777894553957-2",
+    "wt-1777894566546-3",
+    "wt-1781010951135-1",
+    "wt-1781010956783-2"
+  ]
+}

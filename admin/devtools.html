@@ -7,7 +7,7 @@
     <!-- NO META DESCRIPTION — intentionally hidden -->
     <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="../assets/js/config.js?v=4"></script>
+    <script src="../assets/js/config.js?v=1782024132023"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../assets/js/supabase-init.js"></script>
     <style>
@@ -957,7 +957,7 @@ async function resetDevAccess() {
 var _maintActive = false;
 
 function loadMaintenanceStatus() {
-    getDB().from('settings').select('maintenance_mode, maintenance_message').eq('id', 1).single().then(function(r) {
+    getDB().from('devtools').select('maintenance_mode, maintenance_message').eq('id', 1).single().then(function(r) {
         var s = r.data || {};
         _maintActive = s.maintenance_mode === true;
         updateMaintUI(_maintActive, s.maintenance_message || '');
@@ -997,7 +997,7 @@ async function enableMaintenance() {
     var msg = (document.getElementById('maintMessage').value.trim()) || 'আমরা শীঘ্রই ফিরে আসছি। কিছু technical কাজ চলছে। 🔧';
     if (!confirm('⚠️ এখনই site বন্ধ করবেন? সব visitor maintenance page দেখবে।')) return;
 
-    var r = await getDB().from('settings').upsert([{ id: 1, maintenance_mode: true, maintenance_message: msg }]);
+    var r = await getDB().from('devtools').upsert([{ id: 1, maintenance_mode: true, maintenance_message: msg }]);
     if (r.error) { devToast('✗ Error: ' + r.error.message, '#ff4d4d'); return; }
     _maintActive = true;
     updateMaintUI(true, msg);
@@ -1009,7 +1009,7 @@ async function enableMaintenance() {
 async function disableMaintenance() {
     if (!confirm('Site live করবেন? সব visitor access পাবে।')) return;
 
-    var r = await getDB().from('settings').update({ maintenance_mode: false }).eq('id', 1);
+    var r = await getDB().from('devtools').update({ maintenance_mode: false }).eq('id', 1);
     if (r.error) { devToast('✗ Error: ' + r.error.message, '#ff4d4d'); return; }
     _maintActive = false;
     updateMaintUI(false, '');
@@ -1277,7 +1277,7 @@ function loadKeysDisplay() {
     });
 
     // Custom CSS
-    getDB().from('settings').select('custom_css').eq('id',1).single().then(function(r) {
+    getDB().from('devtools').select('custom_css').eq('id',1).single().then(function(r) {
         if (r.data && r.data.custom_css) {
             document.getElementById('customCssInput').value = r.data.custom_css;
         }
@@ -1306,7 +1306,7 @@ function saveSettingsOverride() {
 
 function saveCustomCss() {
     var css = document.getElementById('customCssInput').value;
-    getDB().from('settings').update({custom_css: css}).eq('id', 1).then(function(r) {
+    getDB().from('devtools').update({custom_css: css}).eq('id', 1).then(function(r) {
         if (r.error) { devToast('✗ Failed: ' + r.error.message, '#ff4d4d'); return; }
         devLog('Custom CSS injected (' + css.length + ' chars)', 'warn');
         devToast('💉 CSS injected to site!', '#00ff88');

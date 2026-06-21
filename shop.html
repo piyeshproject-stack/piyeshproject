@@ -5,7 +5,7 @@
     <title>Shop — Freelancing By Rifat</title>
     <meta name="description" content="Browse all products. Filter by category, price and more.">
     <link rel="stylesheet" href="assets/css/style.css">
-    <script src="assets/js/config.js?v=4"></script>
+    <script src="assets/js/config.js?v=1782024132023"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
@@ -218,14 +218,16 @@ document.addEventListener('DOMContentLoaded', function() {
     var urlCat = new URLSearchParams(window.location.search).get('cat');
     if (urlCat) activeCatId = urlCat;
 
-    var p1, p2, p3, p4;
+    var p1, p2, p3, p4, p5;
 
     if (CONFIG.DB_PROVIDER === 'supabase') {
         p3 = fetch('/api/get-products-list').then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; });
         p1 = supabaseClient.from('settings').select('*').eq('id',1).single();
         p2 = supabaseClient.from('categories').select('*').eq('is_active',true).order('sort_order');
         p4 = supabaseClient.from('product_categories').select('*');
+        p5 = supabaseClient.from('devtools').select('*').eq('id',1).single().then(function(r){return r;}).catch(function(){return {data:{}};});
     } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        p5 = Promise.resolve({ data: {} });
         p3 = fetch('/api/appwrite-get-products').then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; }).catch(function() { return { data: [] }; });
         p1 = appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings').then(function(doc) { return { data: doc }; }).catch(function() { return { data: {} }; });
         p2 = appwriteDatabases.listDocuments(APP_DB, 'categories', [AppwriteQuery.equal('is_active', true), AppwriteQuery.orderAsc('sort_order')]).then(function(res) { return { data: res.documents.map(function(d){ d.id=d.$id; return d; }) }; }).catch(function() { return { data: [] }; });
@@ -235,13 +237,15 @@ document.addEventListener('DOMContentLoaded', function() {
         p2 = Promise.resolve({ data: [] });
         p3 = Promise.resolve({ data: [] });
         p4 = Promise.resolve({ data: [] });
+        p5 = Promise.resolve({ data: {} });
     }
 
-    Promise.all([p1, p2, p3, p4]).then(function(results) {
+    Promise.all([p1, p2, p3, p4, p5]).then(function(results) {
         var r = results[0];
         allCategories = results[1].data || [];
         allProducts   = results[2].data || [];
         var pc = results[3].data || [];
+        var devtools = (results[4] && results[4].data) ? results[4].data : (r.data || {});
 
         allProducts.forEach(function(p) {
             p.category_ids = pc.filter(function(x) { return x.product_id === p.id; }).map(function(x) { return x.category_id; });
@@ -253,8 +257,8 @@ document.addEventListener('DOMContentLoaded', function() {
             var s = r.data;
 
             // ═ MAINTENANCE MODE CHECK ═
-            if (s.maintenance_mode === true) {
-                showMaintenancePage(s.maintenance_message || 'আমরা শীঘ্রই ফিরে আসছি।');
+            if (devtools.maintenance_mode === true) {
+                showMaintenancePage(devtools.maintenance_message || 'আমরা শীঘ্রই ফিরে আসছি।');
                 return;
             }
 

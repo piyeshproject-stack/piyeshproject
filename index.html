@@ -6,7 +6,7 @@
     <title>Freelancing By Rifat — Home</title>
     <meta name="description" content="Best quality products at the best prices. Shop now at Freelancing By Rifat.">
     <link rel="stylesheet" href="assets/css/style.css">
-    <script src="assets/js/config.js?v=4"></script>
+    <script src="assets/js/config.js?v=1782024132023"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
@@ -167,11 +167,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadSiteData() {
-    var p1, p2, p3, p4, p5, p6;
+    var p1, p2, p3, p4, p5, p6, p7;
 
     if (CONFIG.DB_PROVIDER === 'supabase') {
         if (!window.supabaseClient) {
-            document.getElementById('pageLoader').innerHTML = '<div style="color:red;padding:20px;text-align:center;font-weight:bold;">Database Error: Supabase credentials are missing! Check Cloudflare Environment Variables (Production & Preview).</div>';
+            document.getElementById('pageLoader').innerHTML = '<div style="color:red;padding:20px;text-align:center;font-weight:bold;">Database Error: Supabase credentials are missing or invalid!</div>';
             return;
         }
         p1 = supabaseClient.from('settings').select('*').eq('id', 1).single();
@@ -181,7 +181,9 @@ function loadSiteData() {
         p4 = fetch('/api/get-products-list').then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; });
         p5 = supabaseClient.from('home_sections').select('*').eq('is_active', true).order('sort_order');
         p6 = supabaseClient.from('product_categories').select('*');
+        p7 = supabaseClient.from('devtools').select('*').eq('id', 1).single().then(function(r){return r;}).catch(function(){return {data:{}};});
     } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        p7 = Promise.resolve({ data: {} });
         p1 = appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings')
             .then(function(doc) {
                 doc.messaging_apps = doc.messaging_apps ? JSON.parse(doc.messaging_apps) : [];
@@ -213,13 +215,14 @@ function loadSiteData() {
             }).catch(function() { return { data: [] }; });
     }
 
-    Promise.all([p1, p2, p3, p4, p5, p6]).then(function(results) {
+    Promise.all([p1, p2, p3, p4, p5, p6, p7]).then(function(results) {
         var settings    = results[0].data || {};
         var banners     = results[1].data || [];
         var cats        = results[2].data || [];
         allProducts     = results[3].data || [];
         var homeSects   = results[4].data || [];
         var prodCats    = results[5].data || [];
+        var devtools    = (results[6] && results[6].data) ? results[6].data : settings;
 
         // Attach category_ids to each product
         allProducts.forEach(function(p) {
@@ -230,8 +233,8 @@ function loadSiteData() {
         siteSettings = settings;
 
         // ═ MAINTENANCE MODE CHECK ═
-        if (settings.maintenance_mode === true) {
-            showMaintenancePage(settings.maintenance_message || 'আমরা শীঘ্রই ফিরে আসছি। কিছু technical কাজ চলছে।');
+        if (devtools.maintenance_mode === true) {
+            showMaintenancePage(devtools.maintenance_message || 'আমরা শীঘ্রই ফিরে আসছি। কিছু technical কাজ চলছে।');
             return;
         }
 

@@ -1,13 +1,5 @@
 // ============================================================
-// assets/js/config.js  —  Placeholder
-// Project: Freelancing By Rifat E-Commerce
-// ============================================================
-//
-// ⚠️  এই ফাইলটি Cloudflare build process-এর সময় স্বয়ংক্রিয়ভাবে
-//     তৈরি হবে (build.js দ্বারা)।
-//
-//     আপনার Cloudflare Dashboard → Settings → Environment Variables
-//     এ সব credentials রাখুন।
+// Auto-generated during Cloudflare Build
 // ============================================================
 
 var CONFIG = {
@@ -23,10 +15,9 @@ var CONFIG = {
     APPWRITE_PROJECT:     '',
     APPWRITE_DATABASE_ID: '',
 
-    // ── Frontend Constants (DB ছাড়াই কাজ করে) ───────────
+    // ── Frontend Constants ───────────────────────────────────
     CART_KEY:         'fbr_cart',
     DIRECT_ORDER_KEY: 'fbr_direct_order',
     SESSION_KEY:      'fbr_session',
     ADMIN_PATH:       '/admin',
 };
-
