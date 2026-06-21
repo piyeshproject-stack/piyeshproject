@@ -5,7 +5,15 @@
 
 // Initialize window.supabase
 if (typeof supabase !== 'undefined') {
-    window.supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    try {
+        if (!CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY) {
+            console.error("SUPABASE_URL or SUPABASE_ANON_KEY is missing in CONFIG!");
+        } else {
+            window.supabaseClient = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+        }
+    } catch (err) {
+        console.error("Supabase init error:", err);
+    }
     
     // Inject custom headers (for auth) into global fetch
     // Supabase JS v2 uses global fetch. We intercept it to inject the admin token.

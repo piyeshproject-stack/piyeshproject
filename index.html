@@ -170,6 +170,10 @@ function loadSiteData() {
     var p1, p2, p3, p4, p5, p6;
 
     if (CONFIG.DB_PROVIDER === 'supabase') {
+        if (!window.supabaseClient) {
+            document.getElementById('pageLoader').innerHTML = '<div style="color:red;padding:20px;text-align:center;font-weight:bold;">Database Error: Supabase credentials are missing! Check Cloudflare Environment Variables (Production & Preview).</div>';
+            return;
+        }
         p1 = supabaseClient.from('settings').select('*').eq('id', 1).single();
         p2 = supabaseClient.from('banners').select('*').eq('is_active', true).order('sort_order');
         p3 = supabaseClient.from('categories').select('*').eq('is_active', true).order('sort_order');
