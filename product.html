@@ -269,14 +269,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (CONFIG.DB_PROVIDER === 'supabase') {
         p2 = fetch('/api/get-single-product?id=' + id).then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) && data.length ? data[0] : null }; });
-        p4 = fetch('/api/get-products-list?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(d){ return { data: Array.isArray(d) ? d : [] }; }).catch(function(){ return { data: [] }; });
+        p4 = fetch('/api/get-products-list').then(function(r){ return r.json(); }).then(function(d){ return { data: Array.isArray(d) ? d : [] }; }).catch(function(){ return { data: [] }; });
         p1 = supabaseClient.from('settings').select('*').eq('id',1).single();
         p3 = supabaseClient.from('reviews').select('rating').eq('product_id', id).eq('is_approved', true);
         p5 = supabaseClient.from('product_categories').select('*');
         p6 = supabaseClient.from('reviews').select('*').eq('product_id', id).eq('is_approved', true).order('created_at', { ascending: false }).range(0, REVIEWS_PAGE_SIZE - 1);
     } else if (CONFIG.DB_PROVIDER === 'appwrite') {
         p2 = fetch('/api/appwrite-get-single-product?id=' + id).then(function(r) { return r.json(); }).then(function(data) { return { data: (data && !data.error) ? data : null }; }).catch(function() { return { data: null }; });
-        p4 = fetch('/api/appwrite-get-products?t=' + Date.now()).then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; }).catch(function() { return { data: [] }; });
+        p4 = fetch('/api/appwrite-get-products').then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; }).catch(function() { return { data: [] }; });
         p1 = appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings').then(function(doc) { if (typeof doc.messaging_apps==='string') { try { doc.messaging_apps=JSON.parse(doc.messaging_apps); } catch(e){} } return { data: doc }; }).catch(function() { return { data: {} }; });
         p3 = appwriteDatabases.listDocuments(APP_DB, 'reviews', [AppwriteQuery.equal('product_id', id), AppwriteQuery.equal('is_approved', true)]).then(function(res) { return { data: res.documents }; }).catch(function() { return { data: [] }; });
         p5 = appwriteDatabases.listDocuments(APP_DB, 'product_categories', [AppwriteQuery.limit(5000)]).then(function(res) { return { data: res.documents.map(function(d){ d.id=d.$id; return d; }) }; }).catch(function() { return { data: [] }; });

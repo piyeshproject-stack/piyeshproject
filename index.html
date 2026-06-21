@@ -178,7 +178,7 @@ function loadSiteData() {
         p2 = supabaseClient.from('banners').select('*').eq('is_active', true).order('sort_order');
         p3 = supabaseClient.from('categories').select('*').eq('is_active', true).order('sort_order');
         // Fetch all products via Cloudflare proxy instead of direct Supabase call
-        p4 = fetch('/api/get-products-list?t=' + Date.now()).then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; });
+        p4 = fetch('/api/get-products-list').then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; });
         p5 = supabaseClient.from('home_sections').select('*').eq('is_active', true).order('sort_order');
         p6 = supabaseClient.from('product_categories').select('*');
     } else if (CONFIG.DB_PROVIDER === 'appwrite') {
@@ -199,7 +199,7 @@ function loadSiteData() {
             ]).then(function(res) {
                 return { data: res.documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; }) };
             }).catch(function() { return { data: [] }; });
-        p4 = fetch('/api/appwrite-get-products?t=' + Date.now()).then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; }).catch(function() { return { data: [] }; });
+        p4 = fetch('/api/appwrite-get-products').then(function(r) { return r.json(); }).then(function(data) { return { data: Array.isArray(data) ? data : [] }; }).catch(function() { return { data: [] }; });
         p5 = appwriteDatabases.listDocuments(APP_DB, 'home_sections', [
                 AppwriteQuery.equal('is_active', true),
                 AppwriteQuery.orderAsc('sort_order')

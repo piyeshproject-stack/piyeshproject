@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     AppwriteQuery.limit(500)
                 ]).then(function(res) { return { data: res.documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; }) }; })
                 .catch(function() { return { data: [] }; });
-            p5 = fetch('/api/appwrite-get-products?t=' + Date.now()).then(function(r) { return r.json(); }).then(function(data) {
+            p5 = fetch('/api/appwrite-get-products').then(function(r) { return r.json(); }).then(function(data) {
                 return { data: (Array.isArray(data) ? data : []).filter(function(d) { return d.is_add_once === true && d.is_active === true; }) };
             }).catch(function() { return { data: [] }; });
         } else {
