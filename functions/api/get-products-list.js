@@ -106,8 +106,7 @@ export async function onRequest(context) {
             status:  200,
             headers: {
                 'Content-Type':                'application/json',
-                'Access-Control-Allow-Origin': '*',
-                'Cache-Control':               'public, max-age=3600', // Cache for 1 hour
+                'Access-Control-Allow-Origin': '*'
             },
         });
 
