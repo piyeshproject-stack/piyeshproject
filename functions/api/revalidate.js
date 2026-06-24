@@ -66,6 +66,12 @@ export async function onRequestPost(context) {
     const origin = config.STORE_URL || new URL(context.request.url).origin;
     const listUrl = `${origin}/api/get-products-list`;
 
+    const filesToPurge = [listUrl];
+
+    if (productId) {
+        filesToPurge.push(`${origin}/api/get-single-product?id=${productId}`);
+    }
+
     const purgeRequests = [
         fetch(CF_PURGE_URL, {
             method:  'POST',
@@ -73,23 +79,9 @@ export async function onRequestPost(context) {
                 'Authorization': `Bearer ${config.CF_API_TOKEN}`,
                 'Content-Type':  'application/json',
             },
-            body: JSON.stringify({ files: [listUrl] }),
-        }),
+            body: JSON.stringify({ files: filesToPurge }),
+        })
     ];
-
-    if (productId) {
-        const urlToPurge = `${origin}/api/get-single-product?id=${productId}`;
-        purgeRequests.push(
-            fetch(CF_PURGE_URL, {
-                method:  'POST',
-                headers: {
-                    'Authorization': `Bearer ${config.CF_API_TOKEN}`,
-                    'Content-Type':  'application/json',
-                },
-                body: JSON.stringify({ files: [urlToPurge] }),
-            })
-        );
-    }
 
     // ── 5. Fire all purge requests in parallel ─────────────────
     try {
