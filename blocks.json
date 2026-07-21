@@ -1,0 +1,52 @@
+[
+  {
+    "start": 456,
+    "end": 456,
+    "content": "        } else if (CONFIG.DB_PROVIDER === 'appwrite') {"
+  },
+  {
+    "start": 1551,
+    "end": 1551,
+    "content": "    } else if (CONFIG.DB_PROVIDER === 'appwrite') {"
+  },
+  {
+    "start": 1594,
+    "end": 1594,
+    "content": "    } else if (CONFIG.DB_PROVIDER === 'appwrite') {"
+  },
+  {
+    "start": 1650,
+    "end": 1650,
+    "content": "    } else if (CONFIG.DB_PROVIDER === 'appwrite') {"
+  },
+  {
+    "start": 1680,
+    "end": 1680,
+    "content": "            } else if (trxId && CONFIG.DB_PROVIDER === 'appwrite') {"
+  },
+  {
+    "start": 1720,
+    "end": 1720,
+    "content": "                        } else if (CONFIG.DB_PROVIDER === 'appwrite') {"
+  },
+  {
+    "start": 2227,
+    "end": 2227,
+    "content": "    } else if (CONFIG.DB_PROVIDER === 'appwrite') {"
+  },
+  {
+    "start": 2392,
+    "end": 2392,
+    "content": "    } else if (CONFIG.DB_PROVIDER === 'appwrite') {"
+  },
+  {
+    "start": 2515,
+    "end": 2515,
+    "content": "    } else if (CONFIG.DB_PROVIDER === 'appwrite') {"
+  },
+  {
+    "start": 2536,
+    "end": 2536,
+    "content": "        } else if (CONFIG.DB_PROVIDER === 'appwrite') {"
+  }
+]

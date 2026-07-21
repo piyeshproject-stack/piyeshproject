@@ -1,0 +1,258 @@
+### Block 1 (Around Line 446)
+`javascript
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            if (!window.supabaseClient) {
+                document.getElementById('pageLoader').innerHTML = '<div style="color:red;padding:20px;text-align:center;font-weight:bold;">Database Error: Supabase credentials are missing or invalid!</div>';
+                return;
+            }
+            p1 = supabaseClient.from('settings').select('*').eq('id',1).single();
+            p2 = supabaseClient.from('delivery_zones').select('*');
+            p3 = supabaseClient.from('addons').select('*').eq('is_active',true).order('created_at');
+            p4 = supabaseClient.from('promos').select('*').eq('is_active',true);
+            p5 = supabaseClient.from('products').select('id,name,base_price,flash_sale_price,gallery_images,variants').eq('is_add_once',true).eq('is_active',true);
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            p1 = appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings')
+                .then(function(doc) {
+                    if (typeof doc.messaging_apps === 'string') { try { doc.messaging_apps = JSON.parse(doc.messaging_apps); } catch(e) { doc.messaging_apps = []; } }
+                    if (typeof doc.crypto_coins  === 'string') { try { doc.crypto_coins  = JSON.parse(doc.crypto_coins);  } catch(e) { doc.crypto_coins = []; } }
+                    return { data: doc };
+                }).catch(function() { return { data: {} }; });
+            p2 = appwriteDatabases.listDocuments(APP_DB, 'delivery_zones', [])
+                .then(function(res) { return { data: res.documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; }) }; })
+                .catch(function() { return { data: [] }; });
+            p3 = appwriteDatabases.listDocuments(APP_DB, 'addons', [
+                    AppwriteQuery.equal('is_active', true),
+                    AppwriteQuery.orderAsc('$createdAt')
+                ]).then(function(res) { return { data: res.documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; }) }; })
+                .catch(function() { return { data: [] }; });
+            p4 = appwriteDatabases.listDocuments(APP_DB, 'promos', [
+                    AppwriteQuery.equal('is_active', true),
+                    AppwriteQuery.limit(500)
+                ]).then(function(res) { return { data: res.documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; }) }; })
+                .catch(function() { return { data: [] }; });
+            p5 = fetch('/api/appwrite-get-products').then(function(r) { return r.json(); }).then(function(data) {
+                return { data: (Array.isArray(data) ? data : []).filter(function(d) { return d.is_add_once === true && d.is_active === true; }) };
+            }).catch(function() { return { data: [] }; });
+        } else {
+`
+
+### Block 2 (Around Line 1549)
+`javascript
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        insertPromise = supabaseClient.from('orders').insert([orderData]);
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var awOrderData = Object.assign({}, orderData);
+        awOrderData.items  = JSON.stringify(awOrderData.items  || []);
+        awOrderData.addons = JSON.stringify(awOrderData.addons || []);
+        delete awOrderData.id;
+        insertPromise = appwriteDatabases.createDocument(APP_DB, 'orders', orderId, awOrderData)
+            .then(function(doc) { return { data: [{ id: doc.$id }], error: null }; })
+            .catch(function(err) { return { data: null, error: err }; });
+    }
+    insertPromise.then(function(r) {
+        if (r.error) { btn.disabled = false; btn.innerHTML = '<i data-lucide="rocket" class="lucide-icon icon-bounce"></i> Place Order'; if (typeof lucide !== 'undefined') lucide.createIcons(); alert('Error: ' + r.error.message); return; }
+        sendOrderNotification(orderData);
+        // Direct Order হলে শুধু direct key clear করো — main cart অক্ষত থাকবে
+        if (isDirectOrder) {
+            localStorage.removeItem(DIRECT_KEY);
+        } else {
+`
+
+### Block 3 (Around Line 1592)
+`javascript
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        insertPromise = supabaseClient.from('orders').insert([Object.assign({}, orderData, { payment_status: 'Unpaid', status: 'Pending' })]);
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var awOrderData2 = Object.assign({}, orderData, { payment_status: 'Unpaid', status: 'Pending' });
+        awOrderData2.items  = JSON.stringify(awOrderData2.items  || []);
+        awOrderData2.addons = JSON.stringify(awOrderData2.addons || []);
+        delete awOrderData2.id;
+        insertPromise = appwriteDatabases.createDocument(APP_DB, 'orders', orderId, awOrderData2)
+            .then(function(doc) { return { data: [{ id: doc.$id }], error: null }; })
+            .catch(function(err) { return { data: null, error: err }; });
+    }
+
+    insertPromise.then(function(r) {
+        if (r.error) { alert('Order save failed: ' + r.error.message); return; }
+
+        // ── 🔄 Gateway Execution (v1 and v2 now use same JSON logic) ────────
+        var reqBody = {
+            cus_name:    name,
+            cus_email:   email,
+            amount:      total,
+            success_url: sUrl,
+            cancel_url:  cUrl,
+            tran_id:     orderId,
+            api_key:     apiKey
+        };
+
+        fetch(proxyUrl + '?action=create', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', 'API-KEY': apiKey },
+            body: JSON.stringify(reqBody)
+        }).then(function(res) { return res.json(); }).then(function(pD) {
+            if (pD.payment_url) {
+                window.location.href = pD.payment_url;
+            } else {
+`
+
+### Block 4 (Around Line 1648)
+`javascript
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        selectPromise = supabaseClient.from('orders').select('*').eq('id', orderId).single();
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        selectPromise = appwriteDatabases.getDocument(APP_DB, 'orders', orderId)
+            .then(function(doc) {
+                doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } }
+                if (typeof doc.items  === 'string') { try { doc.items  = JSON.parse(doc.items);  } catch(e) { doc.items = []; } }
+                if (typeof doc.addons === 'string') { try { doc.addons = JSON.parse(doc.addons); } catch(e) { doc.addons = []; } }
+                return { data: doc, error: null };
+            }).catch(function(err) { return { data: null, error: err }; });
+    }
+    selectPromise.then(function(oRes) {
+        if (oRes.error || !oRes.data) {
+            document.getElementById('pageLoader').style.display = 'none';
+            alert('Order not found!');
+            return;
+        }
+
+        var oData = oRes.data;
+        var cleanUrl = window.location.protocol + '//' + window.location.host + window.location.pathname;
+
+        if (oData.payment_status === 'Paid' || oData.payment_status === 'Advance Paid') {
+            window.history.replaceState({}, document.title, cleanUrl);
+            document.getElementById('pageLoader').style.display = 'none';
+            window.location.href = 'success.html?id=' + orderId;
+            return;
+        }
+
+        if (trxId || orderId) {
+            var dupCheck;
+            if (trxId && CONFIG.DB_PROVIDER === 'supabase') {
+                dupCheck = supabaseClient.from('orders').select('id,payment_trx_id').eq('payment_trx_id', trxId).neq('id', orderId).single();
+            } else if (trxId && CONFIG.DB_PROVIDER === 'appwrite') {
+                dupCheck = appwriteDatabases.listDocuments(APP_DB, 'orders', [
+                        AppwriteQuery.equal('payment_trx_id', trxId),
+                        AppwriteQuery.limit(1)
+                    ]).then(function(res) {
+                        var docs = res.documents.filter(function(d) { return d.$id !== orderId; });
+                        return docs.length ? { data: { id: docs[0].$id }, error: null } : { data: null, error: null };
+                    }).catch(function(err) { return { data: null, error: err }; });
+`
+
+### Block 5 (Around Line 1678)
+`javascript
+            if (trxId && CONFIG.DB_PROVIDER === 'supabase') {
+                dupCheck = supabaseClient.from('orders').select('id,payment_trx_id').eq('payment_trx_id', trxId).neq('id', orderId).single();
+            } else if (trxId && CONFIG.DB_PROVIDER === 'appwrite') {
+                dupCheck = appwriteDatabases.listDocuments(APP_DB, 'orders', [
+                        AppwriteQuery.equal('payment_trx_id', trxId),
+                        AppwriteQuery.limit(1)
+                    ]).then(function(res) {
+                        var docs = res.documents.filter(function(d) { return d.$id !== orderId; });
+                        return docs.length ? { data: { id: docs[0].$id }, error: null } : { data: null, error: null };
+                    }).catch(function(err) { return { data: null, error: err }; });
+            } else {
+`
+
+### Block 6 (Around Line 1718)
+`javascript
+                        if (CONFIG.DB_PROVIDER === 'supabase') {
+                            updatePromise = supabaseClient.from('orders').update(upData).eq('id', orderId);
+                        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                            updatePromise = appwriteDatabases.updateDocument(APP_DB, 'orders', orderId, upData)
+                                .then(function() { return { error: null }; })
+                                .catch(function(err) { return { error: err }; });
+                        } else {
+`
+
+### Block 7 (Around Line 2225)
+`javascript
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        checkPromise = supabaseClient.from('verified_payments').select('id').eq('transaction_id', txid).maybeSingle();
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        checkPromise = appwriteDatabases.listDocuments(APP_DB, 'verified_payments', [
+                AppwriteQuery.equal('transaction_id', txid),
+                AppwriteQuery.limit(1)
+            ]).then(function(res) {
+                return res.documents.length
+                    ? { data: { id: res.documents[0].$id }, error: null }
+                    : { data: null, error: null };
+            }).catch(function(err) { return { data: null, error: err }; });
+    } else {
+`
+
+### Block 8 (Around Line 2390)
+`javascript
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        insPromise = supabaseClient.from('verified_payments').insert([insData]);
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var awInsData = Object.assign({}, insData);
+        if (typeof awInsData.raw_response !== 'string') awInsData.raw_response = JSON.stringify(awInsData.raw_response || {});
+        awInsData.created_at = awInsData.created_at || new Date().toISOString();
+        delete awInsData.id;
+        insPromise = appwriteDatabases.createDocument(APP_DB, 'verified_payments', AppwriteID.unique(), awInsData)
+            .then(function() { return { error: null }; })
+            .catch(function(err) { return { error: err }; });
+    } else {
+`
+
+### Block 9 (Around Line 2513)
+`javascript
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        insertOrderPromise = supabaseClient.from('orders').insert([orderData]);
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var awCryptoOrder = Object.assign({}, orderData);
+        awCryptoOrder.items  = JSON.stringify(awCryptoOrder.items  || []);
+        awCryptoOrder.addons = JSON.stringify(awCryptoOrder.addons || []);
+        delete awCryptoOrder.id;
+        insertOrderPromise = appwriteDatabases.createDocument(APP_DB, 'orders', orderId, awCryptoOrder)
+            .then(function(doc) { return { data: [{ id: doc.$id }], error: null }; })
+            .catch(function(err) { return { data: null, error: err }; });
+    } else {
+`
+
+### Block 10 (Around Line 2534)
+`javascript
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('verified_payments').update({ order_id: orderId }).eq('transaction_id', txid);
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.listDocuments(APP_DB, 'verified_payments', [
+                AppwriteQuery.equal('transaction_id', txid)
+            ]).then(function(res) {
+                if (res.documents.length) {
+                    return appwriteDatabases.updateDocument(APP_DB, 'verified_payments', res.documents[0].$id, { order_id: orderId });
+                }
+            }).catch(function(err) { console.error('VP update error:', err.message); });
+        }
+
+        sendOrderNotification(orderData);
+        if (isDirectOrder) { localStorage.removeItem(DIRECT_KEY); }
+        else               { localStorage.removeItem(CONFIG.CART_KEY); }
+        window.location.href = 'success.html?id=' + orderId;
+    });
+}
+
+// ── Utils ─────────────────────────────────────────────────────
+function copyElementText(elId) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    var text = (el.textContent || el.innerText || '').replace(/[৳]/g, '').trim();
+
+    var fallback = function() {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch(e) {}
+        document.body.removeChild(ta);
+    };
+
+    var done = function() {
+        var og = el.style.color;
+        el.style.color = '#34C759';
+        setTimeout(function() { el.style.color = og; }, 600);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+`
+

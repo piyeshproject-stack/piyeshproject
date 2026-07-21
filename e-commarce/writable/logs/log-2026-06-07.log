@@ -1,0 +1,8 @@
+ALERT - 2026-06-07 12:50:22 --> {"status":1,"message":"Payment Link","payment_url":"https:\/\/updatepaysanbox.ekhonidigital.com\/api\/execute\/f84e2521fdd46593e784064d9d0eeade"}
+CRITICAL - 2026-06-07 13:26:48 --> Class "App\Libraries\GatewayApi" not found
+in APPPATH/Modules/User/Controllers/AddFunds.php on line 18.
+ 1 APPPATH/system/CodeIgniter.php(914): User\Controllers\AddFunds->__construct()
+ 2 APPPATH/system/CodeIgniter.php(493): CodeIgniter\CodeIgniter->createController()
+ 3 APPPATH/system/CodeIgniter.php(361): CodeIgniter\CodeIgniter->handleRequest()
+ 4 FCPATH/index.php(43): CodeIgniter\CodeIgniter->run()
+ALERT - 2026-06-07 13:27:28 --> {"status":1,"message":"Payment Link","payment_url":"https:\/\/updatepaysanbox.ekhonidigital.com\/api\/execute\/53a7b0dfcd5bdae240bb48adc0aff208"}

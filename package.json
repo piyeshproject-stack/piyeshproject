@@ -1,0 +1,13 @@
+{
+  "name": "e-commarce",
+  "version": "1.0.0",
+  "description": "Freelancing By Rifat E-commerce Platform",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server . -p 3000",
+    "dev": "http-server . -p 3000"
+  },
+  "dependencies": {
+    "http-server": "^14.1.1"
+  }
+}

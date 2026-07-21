@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Pricing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #09090b;
+            --card-bg: rgba(24, 24, 27, 0.6);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --secondary: #3b82f6;
+            --accent: #10b981;
+            --text-main: #fafafa;
+            --text-muted: #a1a1aa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.15), transparent 25%);
+            background-attachment: fixed;
+        }
+
+        .pricing-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #a1a1aa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Common Features */
+        .common-features {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 4rem;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .common-features h3 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .feature-icon {
+            color: var(--accent);
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        /* Pricing Cards */
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            align-items: stretch;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 1.5rem;
+            padding: 2.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card.popular {
+            border-color: var(--primary);
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.2);
+        }
+
+        .card.popular::before {
+            content: 'MOST POPULAR';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 0.5rem 1.5rem;
+            border-bottom-left-radius: 1rem;
+            border-bottom-right-radius: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .plan-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items:baseline;
+        }
+
+        .plan-price span {
+            font-size: 1rem;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-left: 0.25rem;
+        }
+
+        .plan-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            min-height: 40px;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
+
+        .plan-features li {
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .plan-features li svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        .plan-features li.info-item svg {
+            stroke: var(--secondary);
+        }
+
+        .info-text {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: #fff;
+            border: 1px solid var(--card-border);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: #fff;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .addons {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--card-border);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .pricing-cards {
+                grid-template-columns: 1fr;
+                max-width: 450px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <section class="pricing-section">
+        <div class="section-header">
+            <h1>Choose Your Perfect Plan</h1>
+            <p>Scalable e-commerce infrastructure designed for speed, reliability, and growth. Upgrade anytime as your business expands.</p>
+        </div>
+
+        <!-- Global Features -->
+        <div class="common-features">
+            <h3>✨ Included in All Plans</h3>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Global CDN for Superfast Loading</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Unlimited Users (100% Cached)</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Secure Admin Panel Access</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Zero Downtime Architecture</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Free SSL & DDoS Protection</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span>Seamless API Integrations</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="pricing-cards">
+            <!-- Lifetime Plan -->
+            <div class="card">
+                <div class="plan-name">Lifetime Starter</div>
+                <div class="plan-price">$150 <span>/ one-time</span></div>
+                <div class="plan-desc">Pay once, use forever. Best for starting out with zero monthly hosting costs.</div>
+                
+                <ul class="plan-features">
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <div>
+                            <strong>$0 Lifetime Hosting Cost</strong>
+                            <span class="info-text">No hidden monthly server fees.</span>
+                        </div>
+                    </li>
+                    <li class="info-item">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                        <div>
+                            <strong>100,000 Actions / Day</strong>
+                            <span class="info-text">Supports ~20k to 80k daily orders.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <div>
+                            <strong>How Actions Work:</strong>
+                            <span class="info-text">1 Order = 1 Action<br>1 Data Update = 1 Action<br>1 Admin Refresh = 1 Action</span>
+                        </div>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <span>Standard Media Storage</span>
+                    </li>
+                </ul>
+
+                <a href="#" class="btn btn-outline">Get Lifetime Plan</a>
+                
+                <div class="addons">
+                    <strong>Need more limits later?</strong><br>
+                    Add-ons available starting from <strong>$6/mo</strong> to increase action limits.
+                </div>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="card popular">
+                <div class="plan-name">Pro Growth</div>
+                <div class="plan-price">$15 <span>/ month</span></div>
+                <div class="plan-desc">Massively increased limits and full control for growing businesses.</div>
+                
+                <ul class="plan-features">
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <div>
+                            <strong>Significantly Higher Limits</strong>
+                            <span class="info-text">Powered by premium workers (Pay-as-you-go for extra). Limit concerns are a thing of the past.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <div>
+                            <strong>10 GB Cloud Storage Included</strong>
+                            <span class="info-text">Just $0.10 / GB monthly if exceeded.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <div>
+                            <strong>Global Photo Guarantee</strong>
+                            <span class="info-text">Lightning-fast image loading via optimized global CDN edge nodes.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <span>Full Control & Advanced Analytics</span>
+                    </li>
+                </ul>
+
+                <a href="#" class="btn btn-primary">Subscribe to Pro</a>
+                
+                <div class="addons" style="border-top-color: rgba(255,255,255,0.2);">
+                    <strong>Setup Details:</strong><br>
+                    $20 One-time setup fee + $15 1st month advance ($35 total to start).
+                </div>
+            </div>
+
+            <!-- Enterprise Max -->
+            <div class="card">
+                <div class="plan-name">Enterprise Max</div>
+                <div class="plan-price">$500 <span>/ month</span></div>
+                <div class="plan-desc">Data-center level scale for massive platforms with extreme traffic.</div>
+                
+                <ul class="plan-features">
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <div>
+                            <strong>Data-Center Level Limits</strong>
+                            <span class="info-text">Virtually unlimited scaling capacity for massive operations.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <span>Dedicated Resources & Priority Routing</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <span>White-Glove VIP Support 24/7</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <span>Custom SLA & Uptime Guarantee</span>
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg>
+                        <span>Everything in Pro Plan, unlimited.</span>
+                    </li>
+                </ul>
+
+                <a href="#" class="btn btn-outline">Contact Sales</a>
+                
+                <div class="addons">
+                    <strong>Setup Details:</strong><br>
+                    Custom setup fee based on migration requirements.
+                </div>
+            </div>
+        </div>
+    </section>
+
+</body>
+</html>

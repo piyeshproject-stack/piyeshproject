@@ -1,0 +1,80 @@
+/* ============================================================
+   Premium SVG Icon Animations & Styling (Lucide Icons)
+   ============================================================ */
+
+.lucide-icon {
+    display: inline-block;
+    vertical-align: middle;
+    width: 1em;
+    height: 1em;
+    stroke-width: 2px;
+    stroke: currentColor;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: all 0.3s ease;
+}
+
+/* Base Animations */
+@keyframes icon-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
+@keyframes icon-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+}
+
+@keyframes icon-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes icon-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px) rotate(-5deg); }
+    75% { transform: translateX(2px) rotate(5deg); }
+}
+
+/* Assigned Classes */
+.icon-bounce {
+    animation: icon-bounce 2s infinite ease-in-out;
+}
+
+.icon-pulse {
+    animation: icon-pulse 2s infinite ease-in-out;
+}
+
+.icon-spin {
+    animation: icon-spin 4s infinite linear;
+}
+
+/* Hover Classes */
+.icon-hover-bounce:hover {
+    animation: icon-bounce 0.5s infinite ease-in-out;
+}
+
+.icon-hover-pulse:hover {
+    animation: icon-pulse 0.5s infinite ease-in-out;
+}
+
+.icon-hover-spin:hover {
+    animation: icon-spin 2s infinite linear;
+}
+
+.icon-hover-shake:hover {
+    animation: icon-shake 0.5s infinite ease-in-out;
+}
+
+/* Sizing Helpers */
+.icon-sm { width: 14px; height: 14px; }
+.icon-md { width: 18px; height: 18px; }
+.icon-lg { width: 24px; height: 24px; }
+.icon-xl { width: 32px; height: 32px; }
+
+/* Status Colors */
+.icon-success { color: #34C759; }
+.icon-danger { color: #FF3B30; }
+.icon-warning { color: #FF9500; }
+.icon-info { color: #007AFF; }

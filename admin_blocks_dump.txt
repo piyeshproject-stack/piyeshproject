@@ -1,0 +1,1590 @@
+
+====================
+admin/addons.html
+====================
+
+--- BLOCK 1 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('addons').select('*').order('created_at').then(function(r) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allAddons = r.data || [];
+            renderAddons();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.listDocuments(APP_DB, 'addons', [
+            AppwriteQuery.orderAsc('$createdAt')
+        ]).then(function(res) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allAddons = res.documents.map(function(doc) {
+                doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } }
+                return doc;
+            });
+            renderAddons();
+        }).catch(function(err) {
+            showToast('Load failed: ' + err.message, 'error');
+        });
+    }
+}
+
+function renderAddons() {
+    var html = '';
+    if (!allAddons.length) { html = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#8E8E93;">No add-ons yet</td></tr>'; }
+    allAddons.forEach(function(a) {
+        html += '<tr>' +
+            '<td style="font-size:24px;">' + (a.icon||'<i data-lucide="gift" class="lucide-icon icon-bounce"></i>') + '</td>' +
+            '<td style="font-weight:700;">' + a.name + '</td>' +
+            '<td style="font-weight:700;color:#007AFF;">+৳' + a.price + '</td>' +
+            '<td><span class="badge ' + (a.is_active ? 'badge-delivered' : 'badge-cancelled') + '">' + (a.is_active ? 'Active' : 'Inactive') + '</span></td>' +
+            '<td style="display:flex;gap:6px;">' +
+                '<button class="btn btn-ghost btn-sm" onclick=\'editAddon(' + JSON.stringify(a).replace(/'/g,"&apos;") + ')\'><i data-lucide="edit-3" class="lucide-icon icon-hover-pulse"></i></button>' +
+
+--- BLOCK 2 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId ? supabaseClient.from('addons').update(payload).eq('id', editingId) : supabaseClient.from('addons').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success'); closeModal(); loadAddons();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var awPayload = { name: payload.name, icon: payload.icon, price: payload.price, is_active: payload.is_active, created_at: new Date().toISOString() };
+        if (editingId) {
+            appwriteDatabases.updateDocument(APP_DB, 'addons', editingId, { name: payload.name, icon: payload.icon, price: payload.price, is_active: payload.is_active })
+            .then(function() {
+                showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+                closeModal();
+                loadAddons();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        } else {
+
+--- BLOCK 3 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('addons').delete().eq('id', id).then(function(r) {
+            if (r.error || !true) { showToast('Delete failed', 'error'); return; }
+            showToast('Deleted!', 'success'); loadAddons();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'addons', id)
+        .then(function() {
+            showToast('Deleted!', 'success');
+            loadAddons();
+        }).catch(function(err) {
+            showToast('Delete failed: ' + err.message, 'error');
+        });
+    }
+}
+function closeModal() { document.getElementById('addonModal').classList.remove('show'); }
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+
+
+====================
+admin/banners.html
+====================
+
+--- BLOCK 1 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('banners').select('*').order('sort_order').then(function(r) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allBanners = r.data || [];
+            renderBanners();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.listDocuments(APP_DB, 'banners', [
+            AppwriteQuery.orderAsc('sort_order')
+        ]).then(function(res) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allBanners = res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; });
+            renderBanners();
+        }).catch(function(err) {
+            showToast('Load failed: ' + err.message, 'error');
+        });
+    }
+}
+
+function renderBanners() {
+    var grid = document.getElementById('bannerGrid');
+    if (!allBanners.length) {
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#8E8E93;"><div style="font-size:40px;margin-bottom:12px;"><i data-lucide="image" class="lucide-icon icon-hover-pulse"></i></div><div>No banners yet</div></div>';
+        return;
+    }
+    grid.innerHTML = '';
+    allBanners.forEach(function(b) {
+        var card = document.createElement('div'); card.className = 'banner-card';
+        card.innerHTML =
+            '<img src="' + (b.image_url||'') + '" class="banner-img">' +
+            '<div class="banner-body">' +
+                '<div style="font-weight:700;">' + (b.title||'No title') + '</div>' +
+                '<div style="font-size:12px;color:#8E8E93;">' + (b.subtitle||'') + '</div>' +
+
+--- BLOCK 2 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId ? supabaseClient.from('banners').update(payload).eq('id', editingId) : supabaseClient.from('banners').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success'); closeModal(); loadBanners();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        if (editingId) {
+            appwriteDatabases.updateDocument(APP_DB, 'banners', editingId, payload)
+            .then(function() {
+                showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+                closeModal();
+                loadBanners();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        } else {
+
+--- BLOCK 3 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('banners').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Delete failed', 'error'); return; }
+            showToast('Deleted!', 'success'); loadBanners();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'banners', id)
+        .then(function() {
+            showToast('Deleted!', 'success');
+            loadBanners();
+        }).catch(function(err) {
+            showToast('Delete failed: ' + err.message, 'error');
+        });
+    }
+}
+function closeModal() { document.getElementById('bannerModal').classList.remove('show'); }
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+
+
+====================
+admin/categories.html
+====================
+
+--- BLOCK 1 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('categories').select('*').order('sort_order').then(function(r) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allCats = r.data || [];
+            renderCats();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.listDocuments(APP_DB, 'categories', [
+            AppwriteQuery.orderAsc('sort_order')
+        ]).then(function(res) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allCats = res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; });
+            renderCats();
+        }).catch(function(err) {
+            showToast('Load failed: ' + err.message, 'error');
+        });
+    }
+}
+
+function renderCats() {
+    var html = '';
+    if (!allCats.length) { html = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#8E8E93;">No categories yet</td></tr>'; }
+    allCats.forEach(function(c) {
+        var iconHtml = '';
+        var iconUrl = c.icon_url || '';
+        if (iconUrl.trim().startsWith('<')) {
+            iconHtml = '<div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--bg-card);overflow:hidden;">' + iconUrl + '</div>';
+        } else if (iconUrl) {
+            iconHtml = '<img src="' + iconUrl + '" style="width:36px;height:36px;border-radius:8px;object-fit:cover;background:var(--bg-card);" onerror="this.style.display=\'none\'">';
+        } else {
+
+--- BLOCK 2 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId ? supabaseClient.from('categories').update(payload).eq('id', editingId) : supabaseClient.from('categories').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success'); closeModal(); loadCats();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        if (editingId) {
+            appwriteDatabases.updateDocument(APP_DB, 'categories', editingId, payload)
+            .then(function() {
+                showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+                closeModal();
+                loadCats();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        } else {
+
+--- BLOCK 3 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('categories').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Delete failed', 'error'); return; }
+            showToast('Deleted!', 'success'); loadCats();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'categories', id)
+        .then(function() {
+            showToast('Deleted!', 'success');
+            loadCats();
+        }).catch(function(err) {
+            showToast('Delete failed: ' + err.message, 'error');
+        });
+    }
+}
+
+function closeModal() { document.getElementById('catModal').classList.remove('show'); }
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+
+
+====================
+admin/dashboard.html
+====================
+
+--- BLOCK 1 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('orders').select('*', { count: 'exact' })
+              .order('created_at', { ascending: false })
+              .then(function(r) {
+            if (r.error) {
+                console.error('Orders load error:', r.error);
+                showToast('❌ Orders error: ' + (r.error.message || r.error), 'error');
+                showUI();
+                return;
+            }
+            var orders = r.data || [];
+            var total  = r.count || orders.length;
+
+            var todayOrders = orders.filter(function(o) {
+                return new Date(o.created_at) >= today;
+            });
+            var pending = orders.filter(function(o) { return o.status === 'Pending'; }).length;
+            var revenue = orders.filter(function(o) {
+                return o.status !== 'Cancelled' && o.status !== 'Pending';
+            }).reduce(function(sum, o) { return sum + (o.grand_total || 0); }, 0);
+
+            document.getElementById('statTotal').textContent   = total;
+            document.getElementById('statToday').textContent   = todayOrders.length;
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statRevenue').textContent = formatMoney(revenue);
+
+            renderRecentOrders(orders.slice(0, 10));
+            buildRevenueChart(orders);
+            buildBestSellers(orders);
+
+            showUI();
+            }).catch(function(err) {
+                console.error('Orders fetch failed:', err);
+                showToast('❌ Failed to load orders: ' + err.message, 'error');
+                showUI();
+
+--- BLOCK 2 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('products').select('*', { count: 'exact', head: true })
+              .eq('is_active', true)
+              .then(function(r) {
+                document.getElementById('statProducts').textContent = r.count || 0;
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.listDocuments(APP_DB, 'products', [AppwriteQuery.equal('is_active', true), AppwriteQuery.limit(1)])
+                .then(function(res) {
+                    document.getElementById('statProducts').textContent = res.total || 0;
+                })
+                .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+        }
+    }
+
+    function renderRecentOrders(orders) {
+        var tbody = document.getElementById('recentOrdersBody');
+        if (!orders.length) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#8E8E93;padding:30px;">No orders yet</td></tr>';
+            return;
+        }
+
+        var html = '';
+        orders.forEach(function(o) {
+            var items = o.items || [];
+            var itemCount = Array.isArray(items) ? items.length : '?';
+            html += '<tr>' +
+                '<td><code style="font-size:12px;color:#007AFF;">' + o.id + '</code></td>' +
+                '<td>' +
+                    '<div style="font-weight:600;">' + (o.customer_name || '—') + '</div>' +
+                    '<div style="font-size:12px;color:#8E8E93;">' + (o.customer_phone || '') + '</div>' +
+                '</td>' +
+                '<td>' + itemCount + ' item(s)</td>' +
+                '<td style="font-weight:700;">' + formatMoney(o.grand_total) + '</td>' +
+                '<td>' + payBadge(o.payment_status) + '</td>' +
+
+====================
+admin/delivery.html
+====================
+
+--- BLOCK 1 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('delivery_zones').select('*').order('created_at').then(function(r) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allZones = r.data || [];
+            renderZones();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.listDocuments(APP_DB, 'delivery_zones', [AppwriteQuery.orderAsc('zone_name')])
+            .then(function(res) {
+                document.getElementById('pageLoader').style.display = 'none';
+                document.getElementById('adminMain').style.display  = 'flex';
+                allZones = res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; });
+                renderZones();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+function renderZones() {
+    var html = '';
+    if (!allZones.length) { html = '<tr><td colspan="4" style="text-align:center;padding:40px;color:#8E8E93;">No zones yet. Add "Inside Dhaka" and "Outside Dhaka" to start.</td></tr>'; }
+    allZones.forEach(function(z) {
+        var districts = (z.districts || []).slice(0, 5).join(', ') + (z.districts && z.districts.length > 5 ? ' +' + (z.districts.length-5) + ' more' : '');
+        html += '<tr>' +
+            '<td style="font-weight:700;">' + z.zone_name + '</td>' +
+            '<td style="font-weight:700;color:#34C759;">৳' + z.charge + '</td>' +
+            '<td style="font-size:12px;color:#8E8E93;">' + (districts || '<em>All remaining (default)</em>') + '</td>' +
+            '<td style="display:flex;gap:6px;">' +
+                '<button class="btn btn-ghost btn-sm" onclick=\'editZone(' + JSON.stringify(z).replace(/'/g,"&apos;") + ')\'><i data-lucide="edit-3" class="lucide-icon icon-hover-pulse"></i> Edit</button>' +
+                '<button class="btn btn-danger btn-sm" onclick="deleteZone(\'' + z.id + '\')"><i data-lucide="trash-2" class="lucide-icon icon-hover-shake icon-danger"></i></button>' +
+            '</td></tr>';
+    });
+    document.getElementById('zonesBody').innerHTML = html;
+}
+
+--- BLOCK 2 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId ? supabaseClient.from('delivery_zones').update(payload).eq('id', editingId) : supabaseClient.from('delivery_zones').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success'); closeModal(); loadZones();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var req;
+        if (editingId) {
+            req = appwriteDatabases.updateDocument(APP_DB, 'delivery_zones', editingId, payload);
+        } else {
+
+--- BLOCK 3 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('delivery_zones').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Delete failed', 'error'); return; }
+            showToast('Deleted!', 'success'); loadZones();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'delivery_zones', id)
+            .then(function() {
+                showToast('Deleted!', 'success');
+                loadZones();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+function closeModal() { document.getElementById('zoneModal').classList.remove('show'); }
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+
+
+====================
+admin/devtools.html
+====================
+
+--- BLOCK 1 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') return supabaseClient;
+        return mockDB;
+    }
+
+// ═══════════════════════════════════════════════════════════
+// SECURITY CONSTANTS
+// ═══════════════════════════════════════════════════════════
+var _DK = '__cfg_sys_dk_v1';
+var _SK = '__cfg_sys_sk_v1';
+var _AT = '__cfg_sys_at_v1';
+var SESSION_TTL = 8 * 60 * 60 * 1000;
+var devLogs = [];
+
+// ─── MASTER CREDENTIAL (XOR-obfuscated, decoded at runtime) ───
+// XOR key: [4,7,3,9,2,8,5,1,6,0] | Salt: __sys__
+// Even with source access, requires runtime execution to decode
+// DO NOT MODIFY unless you know what you are doing
+var _E = [118,110,101,104,118,57,55,50,84,64,39,35,50,63,53,56,53];
+var _K = [4,7,3,9,2,8,5,1,6,0];
+var _MASTER_HASH = null; // computed async on init
+
+// ═══════════════════════════════════════════════════════════
+// CRYPTO
+// ═══════════════════════════════════════════════════════════
+async function sha256(str) {
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT — Master hash computed from XOR-encoded credential
+// ═══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async function() {
+    document.getElementById('setupMode').style.display = 'none';
+    document.getElementById('authMode').style.display  = 'block';
+
+====================
+admin/index.html
+====================
+
+--- BLOCK 1 ---
+            if (CONFIG.DB_PROVIDER === 'supabase') {
+                supabaseClient.auth.getSession().then(function(res) {
+                    var session = res.data && res.data.session;
+                    if (session) {
+                        document.getElementById('loginForm').style.display = 'none';
+                        document.getElementById('redirectMsg').classList.add('show');
+                        window.location.href = 'dashboard.html';
+                    }
+                });
+            } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                appwriteAccount.getSession('current')
+                .then(function(session) {
+                    if (session) {
+                        document.getElementById('loginForm').style.display = 'none';
+                        document.getElementById('redirectMsg').classList.add('show');
+                        window.location.href = 'dashboard.html';
+                    }
+                }).catch(function() {
+                    // No active session — stay on login page
+                });
+            }
+        }
+
+        // Wait for DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("DOM Loaded - Auth UI ready");
+            if (CONFIG.DB_PROVIDER === 'appwrite') {
+                var web3Opts = document.getElementById('web3LoginSection');
+                if (web3Opts) web3Opts.style.display = 'none';
+            }
+            checkSession();
+        });
+
+        // ══ Password Toggle ───────────────────────────────────────
+        function togglePass() {
+
+--- BLOCK 2 ---
+            if (CONFIG.DB_PROVIDER === 'supabase') {
+                res = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+                if (res.error && (res.error.message.includes('Invalid login') || res.error.message.includes('user not found') || res.error.message.includes('Email not confirmed'))) {
+                    // Try signup
+                    res2 = await supabaseClient.auth.signUp({ email, password: pass });
+                    if (res2.error) {
+                        showToast('❌ ' + res2.error.message, 'error');
+                        btn.disabled = false; btn.innerHTML = orig; return;
+                    }
+                    showToast('📧 Check your email to confirm your account!', 'success');
+                    btn.disabled = false; btn.innerHTML = orig; return;
+                }
+            } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                try {
+                    // Try login first
+                    var session = await appwriteAccount.createEmailPasswordSession(email, pass);
+                    res = { error: null, data: { session: session } };
+                } catch (loginErr) {
+                    // If user doesn't exist, create account
+                    try {
+                        await appwriteAccount.create(Appwrite.ID.unique(), email, pass);
+                        var session2 = await appwriteAccount.createEmailPasswordSession(email, pass);
+                        res = { error: null, data: { session: session2 } };
+                    } catch (signupErr) {
+                        res = { error: { message: signupErr.message } };
+                    }
+                }
+            }
+            if (res.error) { showToast('❌ ' + res.error.message, 'error'); btn.disabled = false; btn.innerHTML = orig; return; }
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('redirectMsg').classList.add('show');
+            setTimeout(function() { window.location.href = 'dashboard.html'; }, 1000);
+        }
+
+        // ══ Login Click Handler (Google OAuth) ───────────────────
+
+--- BLOCK 3 ---
+            if (CONFIG.DB_PROVIDER === 'supabase') {
+                const res = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: redirectUrl
+                    }
+                });
+                error = res.error;
+            } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                try {
+                    appwriteAccount.createOAuth2Session(
+                        'google',
+                        redirectUrl,
+                        redirectUrl.replace('dashboard.html', 'index.html')
+                    );
+                    // Browser will redirect — no error here
+                    error = null;
+                } catch (oauthErr) {
+                    error = { message: oauthErr.message };
+                }
+            }
+
+            if (error) {
+                showToast('Login Error: ' + error.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+            // If successful, Supabase redirects the browser to Google
+        }
+
+        // ══ Helper: handle post-auth success ─────────────────────
+        function handleWeb3Success(address, btnEl, originalHTML) {
+            var shortAddr = address.substring(0, 6) + '...' + address.substring(address.length - 4);
+            document.getElementById('walletAddrText').textContent = shortAddr;
+            document.getElementById('walletPill').style.display = 'flex';
+
+--- BLOCK 4 ---
+                if (CONFIG.DB_PROVIDER === 'supabase') {
+                    const res = await supabaseClient.auth.signInWithWeb3({
+                        chain: 'ethereum',
+                        statement: 'Sign in to Freelancing By Rifat Admin Panel.',
+                        getMessageToSign: async ({ message, nonce }) => {
+                            // EIP-191 personal_sign
+                            return message;
+                        },
+                        signMessage: async ({ message }) => {
+                            const signature = await window.ethereum.request({
+                                method: 'personal_sign',
+                                params: [message, address],
+                            });
+                            return { signature };
+                        },
+                        address: address,
+                    });
+                    error = res.error;
+                } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                    // Appwrite তে Web3 native auth নেই — wallet address প্রমাণ করে bypass করি
+                    // Custom session: signed message verify করে admin access
+                    const msgToSign = 'Sign in to Admin Panel: ' + new Date().toISOString().substring(0,10);
+                    const msgHex    = '0x' + Array.from(new TextEncoder().encode(msgToSign)).map(b => b.toString(16).padStart(2,'0')).join('');
+                    const signature = await window.ethereum.request({
+                        method: 'personal_sign',
+                        params: [msgHex, address]
+                    });
+                    // Store wallet address in localStorage as admin auth token
+                    localStorage.setItem('aw_admin_wallet', address);
+                    localStorage.setItem('aw_admin_sig', signature);
+                    localStorage.setItem('aw_admin_ts', Date.now().toString());
+                    error = null;
+                }
+
+                if (error) throw error;
+
+--- BLOCK 5 ---
+                if (CONFIG.DB_PROVIDER === 'supabase') {
+                    const res = await supabaseClient.auth.signInWithWeb3({
+                        chain: 'solana',
+                        statement: 'Sign in to Freelancing By Rifat Admin Panel.',
+                        signMessage: async ({ message }) => {
+                            // message is a Uint8Array
+                            const encoded = new TextEncoder().encode(message);
+                            const { signature } = await solProvider.signMessage(encoded, 'utf8');
+                            return { signature: Array.from(signature) };
+                        },
+                        address: address,
+                    });
+                    error = res.error;
+                } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                    // Solana wallet verify — sign message করে localStorage তে store
+                    const msgToSign2 = 'Sign in to Admin Panel: ' + new Date().toISOString().substring(0,10);
+                    const encoded2 = new TextEncoder().encode(msgToSign2);
+                    const { signature: sig2 } = await solProvider.signMessage(encoded2, 'utf8');
+                    localStorage.setItem('aw_admin_wallet', address);
+                    localStorage.setItem('aw_admin_sig', JSON.stringify(Array.from(sig2)));
+                    localStorage.setItem('aw_admin_ts', Date.now().toString());
+                    error = null;
+                }
+
+                if (error) throw error;
+
+                // ✅ Real Supabase session created
+                document.getElementById('web3EthBtn').disabled = false;
+                handleWeb3Success(address, btn, originalHTML);
+
+            } catch (err) {
+                document.getElementById('web3EthBtn').disabled = false;
+                handleWeb3Error(err, btn, originalHTML);
+            }
+        }
+
+====================
+admin/orders.html
+====================
+
+--- BLOCK 1 ---
+            if (CONFIG.DB_PROVIDER === 'supabase') {
+                supabaseClient.from('orders').select('*').order('created_at', { ascending: false }).then(function(r) {
+                    document.getElementById('pageLoader').style.display = 'none';
+                    document.getElementById('adminMain').style.display  = 'flex';
+
+                    if (r.error) { showToast('Failed to load orders', 'error'); return; }
+                    allOrders = r.data || [];
+                    document.getElementById('orderCountSub').textContent = allOrders.length + ' total orders';
+                    filterOrders();
+
+                    if (urlId) {
+                        var found = allOrders.find(function(o) { return o.id === urlId; });
+                        if (found) openOrderModal(found);
+                    }
+
+                    autoCleanupOrders();
+                });
+            } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+                appwriteDatabases.listDocuments(APP_DB, 'orders', [
+                    AppwriteQuery.orderDesc('$createdAt'),
+                    AppwriteQuery.limit(5000)
+                ]).then(function(res) {
+                    document.getElementById('pageLoader').style.display = 'none';
+                    document.getElementById('adminMain').style.display  = 'flex';
+                    allOrders = res.documents.map(function(doc) {
+                        doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } }
+                        // items is stored as JSON string in Appwrite
+                        if (typeof doc.items === 'string') {
+                            try { doc.items = JSON.parse(doc.items); } catch(e) { doc.items = []; }
+                        }
+                        return doc;
+                    });
+                    document.getElementById('orderCountSub').textContent = allOrders.length + ' total orders';
+                    filterOrders();
+
+
+--- BLOCK 2 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('orders').delete()
+              .in('status', ['Delivered', 'Cancelled'])
+              .lt('created_at', dateStr)
+              .then(function(r) {
+                  if (r.error) {
+                      console.error('Auto cleanup failed:', r.error);
+                  }
+              });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            // Appwrite: filter and delete old delivered/cancelled orders
+            var thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            var oldOrders = allOrders.filter(function(o) {
+                return (o.status === 'Delivered' || o.status === 'Cancelled') &&
+                       o.created_at && new Date(o.created_at) < thirtyDaysAgo;
+            });
+            oldOrders.forEach(function(o) {
+                appwriteDatabases.deleteDocument(APP_DB, 'orders', o.$id || o.id)
+                .catch(function(err) { console.error('Auto cleanup error:', err.message); });
+            });
+        }
+    }
+
+    function deleteOrder(id) {
+        if (!confirm('Are you sure you want to permanently delete order ' + id + '?')) return;
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('orders').delete().eq('id', id).then(function(r) {
+                if (r.error) { showToast('Failed to delete: ' + r.error.message, 'error'); return; }
+                showToast('Order deleted successfully!', 'success');
+                allOrders = allOrders.filter(function(o) { return o.id !== id; });
+                filterOrders();
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.deleteDocument(APP_DB, 'orders', id)
+
+--- BLOCK 3 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('orders').delete().eq('id', id).then(function(r) {
+                if (r.error) { showToast('Failed to delete: ' + r.error.message, 'error'); return; }
+                showToast('Order deleted successfully!', 'success');
+                allOrders = allOrders.filter(function(o) { return o.id !== id; });
+                filterOrders();
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.deleteDocument(APP_DB, 'orders', id)
+            .then(function() {
+                showToast('Order deleted successfully!', 'success');
+                allOrders = allOrders.filter(function(o) { return o.id !== id; });
+                filterOrders();
+            }).catch(function(err) {
+                showToast('Failed to delete: ' + err.message, 'error');
+            });
+        }
+    }
+
+
+    function filterOrders() {
+        var q      = document.getElementById('searchInput').value.toLowerCase();
+        var status = document.getElementById('statusFilter').value;
+        var pay    = document.getElementById('payFilter').value;
+        var sort   = document.getElementById('sortFilter').value;
+        var oType  = document.getElementById('typeFilter').value;
+        var showFailed = document.getElementById('failedFilter').checked;
+
+        var filtered = allOrders.filter(function(o) {
+            var cleanQ = q.replace(/-/g, '');
+            var cleanId = (o.id || '').toLowerCase().replace(/-/g, '');
+            var matchQ = !q || cleanId.includes(cleanQ) ||
+                         (o.customer_name  || '').toLowerCase().includes(q) ||
+                         (o.customer_phone || '').toLowerCase().includes(q);
+            var matchS = !status || o.status === status;
+
+--- BLOCK 4 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('orders').update(payload).eq('id', orderId).then(function(r) {
+                if (r.error) { showToast('Update failed: ' + r.error.message, 'error'); return; }
+
+                // Trigger repeated customer personal coupon generation
+                if (payload.status === 'Delivered' && currentOrder && currentOrder.customer_phone) {
+                    var phone = currentOrder.customer_phone.trim();
+                    supabaseClient.from('promos').select('*').then(function(res) {
+                        var promosList = res.data || [];
+                        var repConfig = promosList.find(function(p) { return p.code && p.code.startsWith('REPEATED_CUSTOMER_CONFIG'); });
+
+                        var existingCoupon = promosList.find(function(p) {
+                            return p.code && p.code.split('|v1|')[0] === phone;
+                        });
+
+                        if (repConfig && repConfig.is_active && !existingCoupon) {
+                            try {
+                                var meta = JSON.parse(repConfig.code.split('|v1|')[1]);
+                                var expiry = null;
+                                if (meta.repExpiryDays) {
+                                    var d = new Date(); d.setDate(d.getDate() + parseInt(meta.repExpiryDays));
+                                    expiry = d.toISOString();
+                                }
+
+                                var newPromoMeta = {
+                                    type: 'private',
+                                    disc_type: meta.repType || 'flat',
+                                    disc_val: parseFloat(meta.repValue) || 0,
+                                    max_cap: parseFloat(meta.repCap) || null,
+                                    min_spend: parseFloat(meta.repMinSpend) || null,
+                                    del_reward: meta.repDelReward || 'none',
+                                    is_repeated_cust: true
+                                };
+
+                                var fullCode = phone + '|v1|' + JSON.stringify(newPromoMeta);
+
+====================
+admin/products.html
+====================
+
+--- BLOCK 1 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('categories').select('*').eq('is_active', true).order('sort_order').then(function(r) {
+                allCategories = r.data || [];
+                var catFilter  = document.getElementById('catFilter');
+                var catFilterM = document.getElementById('catFilterM');
+                var pCatList   = document.getElementById('pCategoryList');
+                allCategories.forEach(function(c) {
+                    var opt = '<option value="' + c.id + '">' + c.name + '</option>';
+                    catFilter.innerHTML  += opt;
+                    if (catFilterM) catFilterM.innerHTML += opt;
+                    pCatList.innerHTML +=
+                        '<label class="category-checkbox-item">' +
+                            '<input type="checkbox" name="pCat" value="' + c.id + '">' +
+                            '<span>' + c.name + '</span>' +
+                        '</label>';
+                });
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.listDocuments(APP_DB, 'categories', [
+                AppwriteQuery.equal('is_active', true),
+                AppwriteQuery.orderAsc('sort_order')
+            ]).then(function(res) {
+                allCategories = res.documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; });
+                var catFilter  = document.getElementById('catFilter');
+                var catFilterM = document.getElementById('catFilterM');
+                var pCatList   = document.getElementById('pCategoryList');
+                allCategories.forEach(function(c) {
+                    var opt = '<option value="' + c.id + '">' + c.name + '</option>';
+                    catFilter.innerHTML  += opt;
+                    if (catFilterM) catFilterM.innerHTML += opt;
+                    pCatList.innerHTML +=
+                        '<label class="category-checkbox-item">' +
+                            '<input type="checkbox" name="pCat" value="' + c.id + '">' +
+                            '<span>' + c.name + '</span>' +
+                        '</label>';
+
+--- BLOCK 2 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            Promise.all([
+                supabaseClient.from('products').select('*').order('created_at', { ascending: false }),
+                supabaseClient.from('product_categories').select('*')
+            ]).then(function(results) {
+                document.getElementById('pageLoader').style.display = 'none';
+                document.getElementById('adminMain').style.display  = 'flex';
+                allProducts = results[0].data || [];
+                var pc = results[1].data || [];
+
+                allProducts.forEach(function(p) {
+                    p.category_ids = pc.filter(function(x) { return x.product_id === p.id; }).map(function(x) { return x.category_id; });
+                    if (p.category_id && !p.category_ids.includes(p.category_id)) p.category_ids.push(p.category_id);
+                });
+
+                document.getElementById('prodCountSub').textContent = allProducts.length + ' products';
+                renderProducts(allProducts);
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            Promise.all([
+                appwriteDatabases.listDocuments(APP_DB, 'products',           [AppwriteQuery.orderDesc('$createdAt'), AppwriteQuery.limit(500)]),
+                appwriteDatabases.listDocuments(APP_DB, 'product_categories', [AppwriteQuery.limit(5000)])
+            ]).then(function(results) {
+                document.getElementById('pageLoader').style.display = 'none';
+                document.getElementById('adminMain').style.display  = 'flex';
+                var pc = results[1].documents;
+                allProducts = results[0].documents.map(function(doc) {
+                    doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } }
+                    // variants stored as JSON string
+                    if (typeof doc.variants === 'string') {
+                        try { doc.variants = JSON.parse(doc.variants); } catch(e) { doc.variants = []; }
+                    }
+                    doc.variants = doc.variants || [];
+                    if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } }
+                    else { doc.gallery_images = doc.gallery_images || []; }
+
+--- BLOCK 3 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('product_categories').select('category_id').eq('product_id', p.id).then(function(catRes) {
+                var selectedIds = (catRes.data || []).map(function(c) { return c.category_id; });
+                if (p.category_id && !selectedIds.includes(p.category_id)) selectedIds.push(p.category_id);
+
+                document.querySelectorAll('input[name="pCat"]').forEach(function(cb) {
+                    cb.checked = selectedIds.includes(cb.value);
+                });
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.listDocuments(APP_DB, 'product_categories', [
+                AppwriteQuery.equal('product_id', p.id)
+            ]).then(function(catRes) {
+                var selectedIds = catRes.documents.map(function(c) { return c.category_id; });
+                document.querySelectorAll('input[name="pCat"]').forEach(function(cb) {
+                    cb.checked = selectedIds.includes(cb.value);
+                });
+            }).catch(function(err) {
+                console.error('Category fetch error:', err.message);
+            });
+        }
+
+        setToggle('pActive',   p.is_active);
+        setToggle('pFeatured', p.is_featured);
+        setToggle('pAddOnce',  p.is_add_once);
+        renderGallery();
+        renderVariants();
+        document.getElementById('productModal').classList.add('show');
+    }
+
+    function setToggle(id, state) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (state) el.classList.add('on'); else el.classList.remove('on');
+    }
+
+--- BLOCK 4 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            var req = editingProductId
+                ? supabaseClient.from('products').update(payload).eq('id', editingProductId)
+                : supabaseClient.from('products').insert([payload]).select();
+
+            req.then(function(r) {
+                setBtnLoading(btn, false, '💾 Save Product');
+                if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+
+                var productId = editingProductId || (r.data && r.data[0] && r.data[0].id);
+
+                // Categories sync
+                function finishSave() {
+                    showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Product saved!', 'success');
+                    closeModal('productModal');
+                    loadProducts();
+                }
+
+                if (productId) {
+                    supabaseClient.from('product_categories').delete().eq('product_id', productId).then(function() {
+                        if (selectedCats.length) {
+                            var rows = selectedCats.map(function(cid) { return { product_id: productId, category_id: cid }; });
+                            supabaseClient.from('product_categories').insert(rows).then(function() {
+                                finishSave();
+                            }).catch(function() {
+                                finishSave();
+                            });
+                        } else {
+
+--- BLOCK 5 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('products').delete().eq('id', id).then(function(r) {
+                if (r.error) { showToast('Delete failed', 'error'); return; }
+                showToast('Deleted!', 'success');
+                allProducts = allProducts.filter(function(p) { return p.id !== id; });
+                renderProducts(allProducts);
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            // Delete product_categories first, then the product
+            appwriteDatabases.listDocuments(APP_DB, 'product_categories', [
+                AppwriteQuery.equal('product_id', id)
+            ]).then(function(catRes) {
+                var delCatPromises = catRes.documents.map(function(doc) {
+                    return appwriteDatabases.deleteDocument(APP_DB, 'product_categories', doc.$id);
+                });
+                return Promise.all(delCatPromises);
+            }).then(function() {
+                return appwriteDatabases.deleteDocument(APP_DB, 'products', id);
+            }).then(function() {
+                showToast('Deleted!', 'success');
+                allProducts = allProducts.filter(function(p) { return p.id !== id; });
+                renderProducts(allProducts);
+            }).catch(function(err) {
+                showToast('Delete failed: ' + err.message, 'error');
+            });
+        }
+    }
+
+    function toggleActive(id, current) {
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('products').update({ is_active: !current }).eq('id', id).then(function(r) {
+                if (r.error) { showToast('Update failed', 'error'); return; }
+                var idx = allProducts.findIndex(function(p) { return p.id === id; });
+                if (idx > -1) allProducts[idx].is_active = !current;
+                renderProducts(allProducts);
+
+--- BLOCK 6 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('products').update({ is_active: !current }).eq('id', id).then(function(r) {
+                if (r.error) { showToast('Update failed', 'error'); return; }
+                var idx = allProducts.findIndex(function(p) { return p.id === id; });
+                if (idx > -1) allProducts[idx].is_active = !current;
+                renderProducts(allProducts);
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.updateDocument(APP_DB, 'products', id, { is_active: !current })
+            .then(function() {
+                var idx = allProducts.findIndex(function(p) { return p.id === id; });
+                if (idx > -1) allProducts[idx].is_active = !current;
+                renderProducts(allProducts);
+            }).catch(function(err) {
+                showToast('Update failed: ' + err.message, 'error');
+            });
+        }
+    }
+
+
+    // ── Rich Text Editor helpers ─────────────────────────────
+    function rteCmd(cmd, val) {
+        var ed = document.getElementById('pDesc');
+        ed.focus();
+        document.execCommand(cmd, false, val || null);
+        updateRteCharCount();
+    }
+    function rteBlock(tag) {
+        var ed = document.getElementById('pDesc');
+        ed.focus();
+        document.execCommand('formatBlock', false, '<' + tag + '>');
+        updateRteCharCount();
+    }
+    function updateRteCharCount() {
+        var ed = document.getElementById('pDesc');
+
+====================
+admin/promos.html
+====================
+
+--- BLOCK 1 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        Promise.all([
+            supabaseClient.from('categories').select('*').eq('is_active', true).order('sort_order'),
+            supabaseClient.from('products').select('*').eq('is_active', true).order('created_at'),
+            supabaseClient.from('promos').select('*').order('created_at', { ascending: false })
+        ]).then(function(results) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allCategories = results[0].data || [];
+            allProducts   = results[1].data || [];
+            allPromos     = results[2].data || [];
+            populateMultiSelects();
+            renderPromos();
+            checkRepeatCustPromo();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        Promise.all([
+            appwriteDatabases.listDocuments(APP_DB, 'categories', [AppwriteQuery.equal('is_active', true), AppwriteQuery.orderAsc('sort_order')]),
+            appwriteDatabases.listDocuments(APP_DB, 'products',   [AppwriteQuery.equal('is_active', true), AppwriteQuery.orderDesc('$createdAt')]),
+            appwriteDatabases.listDocuments(APP_DB, 'promos',     [AppwriteQuery.orderDesc('$createdAt'), AppwriteQuery.limit(500)])
+        ]).then(function(results) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allCategories = results[0].documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; });
+            allProducts   = results[1].documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; });
+            allPromos     = results[2].documents.map(function(d) { d.id = d.$id; d.created_at = d.$createdAt; if (typeof d.gallery_images === 'string') { try { d.gallery_images = JSON.parse(d.gallery_images); } catch(e) { d.gallery_images = []; } } return d; });
+            populateMultiSelects();
+            renderPromos();
+            checkRepeatCustPromo();
+        }).catch(function(err) {
+            showToast('Load failed: ' + err.message, 'error');
+        });
+    }
+}
+
+
+--- BLOCK 2 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId ? supabaseClient.from('promos').update(payload).eq('id', editingId) : supabaseClient.from('promos').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('✅ Coupon saved!', 'success'); closeModal(); loadData();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        if (editingId) {
+            appwriteDatabases.updateDocument(APP_DB, 'promos', editingId, payload)
+            .then(function() {
+                showToast('\u2705 Coupon saved!', 'success');
+                closeModal();
+                loadData();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        } else {
+
+--- BLOCK 3 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('promos').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Delete failed', 'error'); return; }
+            showToast('Deleted!', 'success'); loadData();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'promos', id)
+        .then(function() {
+            showToast('Deleted!', 'success');
+            loadData();
+        }).catch(function(err) {
+            showToast('Delete failed: ' + err.message, 'error');
+        });
+    }
+}
+
+function openRepeatSettings() {
+    var repRow = allPromos.find(function(p) { return p.is_repeated_config || (p.code && p.code.startsWith('REPEATED_CUSTOMER_CONFIG')); });
+    repActive = repRow ? repRow.is_active : false;
+    document.getElementById('repType').value       = repRow ? (repRow.rep_type || 'flat') : 'flat';
+    document.getElementById('repValue').value      = repRow ? (repRow.rep_value || '') : '';
+    document.getElementById('repCap').value        = repRow ? (repRow.rep_cap || '') : '';
+    document.getElementById('repExpiryDays').value = repRow ? (repRow.rep_expiry_days || '') : '';
+    document.getElementById('repMinSpend').value   = repRow ? (repRow.rep_min_spend || '') : '';
+    document.getElementById('repDelReward').value  = repRow ? (repRow.rep_del_reward || 'none') : 'none';
+    setToggle('repActive', repActive);
+    toggleRepDiscTypeFields();
+    document.getElementById('repeatModal').classList.add('show');
+}
+
+function toggleRepDiscTypeFields() {
+    var type = document.getElementById('repType').value;
+    document.getElementById('repCapWrap').style.display = type === 'percent' ? 'block' : 'none';
+}
+
+
+--- BLOCK 4 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = repRow ? supabaseClient.from('promos').update(payload).eq('id', repRow.id) : supabaseClient.from('promos').insert([payload]);
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('✅ Repeat customer config saved!', 'success');
+            closeRepeatModal(); loadData();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var repRow2 = allPromos.find(function(p) { return p.is_repeated_config || (p.code && p.code.startsWith('REPEATED_CUSTOMER_CONFIG')); });
+        var awRepPayload = payload;
+        if (repRow2) {
+            appwriteDatabases.updateDocument(APP_DB, 'promos', repRow2.$id || repRow2.id, payload)
+            .then(function() {
+                showToast('\u2705 Repeat customer config saved!', 'success');
+                closeRepeatModal();
+                loadData();
+            }).catch(function(err) {
+                showToast('Error: ' + err.message, 'error');
+            });
+        } else {
+
+====================
+admin/reviews.html
+====================
+
+--- BLOCK 1 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('reviews').select('*, products(name)').order('created_at', { ascending: false }).then(function(r) {
+            document.getElementById('pageLoader').style.display = 'none';
+            document.getElementById('adminMain').style.display  = 'flex';
+            allReviews = r.data || [];
+            var pending = allReviews.filter(function(rv) { return !rv.is_approved; }).length;
+            document.getElementById('reviewSub').textContent = allReviews.length + ' total | ' + pending + ' pending';
+            filterReviews();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.listDocuments(APP_DB, 'reviews', [AppwriteQuery.orderDesc('$createdAt')])
+            .then(function(res) {
+                document.getElementById('pageLoader').style.display = 'none';
+                document.getElementById('adminMain').style.display  = 'flex';
+                allReviews = res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; });
+                var pending = allReviews.filter(function(rv) { return !rv.is_approved; }).length;
+                document.getElementById('reviewSub').textContent = allReviews.length + ' total | ' + pending + ' pending';
+                filterReviews();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+function filterReviews() {
+    var f = document.getElementById('reviewFilter').value;
+    var rf = document.getElementById('ratingFilter').value;
+
+    var filtered = allReviews.filter(function(rv) {
+        return (!f  || (f==='pending' ? !rv.is_approved : rv.is_approved)) &&
+               (!rf || rv.rating === parseInt(rf));
+    });
+    renderReviews(filtered);
+}
+
+function renderReviews(reviews) {
+
+--- BLOCK 2 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('reviews').update({ is_approved: true }).eq('id', id).then(function(r) {
+            if (r.error) { showToast('Error', 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Review approved!', 'success');
+            var idx = allReviews.findIndex(function(rv) { return rv.id === id; });
+            if (idx > -1) allReviews[idx].is_approved = true;
+            filterReviews();
+            adminLoadBadges();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.updateDocument(APP_DB, 'reviews', id, { is_approved: true })
+            .then(function() {
+                showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Review approved!', 'success');
+                var idx = allReviews.findIndex(function(rv) { return rv.id === id; });
+                if (idx > -1) allReviews[idx].is_approved = true;
+                filterReviews();
+                adminLoadBadges();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+function deleteReview(id) {
+    if (!adminConfirm('Delete this review permanently?')) return;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('reviews').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Error', 'error'); return; }
+            showToast('Deleted!', 'success');
+            allReviews = allReviews.filter(function(rv) { return rv.id !== id; });
+            filterReviews();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'reviews', id)
+            .then(function() {
+                showToast('Deleted!', 'success');
+
+--- BLOCK 3 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('reviews').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Error', 'error'); return; }
+            showToast('Deleted!', 'success');
+            allReviews = allReviews.filter(function(rv) { return rv.id !== id; });
+            filterReviews();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'reviews', id)
+            .then(function() {
+                showToast('Deleted!', 'success');
+                allReviews = allReviews.filter(function(rv) { return rv.id !== id; });
+                filterReviews();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+
+
+====================
+admin/sections.html
+====================
+
+--- BLOCK 1 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        p1 = supabaseClient.from('home_sections').select('*, categories(name)').order('sort_order');
+        p2 = supabaseClient.from('categories').select('id, name').eq('is_active', true).order('sort_order');
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        p1 = appwriteDatabases.listDocuments(APP_DB, 'home_sections', [AppwriteQuery.orderAsc('sort_order')])
+            .then(function(res) {
+                return { data: res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; }) };
+            });
+        p2 = appwriteDatabases.listDocuments(APP_DB, 'categories', [AppwriteQuery.equal('is_active', true), AppwriteQuery.orderAsc('sort_order')])
+            .then(function(res) {
+                return { data: res.documents.map(function(doc) { doc.id = doc.$id; doc.created_at = doc.$createdAt; if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } } return doc; }) };
+            });
+    }
+    var p3 = fetch('/api/get-products-list').then(function(r){ return r.json(); }).then(function(d){ return { data: Array.isArray(d) ? d : [] }; }).catch(function(){ return { data: [] }; });
+
+    Promise.all([p1, p2, p3]).then(function(results) {
+        allSections = results[0].data || [];
+        allCats = results[1].data || [];
+        allProducts = results[2].data || [];
+
+        renderSections();
+        populateCategoryDropdown();
+
+        document.getElementById('pageLoader').style.display = 'none';
+        document.getElementById('adminMain').style.display  = 'flex';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    });
+}
+
+function populateCategoryDropdown() {
+    var sel = document.getElementById('sCategoryId');
+    sel.innerHTML = '<option value="">— Category বেছে নাও —</option>' +
+        allCats.map(function(c) {
+            return '<option value="' + c.id + '">' + c.name + '</option>';
+        }).join('');
+
+--- BLOCK 2 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        var req = editingId
+            ? supabaseClient.from('home_sections').update(payload).eq('id', editingId)
+            : supabaseClient.from('home_sections').insert([payload]);
+
+        req.then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast('<i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Saved!', 'success');
+            closeModal();
+            loadAll();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        var req;
+        if (editingId) {
+            req = appwriteDatabases.updateDocument(APP_DB, 'home_sections', editingId, payload);
+        } else {
+
+--- BLOCK 3 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('home_sections').update({ is_active: newState }).eq('id', id).then(function(r) {
+            if (r.error) { showToast('Error: ' + r.error.message, 'error'); return; }
+            showToast(newState ? '✅ Section এখন Active' : '🙈 Section Hidden হয়েছে', 'success');
+            loadAll();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.updateDocument(APP_DB, 'home_sections', id, { is_active: newState })
+            .then(function() {
+                showToast(newState ? '✅ Section এখন Active' : '🙈 Section Hidden হয়েছে', 'success');
+                loadAll();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+// ── Delete ────────────────────────────────────────────────────
+function deleteSection(id) {
+    if (!adminConfirm('এই section টা delete করবেন?')) return;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('home_sections').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Delete failed', 'error'); return; }
+            showToast('🗑️ Section deleted!', 'success');
+            loadAll();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'home_sections', id)
+            .then(function() {
+                showToast('🗑️ Section deleted!', 'success');
+                loadAll();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+
+--- BLOCK 4 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('home_sections').delete().eq('id', id).then(function(r) {
+            if (r.error) { showToast('Delete failed', 'error'); return; }
+            showToast('🗑️ Section deleted!', 'success');
+            loadAll();
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.deleteDocument(APP_DB, 'home_sections', id)
+            .then(function() {
+                showToast('🗑️ Section deleted!', 'success');
+                loadAll();
+            })
+            .catch(function(err) { showToast('Error: ' + err.message, 'error'); });
+    }
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function escHtml(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+
+    <script src="../assets/js/offline-handler.js"></script>
+</body>
+</html>
+
+
+
+====================
+admin/settings.html
+====================
+
+--- BLOCK 1 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('settings').select('*').eq('id', 1).single().then(function(r) {
+                document.getElementById('pageLoader').style.display  = 'none';
+                document.getElementById('adminMain').style.display   = 'flex';
+
+            // ── প্রথমবার: DB তে row নেই, Config থেকে defaults দেখাও ──
+            var s = (r.data) ? r.data : {};
+            settingsData = s;
+
+            // Store info
+            setVal('storeName',   s.store_name  || CONFIG.STORE_NAME);
+            setVal('logoUrl',     s.logo_url    || '');
+            setVal('faviconUrl',  s.favicon_url || '');
+            setVal('footerText',  s.footer_text || '© ' + new Date().getFullYear() + ' ' + CONFIG.STORE_NAME + '. All rights reserved.');
+
+            // Logo/Favicon preview যদি URL থাকে
+            if (s.logo_url)    previewSettingImg('logoUrl',    'logoPreview');
+            if (s.favicon_url) previewSettingImg('faviconUrl', 'faviconPreview');
+
+            // Social
+            setVal('whatsappNumber', s.whatsapp_number || '');
+            setVal('facebookUrl',    s.facebook_url    || '');
+            setVal('instagramUrl',   s.instagram_url   || '');
+            setVal('youtubeUrl',     s.youtube_url     || '');
+
+            // Telegram
+            setVal('telegramMainBot',  s.telegram_main_bot   || '');
+            setVal('telegramDraftBot', s.telegram_draft_bot  || '');
+            setVal('telegramDraftChat',s.telegram_draft_chat || '');
+
+            // Main chat IDs
+            mainChatIds = s.telegram_main_chats || [];
+            renderChatIds();
+
+            // Payment — Manual numbers
+
+--- BLOCK 2 ---
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('settings').upsert([payload]).then(function(r) {
+                if (r.error) {
+                showToast('<i data-lucide="x-circle" class="lucide-icon icon-danger"></i> Save failed: ' + r.error.message, 'error');
+                return;
+            }
+            // ImgBB key আলাদাভাবে localStorage এ সেভ করো
+            saveImgbbKey();
+            showToast('✅ Settings saved!', 'success');
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            // JSON fields stringify করে পাঠাতে হবে
+            var awPayload = Object.assign({}, payload);
+            awPayload.telegram_main_chats = Array.isArray(awPayload.telegram_main_chats) ? awPayload.telegram_main_chats : [];
+            awPayload.messaging_apps      = JSON.stringify(awPayload.messaging_apps      || []);
+            awPayload.crypto_coins        = JSON.stringify(awPayload.crypto_coins        || []);
+            delete awPayload.id; // Appwrite uses $id, not id field
+
+            appwriteDatabases.updateDocument(APP_DB, 'settings', 'main_settings', awPayload)
+            .then(function() {
+                saveImgbbKey();
+                showToast('✅ Settings saved!', 'success');
+            }).catch(function(err) {
+                showToast('<i data-lucide="x-circle" class="lucide-icon icon-danger"></i> Save failed: ' + err.message, 'error');
+            });
+        }
+    }
+
+    // ── Messaging Apps Renderer ──────────────────────────────
+    function renderMsgApps() {
+        var wrap = document.getElementById('msgAppsWrap');
+        wrap.innerHTML = '';
+        DEFAULT_APPS.forEach(function(app) {
+            var saved = messagingApps.find(function(a) { return a.key === app.key; });
+            var enabled = saved ? saved.enabled : false;
+
+====================
+admin/assets/js/admin-common.js
+====================
+
+--- BLOCK 1 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        sessionPromise = supabaseClient.auth.getSession().then(function(res) {
+            return res.data && res.data.session ? res.data.session : null;
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        sessionPromise = appwriteAccount.getSession('current')
+        .then(function(s) { return s; })
+        .catch(function() { return null; });
+    } else {
+
+--- BLOCK 2 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('settings').select('store_name').eq('id', 1).single()
+        .then(function(r) {
+            if (r.data && r.data.store_name) {
+                var el = document.getElementById('sidebarStoreName');
+                if (el) el.textContent = r.data.store_name;
+            }
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings')
+        .then(function(doc) {
+            if (doc.store_name) {
+                var el = document.getElementById('sidebarStoreName');
+                if (el) el.textContent = doc.store_name;
+            }
+        }).catch(function() {});
+    }
+}
+
+// ── Load sidebar badge counts ─────────────────────────────────
+function adminLoadBadges() {
+    // Pending orders
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'Pending')
+        .then(function(r) {
+            var count = r.count || 0;
+            var el = document.getElementById('pendingBadge');
+            if (el && count > 0) { el.textContent = count; el.style.display = 'inline-flex'; }
+        });
+        supabaseClient.from('reviews').select('id', { count: 'exact', head: true }).eq('is_approved', false)
+        .then(function(r) {
+            var count = r.count || 0;
+            var el = document.getElementById('reviewBadge');
+            if (el && count > 0) { el.textContent = count; el.style.display = 'inline-flex'; }
+        });
+
+--- BLOCK 3 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'Pending')
+        .then(function(r) {
+            var count = r.count || 0;
+            var el = document.getElementById('pendingBadge');
+            if (el && count > 0) { el.textContent = count; el.style.display = 'inline-flex'; }
+        });
+        supabaseClient.from('reviews').select('id', { count: 'exact', head: true }).eq('is_approved', false)
+        .then(function(r) {
+            var count = r.count || 0;
+            var el = document.getElementById('reviewBadge');
+            if (el && count > 0) { el.textContent = count; el.style.display = 'inline-flex'; }
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteDatabases.listDocuments(APP_DB, 'orders', [
+            AppwriteQuery.equal('status', 'Pending'),
+            AppwriteQuery.limit(1)
+        ]).then(function(res) {
+            var count = res.total || 0;
+            var el = document.getElementById('pendingBadge');
+            if (el && count > 0) { el.textContent = count; el.style.display = 'inline-flex'; }
+        }).catch(function() {});
+        appwriteDatabases.listDocuments(APP_DB, 'reviews', [
+            AppwriteQuery.equal('is_approved', false),
+            AppwriteQuery.limit(1)
+        ]).then(function(res) {
+            var count = res.total || 0;
+            var el = document.getElementById('reviewBadge');
+            if (el && count > 0) { el.textContent = count; el.style.display = 'inline-flex'; }
+        }).catch(function() {});
+    }
+}
+
+// ── Logout ───────────────────────────────────────────────────
+function adminLogout() {
+
+--- BLOCK 4 ---
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        supabaseClient.auth.signOut().then(function() {
+            window.location.href = 'index.html';
+        }).catch(function() {
+            window.location.href = 'index.html';
+        });
+    } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+        appwriteAccount.deleteSession('current')
+        .then(function() {
+            window.location.href = 'index.html';
+        }).catch(function() {
+            window.location.href = 'index.html';
+        });
+    } else {

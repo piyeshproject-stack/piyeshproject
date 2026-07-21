@@ -1,0 +1,336 @@
+APPWRITE SETUP CHECKLIST
+========================
+এই file দেখে Appwrite Console এ সব বানাবে।
+https://cloud.appwrite.io
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 1: config.js এ এগুলো বসাও
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DB_PROVIDER: 'appwrite'
+APPWRITE_ENDPOINT: 'https://cloud.appwrite.io/v1'
+APPWRITE_PROJECT: 'তোমার_Project_ID_এখানে'
+APPWRITE_DATABASE_ID: 'main_db'
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 2: Appwrite Console → Databases → Create Database
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Database ID   : main_db
+Database Name : Main Database
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 3: Collections বানাও (Databases → main_db → Create Collection)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[A] = Array checkbox check করবে
+[R] = Required checkbox check করবে
+বাকি সব Optional
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: settings
+Collection ID: settings
+━━━━━━━━━━━━━━━━━━━
+⚠️  প্রথম document বানানোর সময় Document ID = main_settings দেবে (manually)
+
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+store_name              | String       | 255   |
+logo_url                | String       | 2048  |
+favicon_url             | String       | 2048  |
+footer_text             | String       | 1024  |
+whatsapp_number         | String       | 50    |
+facebook_url            | String       | 2048  |
+instagram_url           | String       | 2048  |
+youtube_url             | String       | 2048  |
+bkash_number            | String       | 50    |
+nagad_number            | String       | 50    |
+binance_manual_uid      | String       | 255   |
+gateway_proxy_url       | String       | 2048  |
+gateway_api_key         | String       | 512   |
+allow_cod               | Boolean      |       |
+enable_fun_checkbox     | Boolean      |       |
+allow_whatsapp_order    | Boolean      |       |
+allow_msg_order         | Boolean      |       |
+advance_amount          | Integer      |       |
+advance_method          | String       | 100   |
+telegram_main_bot       | String       | 512   |
+telegram_main_chats     | String       | 255   | [A]
+telegram_draft_bot      | String       | 512   |
+telegram_draft_chat     | String       | 255   |
+messaging_apps          | String       | 65535 |
+allow_pickup            | Boolean      |       |
+store_address           | String       | 1024  |
+store_map_link          | String       | 2048  |
+pickup_bot_token        | String       | 512   |
+pickup_chat_id          | String       | 255   |
+binance_pay_uid         | String       | 255   |
+binance_proxy_url       | String       | 2048  |
+binance_api_key         | String       | 512   |
+binance_api_secret      | String       | 512   |
+usd_to_bdt_rate         | Float        |       |
+verify_mode             | String       | 100   |
+supabase_edge_url       | String       | 2048  |
+crypto_coins            | String       | 65535 |
+review_imgbb_key        | String       | 255   |
+maintenance_mode        | Boolean      |       |
+maintenance_message     | String       | 1024  |
+custom_css              | String       | 65535 |
+
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: addons
+Collection ID: addons
+━━━━━━━━━━━━━━━━━━━
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+name                    | String       | 255   | [R]
+icon                    | String       | 512   |
+price                   | Integer      |       | [R]
+is_active               | Boolean      |       |
+created_at              | String       | 64    |
+
+Index: Key=created_at, Type=key, Order=ASC
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: banners
+Collection ID: banners
+━━━━━━━━━━━━━━━━━━━
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+image_url               | String       | 2048  | [R]
+title                   | String       | 255   |
+subtitle                | String       | 512   |
+link_url                | String       | 2048  |
+sort_order              | Integer      |       |
+is_active               | Boolean      |       |
+
+Index: Key=sort_order, Type=key, Order=ASC
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: categories
+Collection ID: categories
+━━━━━━━━━━━━━━━━━━━
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+name                    | String       | 255   | [R]
+icon_url                | String       | 2048  |
+sort_order              | Integer      |       |
+is_active               | Boolean      |       |
+
+Index: Key=sort_order, Type=key, Order=ASC
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: delivery_zones
+Collection ID: delivery_zones
+━━━━━━━━━━━━━━━━━━━
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+zone_name               | String       | 255   | [R]
+charge                  | Integer      |       | [R]
+districts               | String       | 100   | [A]
+
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: orders
+Collection ID: orders
+━━━━━━━━━━━━━━━━━━━
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+customer_name           | String       | 255   | [R]
+customer_phone          | String       | 50    | [R]
+customer_email          | String       | 255   |
+division                | String       | 100   |
+district                | String       | 100   |
+upazila                 | String       | 100   |
+address                 | String       | 2048  |
+items                   | String       | 65535 | [R]
+addons                  | String       | 1024  |
+subtotal                | Integer      |       |
+addon_total             | Integer      |       |
+delivery_charge         | Integer      |       |
+promo_code              | String       | 100   |
+promo_discount          | Integer      |       |
+grand_total             | Integer      |       |
+advance_payable         | Integer      |       |
+payment_method          | String       | 100   |
+payment_status          | String       | 50    |
+payment_trx_id          | String       | 255   |
+payment_sender          | String       | 100   |
+status                  | String       | 50    |
+order_type              | String       | 50    |
+courier_name            | String       | 100   |
+tracking_number         | String       | 255   |
+tracking_url            | String       | 2048  |
+admin_note              | String       | 2048  |
+created_at              | String       | 64    |
+
+Index: Key=created_at, Type=key, Order=DESC
+Index: Key=status, Type=key
+Index: Key=customer_phone, Type=key
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: products
+Collection ID: products
+━━━━━━━━━━━━━━━━━━━
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+name                    | String       | 255   | [R]
+sku                     | String       | 100   |
+description             | String       | 65535 |
+base_price              | Integer      |       | [R]
+flash_sale_price        | Integer      |       |
+flash_sale_end          | String       | 64    |
+video_url               | String       | 2048  |
+video_type              | String       | 50    |
+is_active               | Boolean      |       |
+is_featured             | Boolean      |       |
+is_add_once             | Boolean      |       |
+gallery_images          | String       | 2048  | [A]
+variants                | String       | 65535 |
+created_at              | String       | 64    |
+
+Index: Key=is_active, Type=key
+Index: Key=created_at, Type=key, Order=DESC
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: product_categories
+Collection ID: product_categories
+━━━━━━━━━━━━━━━━━━━
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+product_id              | String       | 36    | [R]
+category_id             | String       | 36    | [R]
+
+Index: Key=product_id, Type=key
+Index: Key=category_id, Type=key
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: promos
+Collection ID: promos
+━━━━━━━━━━━━━━━━━━━
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+code                    | String       | 512   | [R]
+discount                | Integer      |       |
+is_active               | Boolean      |       |
+usage_limit             | Integer      |       |
+used_count              | Integer      |       |
+expires_at              | String       | 64    |
+type                    | String       | 50    |
+disc_type               | String       | 50    |
+disc_val                | Integer      |       |
+max_cap                 | Integer      |       |
+min_spend               | Integer      |       |
+del_reward              | String       | 50    |
+del_disc_amount         | Integer      |       |
+del_disc_cap            | Integer      |       |
+applicable_products     | String       | 36    | [A]
+applicable_categories   | String       | 36    | [A]
+applicable_districts    | String       | 100   | [A]
+applicable_payments     | String       | 100   | [A]
+is_repeated_config      | Boolean      |       |
+rep_type                | String       | 50    |
+rep_value               | Integer      |       |
+rep_cap                 | Integer      |       |
+rep_expiry_days         | Integer      |       |
+rep_min_spend           | Integer      |       |
+rep_del_reward          | String       | 50    |
+created_at              | String       | 64    |
+
+Index: Key=is_active, Type=key
+Index: Key=created_at, Type=key, Order=DESC
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: reviews
+Collection ID: reviews
+━━━━━━━━━━━━━━━━━━━
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+product_id              | String       | 36    | [R]
+customer_name           | String       | 255   | [R]
+customer_phone          | String       | 50    |
+rating                  | Integer      |       | [R]
+review_text             | String       | 4096  |
+review_image            | String       | 2048  |
+is_approved             | Boolean      |       |
+created_at              | String       | 64    |
+
+Index: Key=product_id, Type=key
+Index: Key=is_approved, Type=key
+Index: Key=created_at, Type=key, Order=DESC
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: home_sections
+Collection ID: home_sections
+━━━━━━━━━━━━━━━━━━━
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+title                   | String       | 255   | [R]
+type                    | String       | 50    | [R]
+category_id             | String       | 36    |
+product_ids             | String       | 36    | [A]
+max_products            | Integer      |       |
+sort_order              | Integer      |       |
+is_active               | Boolean      |       |
+
+Index: Key=sort_order, Type=key, Order=ASC
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━
+COLLECTION: verified_payments
+Collection ID: verified_payments
+━━━━━━━━━━━━━━━━━━━
+Attribute Name          | Type         | Size  | Flags
+------------------------|--------------|-------|-------
+transaction_id          | String       | 512   | [R]
+order_id                | String       | 36    |
+amount                  | Float        |       |
+currency                | String       | 50    |
+network                 | String       | 100   |
+sender_wallet           | String       | 512   |
+status                  | String       | 50    |
+raw_response            | String       | 65535 |
+method                  | String       | 100   |
+coin                    | String       | 50    |
+created_at              | String       | 64    |
+
+Index: Key=transaction_id, Type=unique   ← ⚠️ UNIQUE দিতে হবে
+Index: Key=order_id, Type=key
+Permissions: Read=Any, Create=Any, Update=Any, Delete=Any
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LEGEND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[R] = Required checkbox check করবে
+[A] = Array checkbox check করবে (String type select করার পরে)
+Size = String হলে max length
+Permissions = Appwrite Console → Collection → Settings → Permissions
+
+NOTE: messaging_apps, crypto_coins, variants, items, raw_response
+      এগুলো code এ JSON.stringify() করে save হবে, JSON.parse() করে পড়া হবে।
+
+NOTE: created_at → code এ new Date().toISOString() দিয়ে set করা হবে।

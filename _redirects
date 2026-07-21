@@ -1,0 +1,1 @@
+/api/d1-query https://api.cloudflare.com/client/v4/accounts/YOUR_ACCOUNT_ID/d1/database/YOUR_DB_ID/query 200

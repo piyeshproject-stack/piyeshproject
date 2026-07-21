@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policies & Terms — Freelancing By Rifat</title>
+    <meta name="description" content="Read our Privacy Policy, User Policy, Payment Policy, Refund Policy, and Terms & Conditions.">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/premium-icons.css">
+    <script src="assets/js/config.js?v=1782024132023"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="assets/js/supabase-init.js"></script>
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" type="module"></script>
+    <style>
+        .policy-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 40px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-light);
+        }
+        .policy-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px dashed #eee;
+        }
+        .policy-header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        .policy-header p {
+            color: #666;
+            font-size: 15px;
+        }
+        .policy-section {
+            margin-bottom: 40px;
+        }
+        .policy-section h2 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .policy-section p, .policy-section li {
+            font-size: 15px;
+            color: #444;
+            line-height: 1.8;
+            margin-bottom: 12px;
+        }
+        .policy-section ul {
+            padding-left: 20px;
+            margin-bottom: 16px;
+        }
+        .policy-section ul li::marker {
+            color: var(--primary);
+        }
+        .policy-box {
+            background: #fdf2f2;
+            border: 1px solid rgba(255, 77, 77, 0.2);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+        .policy-box h4 {
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        
+        .lang-toggle-wrap {
+            display: inline-flex;
+            background: #f0f0f5;
+            padding: 4px;
+            border-radius: 30px;
+            margin-top: 15px;
+        }
+        .lang-btn {
+            padding: 8px 24px;
+            border: none;
+            background: transparent;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .lang-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .policy-container { margin: 20px; padding: 25px; }
+            .policy-header h1 { font-size: 26px; }
+        }
+    </style>
+</head>
+<body style="display:flex;flex-direction:column;min-height:100vh;background:#fafafa;">
+
+<!-- Navbar -->
+<nav class="navbar" id="mainNavbar">
+    <a href="index.html" class="nav-icon-btn">←</a>
+    <a href="index.html" class="navbar-brand">
+        <div id="navLogo" style="font-size:22px;"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i></div>
+        <span id="navBrand">Shop</span>
+    </a>
+    <div style="flex:1;"></div>
+    <div class="navbar-actions">
+        <a href="track.html" class="nav-icon-btn" title="Track Order"><i data-lucide="package" class="lucide-icon icon-bounce"></i></a>
+    </div>
+</nav>
+
+<!-- Main Content -->
+<main style="flex:1;">
+    <div class="policy-container">
+        <div class="policy-header">
+            <h1 id="pageTitle">Policies & Terms of Service</h1>
+            <p id="pageDate">Last updated: 18 May 2026</p>
+            
+            <!-- Language Toggle -->
+            <div class="lang-toggle-wrap">
+                <button class="lang-btn active" id="btnEn" onclick="switchLang('en')">English</button>
+                <button class="lang-btn" id="btnBn" onclick="switchLang('bn')">বাংলা (Bengali)</button>
+            </div>
+        </div>
+
+        <!-- ENGLISH CONTENT -->
+        <div id="contentEn">
+            <div class="policy-section">
+                <h2><i data-lucide="alert-triangle" class="lucide-icon text-primary"></i> 1. Placing Orders &amp; COD Rules (CRITICAL)</h2>
+                <ul>
+                    <li><strong>Binding Agreement:</strong> Placing any order (COD or paid) is a legally binding commitment. You confirm you will receive and pay for the product.</li>
+                    <li><strong>Cancellation after Dispatch:</strong> If you cancel after the parcel is shipped, or refuse delivery without valid reason, you <strong>must pay the two-way delivery charge + packaging fee</strong> as a penalty.</li>
+                    <li><strong>Blacklisting:</strong> Failure to pay the penalty will result in your Name, Phone, and Address being reported to national e-commerce seller blacklist groups, preventing you from ordering from other shops. Legal action (Consumer Rights Act) may also be taken.</li>
+                    <li><strong>Fake Orders:</strong> Placing fake or prank orders is a punishable offense. We will report you and take legal measures.</li>
+                    <li><strong>Order Confirmation Call:</strong> We may call you to verify your order. Please answer. If 3 attempts fail, the order may be cancelled.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="video" class="lucide-icon text-primary"></i> 2. Mandatory Unboxing Video</h2>
+                <p>To claim <strong>any</strong> issue (damaged, wrong, missing item), an unboxing video is <strong>absolutely required</strong>. No exceptions.</p>
+                <ul>
+                    <li>Must start recording <strong>before</strong> opening the intact package.</li>
+                    <li>Must be <strong>continuous — no cuts, no pauses, no edits</strong>.</li>
+                    <li>Shipping label must be clearly visible at the start.</li>
+                    <li>Without a valid video, <strong>NO claim will be accepted under any circumstances.</strong></li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="credit-card" class="lucide-icon text-primary"></i> 3. Payment Policy</h2>
+                <ul>
+                    <li><strong>bKash / Nagad (Manual):</strong> Send the exact amount to our number shown at checkout. Enter your Sender Number and Transaction ID (TrxID). Orders are verified manually. Using a wrong number or wrong amount — contact us <em>immediately</em>, otherwise the order is void.</li>
+                    <li><strong>Cash on Delivery (COD):</strong> Pay the delivery rider when you receive the product. You must pay the exact amount shown. Refusing to pay after receiving = legal action.</li>
+                    <li><strong>Online Gateway:</strong> You will be redirected to a secure payment page. After payment, you are returned automatically. Transaction IDs are verified — duplicate TrxIDs are blocked.</li>
+                    <li><strong>Advance Payment:</strong> Some orders require an advance (shown during checkout). The remainder is paid on delivery.</li>
+                    <li><strong>Crypto (International Only):</strong> For international customers only. Crypto is legally restricted in Bangladesh. BD users transact entirely at their own legal risk. We hold zero liability.</li>
+                </ul>
+                <div class="policy-box">
+                    <h4>⚠️ Incorrect / Wrong Payments</h4>
+                    <p>If you send money to a wrong number or wrong amount and do <strong>not</strong> contact support immediately, the order and refund will <strong>not be valid</strong>. Always double-check before sending.</p>
+                </div>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="refresh-ccw" class="lucide-icon text-primary"></i> 4. Refund, Return &amp; Exchange</h2>
+                <ul>
+                    <li><strong>Customized Products:</strong> Zero refunds. Customized items are made specifically for you and cannot be resold.</li>
+                    <li><strong>Color Variation:</strong> Slight color differences due to screen/camera are normal — not a valid return reason.</li>
+                    <li><strong>Size Variation:</strong> Up to 0.5–1 inch variation is industry standard — not a valid return reason.</li>
+                    <li><strong>Wrong Size (Your Mistake):</strong> Exchange allowed but you pay both-way shipping.</li>
+                    <li><strong>Defective / Wrong Item:</strong> Valid claim only with unboxing video. We will replace or refund.</li>
+                </ul>
+                <div class="policy-box">
+                    <h4>💰 Refund Calculation — Strict Deduction Rule</h4>
+                    <p>For ALL refund types: <strong>Delivery charge + Packaging cost are deducted first</strong> from your paid amount. Remaining balance is refunded via your chosen method below.</p>
+                </div>
+                <ul>
+                    <li><strong>Option 1 – Store Voucher:</strong> Remaining amount + <strong>5% bonus</strong> (max ৳150 bonus). Best value option.</li>
+                    <li><strong>Option 2 – Cash Refund:</strong> <strong>90%</strong> of remaining balance sent to your bKash/Nagad.</li>
+                    <li><strong>Option 3 – 50/50:</strong> 50% cash + 50% store voucher.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="truck" class="lucide-icon text-primary"></i> 5. Delivery Policy</h2>
+                <ul>
+                    <li>Delivery charges are calculated by district/zone and shown before you place the order.</li>
+                    <li>Delivery time: Inside Dhaka 1–3 days, Outside Dhaka 3–7 days (approx).</li>
+                    <li>Delivery is done via third-party courier. We are not responsible for courier delays.</li>
+                    <li><strong>Pickup:</strong> If "Pickup from Store" is available, you can collect in person — no delivery charge applies.</li>
+                    <li>Ensure your address and phone number are correct. Wrong address = failed delivery, and return charges are yours to pay.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="sparkles" class="lucide-icon text-primary"></i> 6. Add-ons Policy</h2>
+                <ul>
+                    <li>Add-ons (e.g., Gift Wrap, Express Delivery) are <strong>optional</strong> extra services selected during checkout.</li>
+                    <li>Add-on fees are non-refundable once the service has been rendered (e.g., gift wrapped).</li>
+                    <li>If an add-on service fails due to our error, we will refund the add-on cost in full.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="zap" class="lucide-icon text-primary"></i> 7. Flash Sale Policy</h2>
+                <ul>
+                    <li>Flash sale prices are <strong>time-limited</strong>. The countdown timer shown is accurate.</li>
+                    <li>Once the timer ends, the product returns to its regular price.</li>
+                    <li>Flash sale discounts cannot be combined with promo/coupon codes unless specified.</li>
+                    <li>We reserve the right to end or modify a flash sale at any time without prior notice.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="tag" class="lucide-icon text-primary"></i> 8. Promo Codes &amp; Coupons</h2>
+                <ul>
+                    <li>Each promo code has a minimum order value, expiry date, and usage limit.</li>
+                    <li>Expired, invalid, or used-up codes will not work — no exceptions.</li>
+                    <li>One promo code per order. Codes cannot be combined.</li>
+                    <li>Some coupons may restrict which payment methods can be used.</li>
+                    <li>Promo discounts are not refundable — if an order is refunded, only the actually paid amount (after promo) is considered.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="palette" class="lucide-icon text-primary"></i> 9. Product Variants — Color, Size &amp; Stock</h2>
+                <ul>
+                    <li>Select your color and size carefully before ordering. We cannot change the variant after the order is placed.</li>
+                    <li>Stock availability is shown per size. Greyed-out sizes are out of stock.</li>
+                    <li>If a selected variant is unexpectedly out of stock after your order, we will contact you to offer an alternative or full refund.</li>
+                    <li>Product images show all available colors — the displayed image matches the selected color swatch.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="package" class="lucide-icon text-primary"></i> 10. Order Tracking</h2>
+                <ul>
+                    <li>Track your order at any time using your <strong>Order ID + Phone Number</strong> on the Track Order page.</li>
+                    <li>Statuses: <em>Pending → Confirmed → Processing → Shipped → Delivered</em>.</li>
+                    <li>Once status is "Shipped", contact the courier with the tracking number for exact delivery time.</li>
+                    <li>We are not responsible for delays caused by the courier service.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="star" class="lucide-icon text-primary"></i> 11. Reviews &amp; Ratings</h2>
+                <ul>
+                    <li>Reviews must be honest and based on actual purchase experience.</li>
+                    <li>Fake, offensive, or defamatory reviews will be removed without notice.</li>
+                    <li>We do not manipulate or delete genuine negative reviews — your feedback helps us improve.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="lock" class="lucide-icon text-primary"></i> 12. Privacy Policy</h2>
+                <ul>
+                    <li>We collect only: Name, Phone, Email (optional), Delivery Address — solely for order processing.</li>
+                    <li>Your data is never sold or shared with third parties.</li>
+                    <li>Payment details pass through secure gateways and are never stored on our servers.</li>
+                    <li>We may send order status updates via SMS/messaging apps. No spam.</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="file-text" class="lucide-icon text-primary"></i> 13. Terms &amp; Conditions</h2>
+                <p>By placing an order, you confirm you have read, understood, and agreed to ALL policies above. If you disagree with any rule, please do not order. We may update policies at any time without prior notice. All content, logos, and images are our intellectual property.</p>
+            </div>
+        </div>
+
+        <!-- BENGALI CONTENT (Hidden by default) -->
+        <div id="contentBn" style="display:none;">
+            <div class="policy-section">
+                <h2><i data-lucide="alert-triangle" class="lucide-icon text-primary"></i> ১. অর্ডার ও COD এর কঠোর নিয়ম</h2>
+                <ul>
+                    <li><strong>বাধ্যবাধকতামূলক চুক্তি:</strong> যেকোনো অর্ডার (COD বা পেইড) একটি আইনি চুক্তি। আপনি নিশ্চিত করছেন যে পণ্য রিসিভ করবেন এবং মূল্য দেবেন।</li>
+                    <li><strong>শিপমেন্টের পর ক্যান্সেল:</strong> পার্সেল কুরিয়ারে দেওয়ার পর ক্যান্সেল বা অযৌক্তিক কারণে রিসিভ না করলে <strong>আপ-ডাউন ডেলিভারি চার্জ + প্যাকেজিং খরচ</strong> জরিমানা দিতে হবে।</li>
+                    <li><strong>ব্ল্যাকলিস্ট:</strong> জরিমানা না দিলে নাম, ফোন, ঠিকানা জাতীয় ই-কমার্স ব্ল্যাকলিস্ট গ্রুপে রিপোর্ট করা হবে। প্রয়োজনে আইনি ব্যবস্থা (ভোক্তা অধিকার) নেওয়া হবে।</li>
+                    <li><strong>ফেক অর্ডার:</strong> ফেক বা মজার ছলে অর্ডার করা শাস্তিযোগ্য অপরাধ। আমরা আইনি ব্যবস্থা নেব।</li>
+                    <li><strong>কনফার্মেশন কল:</strong> অর্ডার যাচাই করতে আমরা কল দিতে পারি। ৩ বার চেষ্টায় না ধরলে অর্ডার বাতিল হতে পারে।</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="video" class="lucide-icon text-primary"></i> ২. বাধ্যতামূলক আনবক্সিং ভিডিও</h2>
+                <p>যেকোনো অভিযোগের (নষ্ট, ভুল বা মিসিং পণ্য) জন্য আনবক্সিং ভিডিও <strong>সম্পূর্ণ বাধ্যতামূলক</strong>। কোনো ব্যতিক্রম নেই।</p>
+                <ul>
+                    <li>প্যাকেট খোলা <strong>শুরুর আগে থেকেই</strong> ভিডিও করতে হবে।</li>
+                    <li>ভিডিও <strong>একটানা — কোনো কাট, পজ বা এডিট করা যাবে না</strong>।</li>
+                    <li>প্যাকেটের গায়ের শিপিং লেবেল শুরুতেই স্পষ্ট দেখাতে হবে।</li>
+                    <li>সঠিক ভিডিও ছাড়া <strong>কোনো অভিযোগ গ্রহণ করা হবে না।</strong></li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="credit-card" class="lucide-icon text-primary"></i> ৩. পেমেন্ট নীতিমালা</h2>
+                <ul>
+                    <li><strong>বিকাশ / নগদ (ম্যানুয়াল):</strong> চেকআউটে দেখানো নাম্বারে নির্দিষ্ট পরিমাণ পাঠান। Sender Number এবং TrxID দিন। ভুল নাম্বারে বা ভুল পরিমাণ পাঠালে সাথে সাথে সাপোর্টে যোগাযোগ করুন, নইলে অর্ডার বাতিল।</li>
+                    <li><strong>COD:</strong> পণ্য হাতে পেয়ে ডেলিভারি ম্যানকে নির্দিষ্ট পরিমাণ দিন। রিসিভের পরে দিতে অস্বীকৃতি = আইনি ব্যবস্থা।</li>
+                    <li><strong>অনলাইন গেটওয়ে:</strong> সিকিউর পেমেন্ট পেজে রিডিরেক্ট হবেন, পেমেন্ট শেষে ফেরত আসবেন। TrxID যাচাই হয় — একই TrxID দুইবার ব্যবহার করা যাবে না।</li>
+                    <li><strong>অগ্রিম পেমেন্ট:</strong> কিছু অর্ডারে অগ্রিম লাগতে পারে (চেকআউটে দেখাবে), বাকিটা ডেলিভারিতে।</li>
+                    <li><strong>ক্রিপ্টো (আন্তর্জাতিক গ্রাহকদের জন্য):</strong> বাংলাদেশে ক্রিপ্টো আইনত নিষিদ্ধ। বাংলাদেশি ইউজার ব্যবহার করলে সম্পূর্ণ নিজ দায়িত্বে। আমরা কোনো দায় বহন করবো না।</li>
+                </ul>
+                <div class="policy-box">
+                    <h4>⚠️ ভুল পেমেন্ট</h4>
+                    <p>ভুল নাম্বারে বা ভুল অ্যামাউন্ট পাঠিয়ে সাথে সাথে সাপোর্টে না জানালে অর্ডার ও রিফান্ড <strong>গ্রহণযোগ্য হবে না</strong>। পাঠানোর আগে সবসময় দুইবার চেক করুন।</p>
+                </div>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="refresh-ccw" class="lucide-icon text-primary"></i> ৪. রিফান্ড, রিটার্ন ও এক্সচেঞ্জ</h2>
+                <ul>
+                    <li><strong>কাস্টমাইজড পণ্য:</strong> কোনো রিফান্ড নেই। কাস্টমাইজড পণ্য অন্যত্র বিক্রি করা যায় না।</li>
+                    <li><strong>রঙের পার্থক্য:</strong> স্ক্রিন/ক্যামেরার কারণে সামান্য রঙের তফাৎ স্বাভাবিক — রিটার্নের কারণ নয়।</li>
+                    <li><strong>সাইজের পার্থক্য:</strong> ০.৫–১ ইঞ্চি তফাৎ ইন্ডাস্ট্রি স্ট্যান্ডার্ড — রিটার্নের কারণ নয়।</li>
+                    <li><strong>নিজের ভুলে ভুল সাইজ:</strong> এক্সচেঞ্জ করা যাবে কিন্তু যাতায়াত দুই দিকের শিপিং চার্জ আপনাকে দিতে হবে।</li>
+                    <li><strong>ত্রুটিপূর্ণ/ভুল পণ্য:</strong> শুধুমাত্র আনবক্সিং ভিডিও থাকলে দাবি গ্রহণযোগ্য। আমরা রিপ্লেস বা রিফান্ড করবো।</li>
+                </ul>
+                <div class="policy-box">
+                    <h4>💰 রিফান্ড হিসাব — কঠোর নিয়ম</h4>
+                    <p>সব ধরনের রিফান্ডে: <strong>আগে ডেলিভারি চার্জ + প্যাকেজিং খরচ কেটে নেওয়া হবে।</strong> বাকি টাকার ওপর নিচের অপশন কাজ করবে।</p>
+                </div>
+                <ul>
+                    <li><strong>অপশন ১ – স্টোর ভাউচার:</strong> বাকি টাকা + <strong>৫% বোনাস</strong> (সর্বোচ্চ ৳১৫০)। সবচেয়ে সুবিধাজনক।</li>
+                    <li><strong>অপশন ২ – ক্যাশ রিফান্ড:</strong> বাকি টাকার <strong>৯০%</strong> বিকাশ/নগদে পাঠানো হবে।</li>
+                    <li><strong>অপশন ৩ – ৫০/৫০:</strong> ৫০% ক্যাশ + ৫০% স্টোর ভাউচার।</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="truck" class="lucide-icon text-primary"></i> ৫. ডেলিভারি নীতিমালা</h2>
+                <ul>
+                    <li>ডেলিভারি চার্জ জেলা/জোন অনুযায়ী, অর্ডার করার আগেই দেখা যাবে।</li>
+                    <li>ঢাকার ভেতরে ১–৩ দিন, ঢাকার বাইরে ৩–৭ দিন (আনুমানিক)।</li>
+                    <li>থার্ড-পার্টি কুরিয়ারের মাধ্যমে ডেলিভারি হয়। কুরিয়ারের বিলম্বের দায় আমাদের নয়।</li>
+                    <li><strong>স্টোর পিকআপ:</strong> উপলব্ধ থাকলে সরাসরি স্টোর থেকে নিতে পারবেন — ডেলিভারি চার্জ লাগবে না।</li>
+                    <li>ভুল ঠিকানা বা নম্বর দিলে ডেলিভারি ব্যর্থ হবে এবং ফেরত খরচ আপনাকে বহন করতে হবে।</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="sparkles" class="lucide-icon text-primary"></i> ৬. অ্যাড-অন নীতিমালা</h2>
+                <ul>
+                    <li>অ্যাড-অন (যেমন গিফট র‍্যাপ, এক্সপ্রেস ডেলিভারি) চেকআউটে ঐচ্ছিক সার্ভিস।</li>
+                    <li>একবার সার্ভিস রেন্ডার হলে (যেমন গিফট র‍্যাপ করা হলে) অ্যাড-অনের ফি ফেরত দেওয়া যাবে না।</li>
+                    <li>আমাদের ভুলে অ্যাড-অন সার্ভিস না পেলে পুরো অ্যাড-অন ফি ফেরত দেওয়া হবে।</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="zap" class="lucide-icon text-primary"></i> ৭. ফ্ল্যাশ সেল নীতিমালা</h2>
+                <ul>
+                    <li>ফ্ল্যাশ সেলের দাম সময়সীমিত। কাউন্টডাউন টাইমার সঠিক।</li>
+                    <li>টাইমার শেষ হলে পণ্য স্বাভাবিক দামে ফিরে আসবে।</li>
+                    <li>ফ্ল্যাশ সেল ডিসকাউন্ট সাধারণত প্রোমো কোডের সাথে কম্বাইন করা যায় না।</li>
+                    <li>পূর্ব নোটিশ ছাড়াই যেকোনো সময় ফ্ল্যাশ সেল পরিবর্তন বা বন্ধ করার অধিকার আমাদের আছে।</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="tag" class="lucide-icon text-primary"></i> ৮. প্রোমো কোড ও কুপন</h2>
+                <ul>
+                    <li>প্রতিটি কোডে ন্যূনতম অর্ডার, মেয়াদ এবং ব্যবহার সীমা আছে।</li>
+                    <li>মেয়াদোত্তীর্ণ বা ব্যবহারযোগ্য কোড কাজ করবে না — কোনো ব্যতিক্রম নেই।</li>
+                    <li>প্রতি অর্ডারে মাত্র একটি কোড। একাধিক কোড একসাথে ব্যবহার করা যাবে না।</li>
+                    <li>কিছু কুপনে নির্দিষ্ট পেমেন্ট মেথড বাধ্যতামূলক থাকতে পারে।</li>
+                    <li>রিফান্ডের ক্ষেত্রে প্রোমোর পরে যা পেইড হয়েছে শুধু সেটুকুই বিবেচনায় আসবে।</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="palette" class="lucide-icon text-primary"></i> ৯. পণ্যের রঙ, সাইজ ও স্টক</h2>
+                <ul>
+                    <li>অর্ডারের আগে সাবধানে রঙ ও সাইজ সিলেক্ট করুন। অর্ডারের পর পরিবর্তন সম্ভব নয়।</li>
+                    <li>সাইজ অনুযায়ী স্টক দেখানো হয়। গ্রে রঙের সাইজ = স্টক নেই।</li>
+                    <li>যদি অর্ডারের পর স্টক না থাকে, আমরা বিকল্প দেবো বা সম্পূর্ণ রিফান্ড করবো।</li>
+                    <li>পণ্যের ছবি নির্বাচিত কালার অনুযায়ী পরিবর্তন হয়।</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="package" class="lucide-icon text-primary"></i> ১০. অর্ডার ট্র্যাকিং</h2>
+                <ul>
+                    <li>Order ID + ফোন নম্বর দিয়ে যেকোনো সময় ট্র্যাক করুন।</li>
+                    <li>স্ট্যাটাস: <em>Pending → Confirmed → Processing → Shipped → Delivered</em>।</li>
+                    <li>"Shipped" হলে কুরিয়ারের ট্র্যাকিং নম্বর দিয়ে সঠিক সময় জানুন।</li>
+                    <li>কুরিয়ারের বিলম্বের দায় আমাদের নয়।</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="star" class="lucide-icon text-primary"></i> ১১. রিভিউ ও রেটিং</h2>
+                <ul>
+                    <li>রিভিউ অবশ্যই সত্যিকারের কেনাকাটার অভিজ্ঞতার ওপর ভিত্তি করে হতে হবে।</li>
+                    <li>ফেক, অপমানজনক বা মিথ্যা রিভিউ বিনা নোটিশে মুছে ফেলা হবে।</li>
+                    <li>আমরা সত্যিকারের নেতিবাচক রিভিউ মুছি না — এগুলো আমাদের উন্নতিতে সাহায্য করে।</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="lock" class="lucide-icon text-primary"></i> ১২. গোপনীয়তা নীতিমালা</h2>
+                <ul>
+                    <li>শুধু প্রয়োজনীয় তথ্য (নাম, ফোন, ঠিকানা) সংগ্রহ করা হয়।</li>
+                    <li>আপনার তথ্য কোনো থার্ড পার্টিকে বিক্রি বা শেয়ার করা হয় না।</li>
+                    <li>পেমেন্ট তথ্য সিকিউর গেটওয়ে দিয়ে যায়, আমাদের সার্ভারে সেভ হয় না।</li>
+                    <li>অর্ডার আপডেট SMS/মেসেজে পাঠানো হতে পারে। স্প্যাম করা হয় না।</li>
+                </ul>
+            </div>
+
+            <div class="policy-section">
+                <h2><i data-lucide="file-text" class="lucide-icon text-primary"></i> ১৩. শর্তাবলি</h2>
+                <p>অর্ডার করার মাধ্যমে আপনি ওপরের সব নিয়ম পড়েছেন, বুঝেছেন এবং মেনে নিয়েছেন বলে ধরে নেওয়া হবে। কোনো নিয়মে একমত না হলে অর্ডার করবেন না। পূর্ব নোটিশ ছাড়াই পলিসি পরিবর্তনের অধিকার আমাদের আছে।</p>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer class="footer" style="margin-top:20px; text-align:center; padding:30px; background:#fff; border-top:1px solid #eee;">
+    <div class="footer-bottom">
+        <span id="footerCopy">© 2026 Freelancing By Rifat. All rights reserved.</span>
+    </div>
+</footer>
+
+<script>
+function switchLang(lang) {
+    document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById('contentEn').style.display = 'none';
+    document.getElementById('contentBn').style.display = 'none';
+    
+    if (lang === 'en') {
+        document.getElementById('btnEn').classList.add('active');
+        document.getElementById('contentEn').style.display = 'block';
+        document.getElementById('pageTitle').innerText = 'Policies & Terms of Service';
+        document.getElementById('pageDate').innerText = 'Last updated: 18 May 2026';
+    } else {
+        document.getElementById('btnBn').classList.add('active');
+        document.getElementById('contentBn').style.display = 'block';
+        document.getElementById('pageTitle').innerText = 'নীতিমালা এবং শর্তাবলি';
+        document.getElementById('pageDate').innerText = 'সর্বশেষ আপডেট: ১৮ মে ২০২৬';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var p1;
+    if (CONFIG.DB_PROVIDER === 'supabase') {
+        p1 = supabaseClient.from('settings').select('*').eq('id', 1).single();
+    } else {
+        p1 = Promise.resolve({ data: {} });
+    }
+    p1.then(function(res) {
+        if(res.data) {
+            var name = res.data.store_name || CONFIG.STORE_NAME;
+            document.title = 'Policies — ' + name;
+            document.getElementById('navBrand').textContent = name;
+            document.getElementById('footerCopy').textContent = '© ' + new Date().getFullYear() + ' ' + name + '. All rights reserved.';
+            if (res.data.logo_url) {
+                document.getElementById('navLogo').innerHTML = '<img src="' + res.data.logo_url + '" style="height:36px;width:auto;">';
+            }
+        }
+    });
+});
+</script>
+
+<!-- Premium Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if(typeof lucide !== 'undefined') lucide.createIcons();
+    });
+</script>
+</body>
+</html>
+
+
+

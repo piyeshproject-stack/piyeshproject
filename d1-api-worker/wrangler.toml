@@ -1,0 +1,8 @@
+name = "d1-api-worker"
+main = "src/index.js"
+compatibility_date = "2024-03-20"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "your-database-name-here"
+database_id = "your-database-id-here"
