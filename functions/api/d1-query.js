@@ -22,9 +22,9 @@ export async function onRequestPost(context) {
             }
             
             const statements = body.queries.map(q => 
-                env.cf_db.prepare(q.sql).bind(...(q.params || []).map(v => v === undefined ? null : v))
+                env.DB.prepare(q.sql).bind(...(q.params || []).map(v => v === undefined ? null : v))
             );
-            const results = await env.cf_db.batch(statements);
+            const results = await env.DB.batch(statements);
             
             return new Response(JSON.stringify({ success: true, result: results }), {
                 status: 200,
@@ -42,7 +42,7 @@ export async function onRequestPost(context) {
             });
         }
 
-        const stmt = env.cf_db.prepare(sql);
+        const stmt = env.DB.prepare(sql);
         const { results } = await stmt.bind(...params.map(v => v === undefined ? null : v)).all();
 
         return new Response(JSON.stringify({ success: true, result: [{ results }] }), {
