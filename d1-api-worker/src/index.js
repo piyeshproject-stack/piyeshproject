@@ -26,8 +26,8 @@ export default {
         }
 
         try {
-            // Query the D1 database binding named DB
-            const stmt = env.DB.prepare('SELECT * FROM products WHERE is_active = 1');
+            // Query the D1 database binding named cf_db
+            const stmt = env.cf_db.prepare('SELECT * FROM products WHERE is_active = 1');
             const { results } = await stmt.all();
 
             return new Response(JSON.stringify({ success: true, data: results }), {
