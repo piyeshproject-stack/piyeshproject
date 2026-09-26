@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium E-Commerce Pricing</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        primary: '#8B1A1A', // Maroon
+                        secondary: '#B03535', // Lighter Maroon
+                        accent: '#C89B00', // Gold
+                        dark: '#f4f4f5',
+                        card: 'rgba(255, 255, 255, 0.7)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #fdfdfd;
+            color: #18181b;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(139, 26, 26, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(200, 155, 0, 0.15), transparent 25%);
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #fafafa; }
+        ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+        /* Toggle Switch Styles */
+        .toggle-checkbox:checked { right: 0; border-color: #10b981; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #10b981; }
+        .toggle-checkbox { right: 20px; z-index: 1; transition: all 0.3s ease; }
+        .toggle-label { transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="min-h-screen relative pb-20">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-12">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+            <h1 class="text-4xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-zinc-900 to-zinc-600 mb-6">
+                Premium E-Commerce Infrastructure
+            </h1>
+            <p class="text-lg text-zinc-600">
+                Scalable, high-performance system designed for serious businesses. All the premium features you need, out of the box.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
+            
+            <!-- Lifetime Starter Plan -->
+            <div class="bg-white border border-zinc-200 relative rounded-3xl p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_40px_rgba(16,185,129,0.12)] transition-all hover:-translate-y-2 z-10 flex flex-col">
+                <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-400 to-emerald-500 text-white text-[10px] font-extrabold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-md">
+                    Recommended
+                </div>
+                
+                <h3 class="text-lg font-bold text-zinc-800 uppercase tracking-wide mb-3 mt-2 text-center">Lifetime Starter</h3>
+                <div class="flex items-center justify-center gap-1 mb-2">
+                    <span class="text-5xl font-black text-zinc-900 tracking-tight">৳15,000</span>
+                </div>
+                <div class="text-center mb-5">
+                    <span class="text-zinc-500 text-sm font-medium">One-time payment</span>
+                </div>
+                
+                <div class="flex justify-center mb-6">
+                    <div class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-xs font-semibold border border-emerald-100">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        EMI: ৳1,550/mo
+                    </div>
+                </div>
+                
+                <p class="text-sm text-zinc-500 mb-8 text-center leading-relaxed px-2">Pay once, use forever. Perfect for starting out with zero monthly hosting stress.</p>
+                
+                <button onclick="openOrderModal('Lifetime Starter')" class="w-full bg-zinc-900 text-white font-bold py-3.5 px-4 rounded-2xl hover:bg-zinc-800 transition-all shadow-[0_4px_14px_0_rgba(24,24,27,0.39)] hover:shadow-[0_6px_20px_rgba(24,24,27,0.23)] hover:scale-[1.02] mb-10">
+                    Get Lifetime Plan
+                </button>
+
+                <div class="space-y-5 flex-1">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-emerald-100 p-1 rounded-full shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-[13px] text-zinc-900 leading-none">Unlimited Visitors</p>
+                            <p class="text-xs text-zinc-500 mt-1">100% Uptime without crashes.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-emerald-100 p-1 rounded-full shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-[13px] text-zinc-900 leading-none">100,000 Server Actions / Daily</p>
+                            <p class="text-[11px] text-zinc-500 mt-1 leading-relaxed">
+                                <b>How actions work:</b><br>
+                                1 Admin Refresh, Data Change, Checkout View or Order = 1 Action<br>
+                                <i class="text-emerald-600 font-medium">Easily manages ~50,000 orders monthly.</i>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-zinc-100 p-1 rounded-full shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-[13px] text-zinc-900 leading-none">Limited Database & Media Space</p>
+                            <p class="text-[11px] text-zinc-500 mt-1">Limited space for photos and videos. Upgradeable anytime via add-ons.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-primary/10 p-1 rounded-full shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-[13px] text-zinc-900 leading-none">Add-ons Available</p>
+                            <p class="text-[11px] text-zinc-500 mt-1">Increase actions to 10M or add Payment Gateways during checkout.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pro Growth Plan (Popular) -->
+            <div class="bg-gradient-to-b from-[#8B1A1A] to-[#6a1212] relative rounded-3xl p-10 shadow-[0_20px_50px_rgba(139,26,26,0.25)] transition-all hover:-translate-y-2 z-20 flex flex-col transform lg:scale-105 border border-[#A02020]">
+                <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-accent text-white text-[10px] font-extrabold px-5 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+                    Most Popular
+                </div>
+                
+                <h3 class="text-lg font-bold text-white/90 uppercase tracking-wide mb-3 mt-2 text-center">Pro Growth</h3>
+                <div class="flex items-center justify-center gap-1 mb-2">
+                    <span class="text-5xl font-black text-white tracking-tight">৳1,500</span>
+                </div>
+                <div class="text-center mb-6">
+                    <span class="text-white/70 text-sm font-medium">Billed monthly</span>
+                </div>
+                
+                <div class="flex justify-center mb-6 opacity-0">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 text-xs">Spacer</div>
+                </div>
+                
+                <p class="text-sm text-white/80 mb-8 text-center leading-relaxed px-2">Massive limits and bundled gateways for growing businesses ready to scale.</p>
+                
+                <button onclick="openOrderModal('Pro Growth')" class="w-full bg-white text-[#8B1A1A] font-bold py-3.5 px-4 rounded-2xl hover:bg-zinc-50 transition-all shadow-[0_4px_14px_0_rgba(255,255,255,0.39)] hover:shadow-[0_6px_20px_rgba(255,255,255,0.23)] hover:scale-[1.02] mb-10">
+                    Get Pro Plan
+                </button>
+
+                <div class="space-y-5 flex-1">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-white/20 p-1 rounded-full shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-[13px] text-white leading-none">Unlimited Visitors (Global CDN)</p>
+                            <p class="text-[11px] text-white/70 mt-1">Massive scale ready for viral marketing.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-white/20 p-1 rounded-full shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-[13px] text-white leading-none">Regular Gateway Included</p>
+                            <p class="text-[11px] text-white/70 mt-1">Free included with Admin Panel. (Value: ৳49/mo)</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-white/20 p-1 rounded-full shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-[13px] text-white leading-none flex items-center gap-2">10x Extra DB Space <span class="text-[9px] bg-accent text-white px-1.5 py-0.5 rounded font-black uppercase">Highlight</span></p>
+                            <p class="text-[11px] text-white/70 mt-1 leading-relaxed">
+                                <span class="bg-white/10 px-1 py-0.5 rounded font-medium text-white/90">NOTE:</span> Extra Database is ৳99/GB. Extra Media is ৳5/GB per month additionally.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enterprise Max Plan -->
+            <div class="bg-white/60 border border-zinc-200 relative rounded-3xl p-10 shadow-[0_8px_30px_rgb(0,0,0,0.02)] transition-all hover:-translate-y-2 z-10 flex flex-col backdrop-blur-md">
+                <h3 class="text-lg font-bold text-zinc-500 uppercase tracking-wide mb-4 mt-6 text-center">Enterprise Max</h3>
+                <div class="text-center mb-1">
+                    <span class="text-zinc-400 text-xs font-bold uppercase tracking-wider">Starts from</span>
+                </div>
+                <div class="flex items-center justify-center gap-1 mb-1">
+                    <span class="text-5xl font-black text-zinc-400 tracking-tight">$150</span>
+                </div>
+                <div class="text-center mb-5">
+                    <span class="text-zinc-400 text-sm font-medium">/ month</span>
+                </div>
+                
+                <div class="flex justify-center mb-6 opacity-0">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 text-xs">Spacer</div>
+                </div>
+                
+                <p class="text-sm text-zinc-400 mb-8 text-center leading-relaxed px-2">Data-center level scale for massive platforms. Final bill based on high usage.</p>
+                
+                <button onclick="openOrderModal('Enterprise Max')" class="w-full bg-transparent border-2 border-zinc-300 text-zinc-500 font-bold py-3 px-4 rounded-2xl hover:border-zinc-400 hover:text-zinc-700 transition-all mb-10">
+                    Contact Sales
+                </button>
+
+                <div class="space-y-5 flex-1 opacity-70">
+                    <div class="flex items-start gap-4">
+                        <div class="bg-zinc-100 p-1 rounded-full shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-[13px] text-zinc-600 leading-none">Unlimited Visitors</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-zinc-100 p-1 rounded-full shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-[13px] text-zinc-600 leading-none">Unlimited Server Actions</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-zinc-100 p-1 rounded-full shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-[13px] text-zinc-600 leading-none">Dedicated Resources</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4">
+                        <div class="bg-zinc-100 p-1 rounded-full shrink-0 mt-0.5">
+                            <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                        </div>
+                        <div>
+                            <p class="font-bold text-[13px] text-zinc-600 leading-none">VIP Support 24/7</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Toggle Dropdown For All Features -->
+        <div class="mt-16 flex flex-col items-center w-full max-w-5xl mx-auto">
+            <button id="toggleFeaturesBtn" class="group flex items-center gap-3 bg-white border border-zinc-300 hover:border-primary/50 hover:bg-zinc-100 transition-all text-zinc-900 px-8 py-3.5 rounded-full font-semibold shadow-lg">
+                View All Default Features
+                <svg id="toggleIcon" class="w-5 h-5 text-zinc-600 group-hover:text-primary transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+
+            <!-- Hidden Features List -->
+            <div id="featuresDropdown" class="hidden w-full mt-8 opacity-0 transition-opacity duration-300">
+                <div class="bg-white/50 border border-zinc-200/50 backdrop-blur-xl rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-accent opacity-50"></div>
+                    
+                    <h3 class="text-xl font-bold text-center text-primary mb-8 flex items-center justify-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Included in All Plans by Default
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm text-zinc-700">
+                        <!-- Category 1: Frontend & Experience -->
+                        <div>
+                            <h4 class="text-zinc-900 font-semibold uppercase tracking-wider text-xs border-b border-zinc-300/50 pb-2 mb-4 text-primary">🛍️ Frontend & Experience</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>PWA (Offline):</b> Works smoothly even without internet.</span></div>
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>Live Search:</b> Instant real-time product finding.</span></div>
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>Advanced Filters:</b> Sort by price, newness, & sales.</span></div>
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>Product Variations:</b> Color/Size based live stock.</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Category 2: Checkout & Sales -->
+                        <div>
+                            <h4 class="text-zinc-900 font-semibold uppercase tracking-wider text-xs border-b border-zinc-300/50 pb-2 mb-4 text-secondary">🚀 Checkout & Sales</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>BD Location API:</b> Auto District/Upazila selection.</span></div>
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>Dynamic Delivery:</b> Auto calculates shipping cost.</span></div>
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>Promo & Add-ons:</b> Coupons & optional checkout services.</span></div>
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>Order Tracking:</b> Live status check & auto PDF Invoice.</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Category 3: Admin & Security -->
+                        <div>
+                            <h4 class="text-zinc-900 font-semibold uppercase tracking-wider text-xs border-b border-zinc-300/50 pb-2 mb-4 text-accent">🛡️ Admin & Security</h4>
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>Duplicate TrxID Protect:</b> Blocks fake bKash/Nagad IDs.</span></div>
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>Telegram Alerts:</b> Instant new & draft order notifications.</span></div>
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>Full Admin Control:</b> Manage Banners, Orders & Settings.</span></div>
+                                <div class="flex items-start gap-3"><span class="text-accent text-lg leading-none">✓</span> <span><b>Abandoned Cart:</b> Track half-filled dropped orders.</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Meet Team Button -->
+        <a href="/team" target="_top" class="fixed bottom-6 right-6 z-50 bg-white/90 backdrop-blur-md border border-zinc-200 shadow-2xl px-6 py-3 rounded-full text-zinc-800 font-bold flex items-center gap-2 hover:bg-zinc-50 hover:-translate-y-1 transition-all group">
+            <span class="text-xl group-hover:scale-110 transition-transform">👋</span> Meet Our Team
+        </a>
+    </div>
+
+    <!-- Order Modal Overlay -->
+    <div id="orderModal" class="fixed inset-0 bg-zinc-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-zinc-50 border border-zinc-200 rounded-2xl w-full max-w-lg shadow-2xl relative max-h-[90vh] flex flex-col overflow-hidden">
+            
+            <!-- Header -->
+            <div class="p-5 border-b border-zinc-200 flex justify-between items-center bg-white/50">
+                <h2 class="text-xl font-bold text-zinc-900">Complete Your Order</h2>
+                <button onclick="closeOrderModal()" class="text-zinc-600 hover:text-zinc-900 bg-zinc-100 hover:bg-zinc-200 rounded-full p-1.5 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="overflow-y-auto custom-scrollbar p-6">
+                <!-- Form Section -->
+                <div id="modalFormSection">
+                    <div class="mb-5 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-primary font-semibold uppercase tracking-wider">Selected Plan</p>
+                            <p id="selectedPlanName" class="text-lg font-bold text-zinc-900 mt-0.5">Plan Name</p>
+                        </div>
+                    </div>
+
+                    <form id="checkoutForm" class="space-y-5">
+                        
+                        <!-- Dynamic Toggles / Payment Options -->
+                        <div id="dynamicOptionsContainer"></div>
+
+                        <!-- User Info Fields -->
+                        <div class="space-y-4 pt-4 border-t border-zinc-200">
+                            <h4 class="text-sm font-semibold text-zinc-900 uppercase tracking-wider">Business Info</h4>
+                            
+                            <div>
+                                <input type="text" id="businessName" required placeholder="Shop/Business Name" class="w-full bg-white border border-zinc-300 rounded-xl px-4 py-3 text-zinc-900 placeholder-zinc-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <input type="text" id="customerName" required placeholder="Your Name" class="w-full bg-white border border-zinc-300 rounded-xl px-4 py-3 text-zinc-900 placeholder-zinc-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                                </div>
+                                <div>
+                                    <input type="tel" id="customerPhone" required placeholder="Phone Number" class="w-full bg-white border border-zinc-300 rounded-xl px-4 py-3 text-zinc-900 placeholder-zinc-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                                </div>
+                            </div>
+                            <div>
+                                <input type="email" id="customerEmail" placeholder="Email Address (Optional)" class="w-full bg-white border border-zinc-300 rounded-xl px-4 py-3 text-zinc-900 placeholder-zinc-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Order Summary -->
+                        <div id="orderSummarySection" class="mt-6 bg-white/80 border border-zinc-300 rounded-xl p-5 shadow-inner">
+                            <h4 class="text-xs font-bold text-zinc-600 uppercase tracking-wider mb-3 pb-2 border-b border-zinc-200">Live Order Summary</h4>
+                            <div class="space-y-2.5 text-sm">
+                                <div class="flex justify-between text-zinc-800">
+                                    <span id="sumPlanName">Plan Base</span>
+                                    <span id="sumPlanPrice" class="font-medium">৳0</span>
+                                </div>
+                                <div id="sumSetupRow" class="flex justify-between text-zinc-600 hidden">
+                                    <span>One-time Setup Fees</span>
+                                    <span id="sumSetupPrice">৳0</span>
+                                </div>
+                                <div id="sumMonthlyRow" class="flex justify-between text-accent hidden">
+                                    <span>Total Monthly Recurring</span>
+                                    <span id="sumMonthlyPrice">৳0/mo</span>
+                                </div>
+                                <div class="pt-3 mt-2 border-t border-zinc-200 flex justify-between items-center">
+                                    <span class="font-bold text-zinc-900 text-base">Total Due Today</span>
+                                    <span id="sumTotalToday" class="text-xl font-bold text-primary">৳0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-primary to-secondary text-white font-bold py-3.5 px-4 rounded-xl hover:opacity-90 transition-all mt-4">
+                            Submit Order Request
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Success State -->
+                <div id="modalSuccessSection" class="hidden text-center py-8">
+                    <div class="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-accent/30">
+                        <svg class="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-zinc-900 mb-2">Request Received!</h3>
+                    <p class="text-zinc-600 mb-6">Your order details have been securely sent. Please connect with the developer via WhatsApp to finalize the setup.</p>
+                    
+                    <a id="waContactBtn" href="#" target="_blank" class="inline-flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold py-3.5 px-4 rounded-xl transition-colors mb-3">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.964 9.964 0 001.333 4.976L2 22l5.187-1.346a9.923 9.923 0 004.825 1.254h.005c5.505 0 9.988-4.478 9.989-9.985A9.97 9.97 0 0012.012 2zm.006 16.924c-1.328 0-2.628-.356-3.766-1.03l-.27-.16-2.795.733.746-2.724-.176-.279a8.318 8.318 0 01-1.272-4.462c.001-4.6 3.747-8.344 8.351-8.345a8.307 8.307 0 015.908 2.45A8.324 8.324 0 0120.36 11.99c-.001 4.599-3.746 8.343-8.342 8.344zm4.576-6.25c-.25-.125-1.485-.733-1.716-.817-.23-.083-.398-.125-.565.125-.167.25-.65.817-.798.983-.148.167-.297.188-.548.063-1.042-.518-1.92-1.125-2.645-2.229-.168-.25-.018-.386.106-.511.112-.112.25-.292.375-.438.125-.146.167-.25.25-.417.083-.167.042-.313-.021-.438-.063-.125-.565-1.363-.775-1.866-.203-.491-.41-.425-.565-.433-.148-.008-.316-.008-.483-.008-.167 0-.438.063-.667.313-.23.25-.876.857-.876 2.088 0 1.231.897 2.42 1.022 2.587.125.167 1.764 2.693 4.275 3.776 1.107.478 1.835.72 2.531.91.56.15 1.07.13 1.472.078.455-.058 1.485-.607 1.694-1.194.209-.587.209-1.09.147-1.194-.062-.104-.23-.167-.48-.292z"></path></svg>
+                        Message on WhatsApp
+                    </a>
+                    
+                    <a href="/team" target="_top" class="inline-flex items-center justify-center gap-2 w-full bg-white border border-zinc-200 hover:bg-zinc-50 text-zinc-800 font-bold py-3.5 px-4 rounded-xl transition-colors shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Meet Our Team
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Telegram & WhatsApp Configuration
+        const TELEGRAM_BOT_TOKEN = '8254118804:AAFT1S3jHfEkt2rYYh-P2xHqXxPKEVIYxJY';
+        const TELEGRAM_CHAT_ID = '5513474694';
+        const WHATSAPP_NUMBER = '8801874600203';
+        
+        let currentPlan = '';
+        let currentOrderId = '';
+
+        // Dropdown toggle functionality
+        document.getElementById('toggleFeaturesBtn').addEventListener('click', function() {
+            const dropdown = document.getElementById('featuresDropdown');
+            const icon = document.getElementById('toggleIcon');
+            
+            if (dropdown.classList.contains('hidden')) {
+                dropdown.classList.remove('hidden');
+                setTimeout(() => dropdown.classList.remove('opacity-0'), 10);
+                icon.classList.add('rotate-180');
+            } else {
+                dropdown.classList.add('opacity-0');
+                icon.classList.remove('rotate-180');
+                setTimeout(() => dropdown.classList.add('hidden'), 300);
+            }
+        });
+
+        // Toggle logic for Add-ons (10M unlocks Auto-scaling)
+        window.toggleAutoScaling = function() {
+            const addon10m = document.getElementById('addon-10m');
+            const addonActions = document.getElementById('addon-actions');
+            const container = document.getElementById('auto-scaling-container');
+            
+            if (addon10m && addon10m.checked) {
+                addonActions.disabled = false;
+                container.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                if(addonActions) {
+                    addonActions.disabled = true;
+                    addonActions.checked = false;
+                }
+                if(container) {
+                    container.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+            calculateSummary();
+        };
+
+        // Live Order Summary Calculator
+        function calculateSummary() {
+            const summaryDiv = document.getElementById('orderSummarySection');
+            if (!summaryDiv) return;
+            
+            let isEnterprise = (currentPlan === 'Enterprise Max');
+            
+            // Advance & Due Logics
+            const baseAdvance = 500;
+            let setupFees = [];
+            let extraMonthly = [];
+            let monthlyRecurring = 0;
+            
+            let planBaseValue = 0;
+            let advanceToPayToday = 0;
+            let dueAfterLive = 0;
+            
+            let dueLabel = 'Due After Site Live';
+            let usageNote = false;
+
+            // Base Logic Based on Plan
+            if (currentPlan === 'Lifetime Starter') {
+                const paymentType = document.querySelector('input[name="paymentType"]:checked')?.value || 'One-Time';
+                if (paymentType === 'EMI') {
+                    planBaseValue = 15500;
+                    advanceToPayToday = baseAdvance;
+                    dueAfterLive = 1550 - baseAdvance; // Remaining of 1st EMI
+                    dueLabel = 'Due After Live (1st EMI Remainder)';
+                    extraMonthly.push({ name: "EMI Installment (Next 9 Months)", amount: 1550 });
+                    monthlyRecurring += 1550; // Starts from 2nd month visually
+                } else {
+                    planBaseValue = 15000;
+                    advanceToPayToday = baseAdvance;
+                    dueAfterLive = 15000 - baseAdvance;
+                    dueLabel = 'Due After Live (Final Payment)';
+                }
+            } else if (currentPlan === 'Pro Growth') {
+                planBaseValue = 1500; // Monthly base
+                advanceToPayToday = baseAdvance;
+                dueAfterLive = 1500 - baseAdvance;
+                dueLabel = 'Due After Live (1st Month Remainder)';
+                monthlyRecurring += 1500;
+            } else if (isEnterprise) {
+                planBaseValue = "Custom";
+                advanceToPayToday = "Custom";
+                dueAfterLive = "Custom";
+                monthlyRecurring = 150; // In dollars
+            }
+
+            // Explicitly show Base Advance in the list
+            if (!isEnterprise) {
+                setupFees.push({ name: "Base Security Advance", amount: baseAdvance });
+            }
+
+            // Check Gateway Fees
+            const gateway = document.querySelector('input[name="gateway"]:checked');
+            if (gateway) {
+                const gwMonthly = parseInt(gateway.dataset.monthly || '0');
+                const gwSetup = parseInt(gateway.dataset.setup || '0');
+                
+                if (gwMonthly > 0) {
+                    extraMonthly.push({ name: "Gateway", amount: gwMonthly });
+                    monthlyRecurring += gwMonthly;
+                }
+                if (gwSetup > 0) {
+                    setupFees.push({ name: "Gateway Setup", amount: gwSetup });
+                    if(!isEnterprise) advanceToPayToday += gwSetup;
+                }
+            }
+
+            // Check Add-ons (Performance)
+            const addon10m = document.getElementById('addon-10m');
+            if (addon10m && addon10m.checked) {
+                extraMonthly.push({ name: "10M Actions Add-on", amount: 600 });
+                monthlyRecurring += 600;
+            }
+
+            const addonActions = document.getElementById('addon-actions');
+            if (addonActions && addonActions.checked && !addonActions.disabled) {
+                usageNote = true;
+            }
+
+            const addonAdminApp = document.getElementById('addon-admin-app');
+            if (addonAdminApp && addonAdminApp.checked) {
+                setupFees.push({ name: "Admin App Setup", amount: 200 });
+                if(!isEnterprise) advanceToPayToday += 200;
+            }
+
+            // Build Dynamic Summary HTML
+            let html = `
+                <h4 class="text-xs font-bold text-zinc-600 uppercase tracking-wider mb-3 pb-2 border-b border-zinc-200">Live Order Summary</h4>
+                <div class="space-y-3 text-sm" id="summaryData">
+            `;
+
+            // Plan Base value
+            html += `
+                <div class="flex justify-between text-zinc-700">
+                    <span>Plan Base Value</span>
+                    <span class="font-medium">${isEnterprise ? '$150/mo' : '৳' + planBaseValue.toLocaleString()}</span>
+                </div>
+            `;
+
+            // Setup Fees rows
+            setupFees.forEach(fee => {
+                html += `
+                    <div class="flex justify-between text-zinc-600 text-[13px]">
+                        <span>+ ${fee.name}</span>
+                        <span>৳${fee.amount}</span>
+                    </div>
+                `;
+            });
+
+            // Advance Payable Today
+            html += `
+                <div class="flex justify-between items-center text-primary font-semibold bg-primary/10 -mx-2 px-2 py-1 rounded">
+                    <span>Advance Payable Today</span>
+                    <span>${isEnterprise ? 'Discuss with Sales' : '৳' + advanceToPayToday.toLocaleString()}</span>
+                </div>
+            `;
+
+            // Due After Live
+            html += `
+                <div class="flex justify-between text-zinc-800 pt-2 border-t border-zinc-200/50">
+                    <span>${dueLabel}</span>
+                    <span class="font-bold">${isEnterprise ? 'Custom' : '৳' + dueAfterLive.toLocaleString()}</span>
+                </div>
+            `;
+
+            // Extra Monthly rows
+            extraMonthly.forEach(fee => {
+                html += `
+                    <div class="flex justify-between text-zinc-600 text-[13px] mt-1">
+                        <span>+ ${fee.name}</span>
+                        <span>৳${fee.amount}/mo</span>
+                    </div>
+                `;
+            });
+
+            // Monthly Recurring
+            if (monthlyRecurring > 0 || usageNote) {
+                let recText = isEnterprise ? `$${monthlyRecurring}/mo` : `৳${monthlyRecurring.toLocaleString()}/mo`;
+                if(usageNote) recText += ` + Usage (৳20/0.1M)`;
+                
+                html += `
+                    <div class="flex justify-between text-accent mt-1 border-t border-zinc-200/50 pt-2">
+                        <span>Total Monthly Recurring</span>
+                        <span class="font-bold">${recText}</span>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+            summaryDiv.innerHTML = html;
+        }
+
+        function openOrderModal(planName) {
+            currentPlan = planName;
+            document.getElementById('selectedPlanName').innerText = planName;
+            
+            const optionsContainer = document.getElementById('dynamicOptionsContainer');
+            
+            // Reusable Admin App Component
+            const adminAppOptionHTML = `
+                <div>
+                    <h4 class="text-sm font-semibold text-zinc-900 uppercase tracking-wider mb-3 flex items-center gap-2">Dedicated Admin App <span class="bg-accent/20 text-accent text-[9px] px-1.5 py-0.5 rounded font-bold">Add-on</span></h4>
+                    
+                    <label class="flex items-center justify-between p-3.5 rounded-xl bg-white/50 border border-zinc-200 hover:border-zinc-300 transition-colors cursor-pointer">
+                        <div>
+                            <p class="text-sm font-medium text-zinc-800">Pro Admin App</p>
+                            <p class="text-[11px] text-zinc-600 mt-0.5">Professional dashboard. Unlimited actions (0 Action Cost). Control everything.</p>
+                            <p class="text-[10px] text-zinc-500 mt-1 italic">* ৳200/rebuild.</p>
+                        </div>
+                        <div class="text-right flex items-center gap-3">
+                            <div class="text-right">
+                                <p class="text-xs font-semibold text-accent">৳200</p>
+                                <p class="text-[10px] text-zinc-500">1st time setup</p>
+                            </div>
+                            <input type="checkbox" id="addon-admin-app" name="addons" value="Dedicated Admin App (৳200 1st time, ৳200/rebuild)" onchange="calculateSummary()" class="w-5 h-5 text-accent bg-zinc-100 border-zinc-300 rounded focus:ring-accent focus:ring-offset-zinc-900">
+                        </div>
+                    </label>
+                </div>
+            `;
+
+            // Reusable Gateway Options Component
+            const gatewayOptionsHTML = `
+                <div>
+                    <h4 class="text-sm font-semibold text-zinc-900 uppercase tracking-wider mb-3 flex items-center gap-2">Payment Gateway Integration <span class="bg-primary/20 text-primary text-[9px] px-1.5 py-0.5 rounded font-bold">Add-on</span></h4>
+                    <div class="space-y-2.5">
+                        
+                        <!-- Manual Gateway -->
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-white/50 border border-zinc-200 hover:border-zinc-300 transition-colors cursor-pointer">
+                            <div class="flex items-center gap-3">
+                                <input type="radio" name="gateway" value="Manual Mode Only" data-monthly="0" data-setup="0" onchange="calculateSummary()" checked class="w-4 h-4 text-zinc-500 bg-zinc-100 border-zinc-300 focus:ring-zinc-500 focus:ring-offset-zinc-900">
+                                <div>
+                                    <p class="text-sm font-medium text-zinc-800">Manual Payment Mode</p>
+                                    <p class="text-[10px] text-zinc-600 mt-0.5">bKash/Nagad TrxID form built-in</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-semibold text-zinc-600">Free</p>
+                            </div>
+                        </label>
+
+                        <!-- Shared Gateway -->
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-white/50 border border-zinc-200 hover:border-zinc-300 transition-colors cursor-pointer relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-secondary"></div>
+                            <div class="flex items-center gap-3 pl-2">
+                                <input type="radio" name="gateway" value="Shared Gateway (৳49/mo, ৳500 Setup)" data-monthly="49" data-setup="500" onchange="calculateSummary()" class="w-4 h-4 text-secondary bg-zinc-100 border-zinc-300 focus:ring-secondary focus:ring-offset-zinc-900">
+                                <div>
+                                    <p class="text-sm font-medium text-zinc-800">Shared Gateway</p>
+                                    <p class="text-[10px] text-zinc-600 mt-0.5">Subscription based (Hosted on Dev domain)</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-semibold text-secondary">৳49/mo</p>
+                                <p class="text-[10px] text-zinc-500">৳500 Setup Fee</p>
+                            </div>
+                        </label>
+
+                        <!-- Dedicated Gateway -->
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-white/50 border border-zinc-200 hover:border-zinc-300 transition-colors cursor-pointer relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-primary"></div>
+                            <div class="flex items-center gap-3 pl-2">
+                                <input type="radio" name="gateway" value="Dedicated Gateway (৳99/mo)" data-monthly="99" data-setup="0" onchange="calculateSummary()" class="w-4 h-4 text-primary bg-zinc-100 border-zinc-300 focus:ring-primary focus:ring-offset-zinc-900">
+                                <div>
+                                    <p class="text-sm font-medium text-zinc-800">Dedicated Gateway</p>
+                                    <p class="text-[10px] text-zinc-600 mt-0.5">Custom link embedded on your domain</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-semibold text-primary">৳99/mo</p>
+                                <p class="text-[10px] text-zinc-500">No Setup Fee</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            `;
+
+            // Build Dynamic Options based on Plan
+            if (planName === 'Lifetime Starter') {
+                optionsContainer.innerHTML = `
+                    <div class="space-y-6">
+                        <!-- Payment Type Toggle -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-zinc-900 uppercase tracking-wider mb-3">Payment Method <span class="text-primary">*</span></h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="paymentType" value="One-Time" onchange="calculateSummary()" checked class="peer sr-only">
+                                    <div class="rounded-xl border border-zinc-300 bg-white/80 p-3 text-center hover:border-primary peer-checked:border-primary peer-checked:bg-primary/10 transition-all">
+                                        <p class="text-zinc-900 font-medium text-sm">One-Time</p>
+                                        <p class="text-xs text-zinc-600 mt-0.5">৳15,000 Total</p>
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="paymentType" value="EMI" onchange="calculateSummary()" class="peer sr-only">
+                                    <div class="rounded-xl border border-zinc-300 bg-white/80 p-3 text-center hover:border-primary peer-checked:border-primary peer-checked:bg-primary/10 transition-all relative overflow-hidden">
+                                        <p class="text-zinc-900 font-medium text-sm">EMI Option</p>
+                                        <p class="text-[10px] text-zinc-600 mt-0.5">৳1,550/mo (10 Months)</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        ${adminAppOptionHTML}
+
+                        <!-- Performance Add-ons -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-zinc-900 uppercase tracking-wider mb-3 flex items-center gap-2">Performance Add-ons <span class="bg-primary/20 text-primary text-[9px] px-1.5 py-0.5 rounded font-bold">Add-on</span></h4>
+                            
+                            <!-- 10M Actions Addon -->
+                            <label class="flex items-center justify-between p-3.5 rounded-xl bg-white/50 border border-zinc-200 hover:border-zinc-300 transition-colors cursor-pointer mb-3">
+                                <div>
+                                    <p class="text-sm font-medium text-zinc-800">10M Actions + 10x DB Space</p>
+                                    <p class="text-[11px] text-secondary mt-0.5">৳600/mo. Unlocks extra DB (৳100/GB) & Auto-Scaling</p>
+                                </div>
+                                <input type="checkbox" id="addon-10m" name="addons" value="10M Actions & 10x DB Space (৳600/mo)" onchange="toggleAutoScaling()" class="w-5 h-5 text-primary bg-zinc-100 border-zinc-300 rounded focus:ring-primary focus:ring-offset-zinc-900">
+                            </label>
+
+                            <!-- Auto Scaling Addon -->
+                            <label id="auto-scaling-container" class="flex items-center justify-between p-3.5 rounded-xl bg-white/50 border border-zinc-200 opacity-50 cursor-not-allowed transition-colors relative overflow-hidden">
+                                <div>
+                                    <p class="text-sm font-medium text-zinc-800">Enable Auto-Scaling</p>
+                                    <p class="text-[11px] text-accent mt-0.5">৳20 per 100k (0.1M) extra actions</p>
+                                </div>
+                                <input type="checkbox" id="addon-actions" name="addons" value="Auto-Scaling Enabled (৳20/0.1M usage)" onchange="calculateSummary()" disabled class="w-5 h-5 text-primary bg-zinc-100 border-zinc-300 rounded focus:ring-primary focus:ring-offset-zinc-900 disabled:opacity-50">
+                            </label>
+                        </div>
+
+                        ${gatewayOptionsHTML}
+                    </div>
+                `;
+            } else {
+                // For Pro Growth and Enterprise Max
+                optionsContainer.innerHTML = `
+                    <div class="space-y-6">
+                        ${adminAppOptionHTML}
+                        ${gatewayOptionsHTML}
+                    </div>
+                `;
+            }
+
+            // Reset Form and UI states
+            document.getElementById('checkoutForm').reset();
+            document.getElementById('modalFormSection').classList.remove('hidden');
+            document.getElementById('modalSuccessSection').classList.add('hidden');
+            
+            // Run summary calculation initially
+            calculateSummary();
+
+            // Show modal with animation
+            document.getElementById('orderModal').classList.remove('hidden');
+        }
+
+        function closeOrderModal() {
+            document.getElementById('orderModal').classList.add('hidden');
+        }
+
+        // Form Submission & Telegram formatting
+        document.getElementById('checkoutForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Processing Request...';
+            btn.disabled = true;
+
+            // Generate Order ID
+            currentOrderId = 'ORD-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            
+            // Collect User Info
+            const name = document.getElementById('customerName').value;
+            const phone = document.getElementById('customerPhone').value;
+            const email = document.getElementById('customerEmail').value || 'Not provided';
+            const business = document.getElementById('businessName').value;
+
+            // Collect Options
+            const paymentTypeEl = document.querySelector('input[name="paymentType"]:checked');
+            const paymentType = paymentTypeEl ? paymentTypeEl.value : 'Standard Monthly/Custom';
+            
+            // Collect Add-ons & Gateway
+            let selectedFeatures = [];
+            
+            const addon10m = document.getElementById('addon-10m');
+            if(addon10m && addon10m.checked) selectedFeatures.push(addon10m.value);
+            
+            const addonActions = document.getElementById('addon-actions');
+            if(addonActions && addonActions.checked && !addonActions.disabled) selectedFeatures.push(addonActions.value);
+            
+            const gateway = document.querySelector('input[name="gateway"]:checked');
+            if(gateway) selectedFeatures.push(gateway.value);
+
+            const addonsText = selectedFeatures.length > 0 ? selectedFeatures.join('\n- ') : 'None';
+            
+            // Extract the generated Summary details cleanly
+            const summaryHTML = document.getElementById('summaryData').innerText;
+            const cleanSummary = summaryHTML.replace(/\n\n/g, '\n'); // Remove double spaces
+
+            // Build Highly Detailed Telegram Message
+            const message = `
+🔔 *NEW SYSTEM ORDER (ADVANCED)* 🔔
+
+*Order ID:* \`${currentOrderId}\`
+*Selected Plan:* ${currentPlan}
+*Payment Model:* ${paymentType}
+
+*Selected Integrations & Add-ons:* 
+- ${addonsText}
+
+💰 *Detailed Financials Summary:*
+\`\`\`text
+${cleanSummary}
+\`\`\`
+
+👤 *Client Information:*
+*Business:* ${business}
+*Name:* ${name}
+*Phone:* \`${phone}\`
+*Email:* ${email}
+            `;
+
+            try {
+                // Send to Telegram
+                const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: message,
+                        parse_mode: 'Markdown'
+                    })
+                });
+
+                if (response.ok) {
+                    // Show Success Section
+                    document.getElementById('modalFormSection').classList.add('hidden');
+                    document.getElementById('modalSuccessSection').classList.remove('hidden');
+                    
+                    // Setup WhatsApp Link
+                    const waMsg = `Hello! I just submitted an order request for the *${currentPlan}* plan.\n\n*Order ID:* ${currentOrderId}\n*Business:* ${business}\n\nPlease help me finalize the setup.`;
+                    document.getElementById('waContactBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMsg)}`;
+                } else {
+                    btn.innerHTML = 'Error - Please try again';
+                    btn.style.backgroundColor = '#ef4444';
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                btn.innerHTML = 'Network Error';
+                btn.style.backgroundColor = '#ef4444';
+            } finally {
+                if(btn.innerHTML !== 'Processing Request...') {
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                        btn.style.backgroundColor = '';
+                    }, 3000);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

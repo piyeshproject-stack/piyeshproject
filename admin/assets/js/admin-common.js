@@ -68,6 +68,10 @@ var SIDEBAR_HTML = `
         </a>
 
         <div class="nav-section-label">Config</div>
+        <a href="env-setup.html" class="nav-item" data-page="env-setup">
+            <span class="nav-icon">🔐</span>
+            <span>ENV Setup</span>
+        </a>
         <a href="settings.html" class="nav-item" data-page="settings">
             <span class="nav-icon">⚙️</span>
             <span>Settings</span>

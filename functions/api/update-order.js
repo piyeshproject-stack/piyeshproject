@@ -1,35 +1,62 @@
+// ─────────────────────────────────────────────
+// functions/api/update-order.js
+// POST /api/update-order
+//
+// Order status update + instant email notification
+// Email via Cloudflare Email Workers (no 3rd party)
+// ─────────────────────────────────────────────
+import { sendEmail, buildStatusUpdateEmail, buildOrderConfirmEmail } from './_email-helper.js';
+
+const CORS_HEADERS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function onRequestOptions() {
+    return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
+
 export async function onRequestPost(context) {
     const { request, env } = context;
-
-    const CORS_HEADERS = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    };
-
-    // Authenticate Admin
-    const authHeader = request.headers.get('Authorization');
-    if (false) { // Auth check bypassed as requested by user
-        return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
-            status: 401,
-            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
-        });
-    }
 
     try {
         const body = await request.json();
         const { id, status, payment_status, payment_trx_id } = body;
-        
-        const sql = `UPDATE orders SET status=?, payment_status=?, payment_trx_id=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`;
-        const params = [status, payment_status, payment_trx_id, id];
 
-        const stmt = env.DB.prepare(sql);
-        const { results } = await stmt.bind(...params.map(v => v === undefined ? null : v)).run();
+        if (!id) {
+            return new Response(JSON.stringify({ success: false, error: 'order id দিন' }), {
+                status: 400, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+            });
+        }
 
-        return new Response(JSON.stringify({ success: true, result: [{ results }] }), {
+        // ── Build update query (only provided fields) ──
+        const updates = [];
+        const params  = [];
+
+        if (status         !== undefined) { updates.push('status=?');          params.push(status); }
+        if (payment_status !== undefined) { updates.push('payment_status=?');  params.push(payment_status); }
+        if (payment_trx_id !== undefined) { updates.push('payment_trx_id=?'); params.push(payment_trx_id); }
+
+        updates.push('updated_at=CURRENT_TIMESTAMP');
+        params.push(id);
+
+        await env.DB.prepare(
+            `UPDATE orders SET ${updates.join(', ')} WHERE id=?`
+        ).bind(...params).run();
+
+        // ── Send status email (non-blocking, fire-and-forget) ──
+        if (status && env.EMAIL) {
+            context.waitUntil(
+                sendStatusEmail(env, id, status)
+            );
+        }
+
+        return new Response(JSON.stringify({ success: true }), {
             status: 200,
             headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
         });
+
     } catch (error) {
         return new Response(JSON.stringify({ success: false, error: error.message }), {
             status: 500,
@@ -38,13 +65,35 @@ export async function onRequestPost(context) {
     }
 }
 
-export async function onRequestOptions() {
-    return new Response(null, {
-        status: 204,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        }
-    });
+// ── Fetch order + send email (non-blocking via waitUntil) ──
+async function sendStatusEmail(env, orderId, status) {
+    try {
+        // Only send emails for meaningful status changes
+        const EMAIL_STATUSES = ['Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
+        if (!EMAIL_STATUSES.includes(status)) return;
+
+        // Fetch order details
+        const { results } = await env.DB.prepare(
+            `SELECT customer_name, customer_email, id FROM orders WHERE id=? LIMIT 1`
+        ).bind(orderId).all();
+
+        const order = results?.[0];
+        if (!order?.customer_email) return; // কোনো email নেই — skip
+
+        await sendEmail(env, {
+            to:      order.customer_email,
+            toName:  order.customer_name || '',
+            subject: `📦 অর্ডার আপডেট — #${orderId}`,
+            html:    buildStatusUpdateEmail({
+                name:      order.customer_name,
+                orderId,
+                status,
+                storeUrl:  env.STORE_URL  || '',
+                storeName: env.STORE_NAME || 'Smiee Shop',
+            }),
+        });
+    } catch (e) {
+        // Email fail হলেও order update succeed করেছে — log only
+        console.error('Status email failed:', e.message);
+    }
 }
