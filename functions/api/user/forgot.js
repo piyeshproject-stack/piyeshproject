@@ -46,12 +46,17 @@ export async function onRequestPost(context) {
                 env.USERS_KV.put(rateKey, String(rateCount + 1), { expirationTtl: 900 }),
             ]);
 
+            // ── Fetch store_name from DB ──
+            const dbSettings = env.DB ? await env.DB.prepare("SELECT store_name FROM settings WHERE id = 1").first() : null;
+            const storeName  = dbSettings?.store_name || 'Smiee Shop';
+
             // ── Cloudflare Email Workers — instant, no 3rd party ──
             await sendEmail(env, {
                 to:      email,
                 toName:  user.name || '',
-                subject: `🔐 আপনার OTP — ${env.STORE_NAME || 'Smiee Shop'}`,
-                html:    buildOTPEmail({ otp, name: user.name, storeName: env.STORE_NAME }),
+                subject: `🔐 আপনার OTP — ${storeName}`,
+                html:    buildOTPEmail({ otp, name: user.name, storeName }),
+                storeName: storeName
             });
         }
 

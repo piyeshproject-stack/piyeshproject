@@ -1,0 +1,31 @@
+name: Update Theme Config
+
+on:
+  workflow_dispatch:
+    inputs:
+      css_payload:
+        description: 'Raw CSS content for theme variables'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  update-theme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Update theme.css
+        run: |
+          mkdir -p assets/css
+          echo '${{ github.event.inputs.css_payload }}' > assets/css/theme.css
+          
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/css/theme.css
+          git commit -m "chore: update theme styling from admin panel" || echo "No changes to commit"
+          git push

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Customizer — Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/admin.css">
+    <link rel="stylesheet" href="../assets/css/theme.css?v=2">
+    <script src="../assets/js/config.js?v=1782024132023"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../assets/js/supabase-init.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
+    <script src="../assets/js/appwrite-init.js"></script>
+    <script src="assets/js/admin-common.js?v=5"></script>
+    <link rel="stylesheet" href="../assets/css/premium-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+</head>
+<body>
+    <div class="page-loader" id="pageLoader" style="display:none;">
+        <div class="spinner"></div>
+    </div>
+
+    <main class="admin-main" id="adminMain">
+        <header class="admin-header">
+            <div class="header-left">
+                <button class="hamburger-btn" onclick="openSidebar()">☰</button>
+                <div>
+                    <div class="page-title">Theme Customizer</div>
+                    <div class="page-subtitle">Store branding & colors</div>
+                </div>
+            </div>
+            <div class="header-right"></div>
+        </header>
+
+        <div class="admin-content">
+            <div class="settings-grid" style="display:block; max-width:800px; margin:0 auto;">
+                
+            <!-- Theme Settings -->
+            <div class="card" style="margin-bottom:20px;">
+                <div class="settings-section-title"><i data-lucide="palette" class="lucide-icon"></i> Theme Customizer (Github Deploy Hook)</div>
+                <div style="font-size:11px; color:#ff9500; margin-bottom:12px; font-weight:600; padding:8px; background:rgba(255,149,0,0.1); border-radius:6px;">
+                    ⚠️ Saving theme will directly edit your Github CSS file and trigger a full Cloudflare Pages Rebuild (Takes ~2-3 mins).
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Extract Colors from Image</label>
+                    <input type="file" id="paletteImageInput" accept="image/*" style="display:none;" onchange="extractColorsFromImage(event)">
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('paletteImageInput').click()" style="width:100%; border:1px dashed var(--primary); color:var(--primary); background:rgba(255,77,77,0.05);">
+                        🎨 Upload Image/Logo to Pick Colors
+                    </button>
+                    <div id="palettePreview" style="display:flex; flex-direction:column; gap:8px; margin-top:12px;"></div>
+                </div>
+
+                <div class="settings-section-title" style="margin-top:20px; font-size:14px;">1. Brand Colors</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Primary (Navbar/Btn)</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themePrimary" value="#FF4D4D" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themePrimaryHex" class="form-input" value="#FF4D4D" oninput="document.getElementById('themePrimary').value=this.value">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Primary Light (Hover)</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themePrimaryLight" value="#FF7070" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themePrimaryLightHex" class="form-input" value="#FF7070" oninput="document.getElementById('themePrimaryLight').value=this.value">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Primary Dark</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themePrimaryDark" value="#D13B3B" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themePrimaryDarkHex" class="form-input" value="#D13B3B" oninput="document.getElementById('themePrimaryDark').value=this.value">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section-title" style="margin-top:20px; font-size:14px;">2. Backgrounds</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Main Background</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themeBg" value="#FFFFFF" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themeBgHex" class="form-input" value="#FFFFFF" oninput="document.getElementById('themeBg').value=this.value">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Card Background</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themeBgCard" value="#FFFFFF" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themeBgCardHex" class="form-input" value="#FFFFFF" oninput="document.getElementById('themeBgCard').value=this.value">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Light Background</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themeBgLight" value="#FBF8F7" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themeBgLightHex" class="form-input" value="#FBF8F7" oninput="document.getElementById('themeBgLight').value=this.value">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Subtle Background</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themeBgSubtle" value="#F7F2F2" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themeBgSubtleHex" class="form-input" value="#F7F2F2" oninput="document.getElementById('themeBgSubtle').value=this.value">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Footer Background</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themeFooterBg" value="#1A0A0A" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themeFooterBgHex" class="form-input" value="#1A0A0A" oninput="document.getElementById('themeFooterBg').value=this.value">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section-title" style="margin-top:20px; font-size:14px;">3. Text & Borders</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Dark Text (Headings)</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themeTextDark" value="#1A0808" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themeTextDarkHex" class="form-input" value="#1A0808" oninput="document.getElementById('themeTextDark').value=this.value">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Body Text</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themeTextBody" value="#3D2A2A" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themeTextBodyHex" class="form-input" value="#3D2A2A" oninput="document.getElementById('themeTextBody').value=this.value">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Muted Text</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themeTextMuted" value="#9E7070" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themeTextMutedHex" class="form-input" value="#9E7070" oninput="document.getElementById('themeTextMuted').value=this.value">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Border</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themeBorder" value="#E4D8D8" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themeBorderHex" class="form-input" value="#E4D8D8" oninput="document.getElementById('themeBorder').value=this.value">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Border Light</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="color" id="themeBorderLight" value="#F0EAEA" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themeBorderLightHex" class="form-input" value="#F0EAEA" oninput="document.getElementById('themeBorderLight').value=this.value">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:16px;">
+                    <label class="form-label">Advanced Live Preview</label>
+                    <div id="themePreviewBox" style="padding:0; border-radius:12px; background:#F4F7FE; border:1px solid rgba(0,0,0,0.1); overflow:hidden; display:flex; flex-direction:column; height:300px;">
+                        
+                        <!-- Mock Navbar -->
+                        <div id="tpNavbar" style="background:#FF4D4D; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+                            <div style="color:white; font-weight:800; font-size:16px;">My Store</div>
+                            <div style="color:white; font-size:12px;">☰</div>
+                        </div>
+                        
+                        <!-- Mock Content -->
+                        <div style="padding:20px; flex:1;">
+                            <div id="tpTitle" style="font-size:18px; font-weight:800; color:#1A1A2E; margin-bottom:12px;">Featured Products</div>
+                            
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                                <!-- Mock Card 1 -->
+                                <div class="tpCard" style="background:#FFFFFF; border-radius:10px; padding:10px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+                                    <div style="background:#e0e0e0; height:80px; border-radius:6px; margin-bottom:10px;"></div>
+                                    <div class="tpText" style="font-size:12px; font-weight:700; color:#1A1A2E; margin-bottom:6px;">Smart Watch</div>
+                                    <button class="tpBtn" style="background:#FF4D4D; color:white; border:none; padding:6px; border-radius:6px; font-weight:700; width:100%; cursor:pointer; font-size:11px;">Buy Now</button>
+                                </div>
+                                
+                                <!-- Mock Card 2 -->
+                                <div class="tpCard" style="background:#FFFFFF; border-radius:10px; padding:10px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+                                    <div style="background:#e0e0e0; height:80px; border-radius:6px; margin-bottom:10px;"></div>
+                                    <div class="tpText" style="font-size:12px; font-weight:700; color:#1A1A2E; margin-bottom:6px;">Headphones</div>
+                                    <button class="tpBtn" style="background:#FF4D4D; color:white; border:none; padding:6px; border-radius:6px; font-weight:700; width:100%; cursor:pointer; font-size:11px;">Buy Now</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary" style="width:100%;" onclick="saveThemeToGithub()">🚀 Push Theme & Rebuild Site</button>
+            </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Custom Color Picker Modal -->
+    <div id="customColorModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:99999; flex-direction:column; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px);">
+        <div style="background:#fff; border-radius:12px; padding:16px; max-width:95vw; max-height:90vh; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,0.5); width:100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <h3 style="margin:0; font-size:16px; color:var(--text-dark);">Pick exact color</h3>
+                <button type="button" onclick="document.getElementById('customColorModal').style.display='none'" style="background:none; border:none; font-size:24px; cursor:pointer; color:#999; padding:0 8px;">&times;</button>
+            </div>
+            <div style="overflow:auto; position:relative; flex:1; border:2px dashed #ddd; border-radius:8px; display:flex; justify-content:center; align-items:center; background:#f9f9f9;" id="canvasContainer">
+                <canvas id="colorPickerCanvas" style="cursor:crosshair; touch-action:none;"></canvas>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <div id="colorPreviewBox" style="width:36px; height:36px; border-radius:8px; border:1px solid #ddd; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.1);"></div>
+                    <span id="colorPreviewHex" style="font-family:monospace; font-weight:700; font-size:16px;">#FFFFFF</span>
+                </div>
+                <button type="button" id="colorPickerConfirmBtn" class="btn btn-primary" style="border-radius:30px; padding:8px 24px;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    var uploadedImageSrc = null;
+    var currentPickingInput = null;
+    var currentPickingHexInput = null;
+
+    // 1. Initialize Admin Layout
+    document.addEventListener('DOMContentLoaded', function() {
+        if(typeof adminInit === 'function') adminInit('theme');
+        
+        // 2. Bind Color Inputs for Live Preview & Add Custom EyeDroppers
+        var colorInputs = document.querySelectorAll('input[type="color"]');
+        colorInputs.forEach(function(input) {
+            input.addEventListener('input', updateThemePreview);
+            
+            var textInput = document.getElementById(input.id + 'Hex');
+            if(textInput) {
+                textInput.addEventListener('input', updateThemePreview);
+                
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'btn btn-outline';
+                btn.style.padding = '0 10px';
+                btn.style.fontSize = '16px';
+                btn.style.borderColor = 'rgba(0,0,0,0.1)';
+                btn.innerHTML = '💧';
+                btn.title = 'Pick Color from Uploaded Logo';
+                btn.onclick = function() {
+                    openColorPickerModal(input, textInput);
+                };
+                textInput.parentNode.appendChild(btn);
+            }
+        });
+        
+        var confirmBtn = document.getElementById('colorPickerConfirmBtn');
+        if(confirmBtn) {
+            confirmBtn.onclick = function() {
+                var hex = document.getElementById('colorPreviewHex').dataset.hex;
+                if(hex && currentPickingInput) {
+                    currentPickingInput.value = hex;
+                    if(currentPickingHexInput) currentPickingHexInput.value = hex;
+                    updateThemePreview();
+                }
+                document.getElementById('customColorModal').style.display = 'none';
+            };
+        }
+
+        // 2.5 Load current theme colors from live CSS file
+        fetch('../assets/css/theme.css?v=' + Date.now())
+        .then(function(res) { return res.text(); })
+        .then(function(css) {
+            var map = {
+                '--primary': 'themePrimary',
+                '--primary-light': 'themePrimaryLight',
+                '--primary-dark': 'themePrimaryDark',
+                '--bg': 'themeBg',
+                '--bg-light': 'themeBgLight',
+                '--bg-card': 'themeBgCard',
+                '--bg-subtle': 'themeBgSubtle',
+                '--footer-bg': 'themeFooterBg',
+                '--border': 'themeBorder',
+                '--border-light': 'themeBorderLight',
+                '--text-dark': 'themeTextDark',
+                '--text-body': 'themeTextBody',
+                '--text-muted': 'themeTextMuted'
+            };
+            
+            for(var key in map) {
+                var regex = new RegExp(key + "\\s*:\\s*(#[0-9a-fA-F]{3,8})", "i");
+                var match = css.match(regex);
+                if(match && match[1]) {
+                    var el = document.getElementById(map[key]);
+                    var elHex = document.getElementById(map[key] + 'Hex');
+                    if(el) el.value = match[1].toLowerCase();
+                    if(elHex) elHex.value = match[1].toLowerCase();
+                }
+            }
+            updateThemePreview();
+        })
+        .catch(function(e) {
+            console.warn("Could not load existing theme CSS", e);
+            updateThemePreview();
+        });
+    });
+
+    // 3. Simple Live Preview Function
+    function updateThemePreview() {
+        // Sync hex inputs with color pickers automatically via event listeners earlier
+        
+        var pri = document.getElementById('themePrimary').value;
+        var bg = document.getElementById('themeBg').value;
+        var bgC = document.getElementById('themeBgCard').value;
+        var txtCol = document.getElementById('themeTextDark').value;
+        var border = document.getElementById('themeBorder').value;
+        
+        var box = document.getElementById('themePreviewBox');
+        var nav = document.getElementById('tpNavbar');
+        
+        if(box) box.style.background = bg;
+        if(nav) nav.style.background = pri;
+        
+        document.querySelectorAll('.tpCard').forEach(function(c) { 
+            c.style.background = bgC; 
+            c.style.borderColor = border;
+        });
+        document.querySelectorAll('.tpText').forEach(function(t) { t.style.color = txtCol; });
+        var mainTitle = document.getElementById('tpTitle');
+        if(mainTitle) mainTitle.style.color = txtCol;
+        
+        document.querySelectorAll('.tpBtn').forEach(function(b) { b.style.background = pri; });
+    }
+    
+    // 4. Display Photo for Manual Color Picking
+    function extractColorsFromImage(event) {
+        var file = event.target.files[0];
+        if(!file) return;
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            uploadedImageSrc = e.target.result;
+            var preview = document.getElementById('palettePreview');
+            preview.innerHTML = '<div style="width:100%;text-align:center;"><img src="' + uploadedImageSrc + '" style="max-width:100%; max-height:250px; border-radius:8px; border:2px solid var(--border-light); box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>' + 
+                                '<div style="width:100%;text-align:center;font-size:13px;color:var(--text-muted);font-weight:600;margin-top:8px;">✅ Image loaded! Click the 💧 icon next to any color box below to pick pixels directly from this logo!</div>';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function openColorPickerModal(input, textInput) {
+        if(!uploadedImageSrc) {
+            alert('Please upload an image/logo first!');
+            return;
+        }
+        currentPickingInput = input;
+        currentPickingHexInput = textInput;
+        
+        var modal = document.getElementById('customColorModal');
+        var canvas = document.getElementById('colorPickerCanvas');
+        var ctx = canvas.getContext('2d');
+        var previewBox = document.getElementById('colorPreviewBox');
+        var previewHex = document.getElementById('colorPreviewHex');
+        
+        // reset preview
+        previewBox.style.background = '#FFFFFF';
+        previewHex.textContent = '#FFFFFF';
+        previewHex.dataset.hex = '';
+        
+        modal.style.display = 'flex';
+        
+        var img = new Image();
+        img.onload = function() {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            
+            // responsive sizing
+            var maxW = window.innerWidth * 0.85;
+            var maxH = window.innerHeight * 0.55;
+            var scale = Math.min(maxW / img.width, maxH / img.height);
+            
+            if(scale < 1) {
+                canvas.style.width = (img.width * scale) + 'px';
+                canvas.style.height = (img.height * scale) + 'px';
+            } else {
+                canvas.style.width = img.width + 'px';
+                canvas.style.height = img.height + 'px';
+            }
+            
+            ctx.drawImage(img, 0, 0, img.width, img.height);
+            
+            var isDragging = false;
+            
+            function pickColor(e) {
+                e.preventDefault();
+                var rect = canvas.getBoundingClientRect();
+                var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                var x = (clientX - rect.left) * (canvas.width / rect.width);
+                var y = (clientY - rect.top) * (canvas.height / rect.height);
+                
+                // clamp
+                x = Math.max(0, Math.min(canvas.width - 1, x));
+                y = Math.max(0, Math.min(canvas.height - 1, y));
+                
+                var pixel = ctx.getImageData(x, y, 1, 1).data;
+                var hex = "#" + ("0" + pixel[0].toString(16)).slice(-2) + 
+                                ("0" + pixel[1].toString(16)).slice(-2) + 
+                                ("0" + pixel[2].toString(16)).slice(-2);
+                                
+                previewBox.style.background = hex;
+                previewHex.textContent = hex.toUpperCase();
+                previewHex.dataset.hex = hex.toUpperCase();
+            }
+            
+            canvas.onmousedown = function(e) { isDragging = true; pickColor(e); };
+            canvas.onmousemove = function(e) { if(isDragging) pickColor(e); };
+            window.onmouseup = function() { isDragging = false; };
+            
+            canvas.ontouchstart = function(e) { isDragging = true; pickColor(e); };
+            canvas.ontouchmove = function(e) { if(isDragging) pickColor(e); };
+            window.ontouchend = function() { isDragging = false; };
+        };
+        img.src = uploadedImageSrc;
+    }
+
+    // 5. Save to Github
+    function saveThemeToGithub() {
+        var pri = document.getElementById('themePrimary').value;
+        var priL = document.getElementById('themePrimaryLight').value;
+        var priD = document.getElementById('themePrimaryDark').value;
+        
+        var bg = document.getElementById('themeBg').value;
+        var bgL = document.getElementById('themeBgLight').value;
+        var bgC = document.getElementById('themeBgCard').value;
+        var bgS = document.getElementById('themeBgSubtle').value;
+        var footerBg = document.getElementById('themeFooterBg').value;
+        
+        var border = document.getElementById('themeBorder').value;
+        var borderL = document.getElementById('themeBorderLight').value;
+        
+        var textD = document.getElementById('themeTextDark').value;
+        var textB = document.getElementById('themeTextBody').value;
+        var textM = document.getElementById('themeTextMuted').value;
+        
+        var css = ":root { ";
+        css += "--primary: " + pri + "; ";
+        css += "--primary-light: " + priL + "; ";
+        css += "--primary-dark: " + priD + "; ";
+        
+        css += "--bg: " + bg + "; ";
+        css += "--bg-light: " + bgL + "; ";
+        css += "--bg-card: " + bgC + "; ";
+        css += "--bg-subtle: " + bgS + "; ";
+        css += "--footer-bg: " + footerBg + "; ";
+        
+        css += "--border: " + border + "; ";
+        css += "--border-light: " + borderL + "; ";
+        
+        css += "--text-dark: " + textD + "; ";
+        css += "--text-body: " + textB + "; ";
+        css += "--text-muted: " + textM + "; ";
+        css += "}";
+        
+        var btn = document.querySelector('.btn-primary');
+        var originalText = btn.textContent;
+        btn.textContent = "⏳ Triggering Rebuild...";
+        btn.disabled = true;
+        
+        var apiUrl = (CONFIG.HF_API_BASE ? CONFIG.HF_API_BASE.replace(/\/+$/, '') : '') + '/api/admin/update-theme';
+        var token = localStorage.getItem('admin_token') || '';
+
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ css_payload: css })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if(data.success) {
+                if(typeof showToast === 'function') showToast("✅ Github Rebuild Triggered! Wait 2-3 mins.", "success");
+                else alert("✅ Rebuild Triggered!");
+            } else {
+                if(typeof showToast === 'function') showToast("❌ Error: " + data.error, "error");
+                else alert("❌ Error: " + data.error);
+            }
+        })
+        .catch(function(err) {
+            alert("Network Error: " + err.message);
+        })
+        .finally(function() {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        });
+    }
+    </script>
+</body>
+</html>

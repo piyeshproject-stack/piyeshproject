@@ -48,7 +48,7 @@ export async function onRequestPost(context) {
         // ── Send status email (non-blocking, fire-and-forget) ──
         if (status && env.EMAIL) {
             context.waitUntil(
-                sendStatusEmail(env, id, status)
+                sendStatusEmail(env, id, status, request.url)
             );
         }
 
@@ -66,7 +66,7 @@ export async function onRequestPost(context) {
 }
 
 // ── Fetch order + send email (non-blocking via waitUntil) ──
-async function sendStatusEmail(env, orderId, status) {
+async function sendStatusEmail(env, orderId, status, reqUrl) {
     try {
         // Only send emails for meaningful status changes
         const EMAIL_STATUSES = ['Confirmed', 'Shipped', 'Delivered', 'Cancelled'];
@@ -80,6 +80,13 @@ async function sendStatusEmail(env, orderId, status) {
         const order = results?.[0];
         if (!order?.customer_email) return; // কোনো email নেই — skip
 
+        // ── Fetch store_name from DB and origin from URL ──
+        const dbSettings = await env.DB.prepare("SELECT store_name FROM settings WHERE id = 1").first();
+        const storeName  = dbSettings?.store_name || 'Smiee Shop';
+        
+        let storeUrl = '';
+        try { storeUrl = new URL(reqUrl).origin; } catch(e) {}
+
         await sendEmail(env, {
             to:      order.customer_email,
             toName:  order.customer_name || '',
@@ -88,9 +95,10 @@ async function sendStatusEmail(env, orderId, status) {
                 name:      order.customer_name,
                 orderId,
                 status,
-                storeUrl:  env.STORE_URL  || '',
-                storeName: env.STORE_NAME || 'Smiee Shop',
+                storeUrl,
+                storeName,
             }),
+            storeName: storeName
         });
     } catch (e) {
         // Email fail হলেও order update succeed করেছে — log only

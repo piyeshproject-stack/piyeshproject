@@ -5,7 +5,7 @@
 //
 // Requires in Cloudflare Pages settings:
 //   Email binding: EMAIL (send_email type)
-//   ENV: EMAIL_FROM, EMAIL_DOMAIN, STORE_NAME, STORE_URL
+//   ENV: EMAIL_FROM, EMAIL_DOMAIN
 //
 // No 3rd party — Cloudflare's own email infrastructure
 // ─────────────────────────────────────────────
@@ -17,14 +17,14 @@ const BOUNDARY_PREFIX = 'cf_email_';
  * @param {object} env - Cloudflare env object
  * @param {object} opts - { to, toName, subject, html }
  */
-export async function sendEmail(env, { to, toName = '', subject, html }) {
+export async function sendEmail(env, { to, toName = '', subject, html, storeName }) {
     if (!env.EMAIL) {
         console.warn('EMAIL binding নেই — Cloudflare Pages settings এ add করুন');
         return;
     }
 
     const from     = env.EMAIL_FROM || `noreply@${env.EMAIL_DOMAIN}`;
-    const fromName = env.STORE_NAME  || 'Smiee Shop';
+    const fromName = storeName || 'Smiee Shop';
     const boundary = `${BOUNDARY_PREFIX}${crypto.randomUUID().replace(/-/g, '')}`;
 
     const rawEmail = [

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile — Freelancing By Rifat</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/theme.css?v=2">
+    <script src="assets/js/config.js?v=1782024132023"></script>
+    <link rel="stylesheet" href="assets/css/premium-icons.css">
+    <style>
+        .profile-layout { display: grid; grid-template-columns: 300px 1fr; gap: 24px; padding: 40px 0; }
+        
+        .profile-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 20px; }
+        .profile-avatar { width: 80px; height: 80px; background: rgba(255,77,77,0.1); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; margin: 0 auto 16px; }
+        .profile-name { font-size: 20px; font-weight: 800; text-align: center; color: var(--text-dark); margin-bottom: 4px; }
+        .profile-email { font-size: 14px; text-align: center; color: var(--text-muted); margin-bottom: 24px; }
+        
+        .profile-menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; color: var(--text-dark); font-weight: 600; cursor: pointer; transition: 0.2s; background: transparent; border: none; width: 100%; text-align: left; font-size: 15px; }
+        .profile-menu-item:hover, .profile-menu-item.active { background: rgba(255,77,77,0.05); color: var(--primary); }
+        .profile-menu-item.danger { color: #dc2626; margin-top: 16px; border-top: 1px solid var(--border); border-radius: 0; padding-top: 20px; }
+        .profile-menu-item.danger:hover { background: rgba(220,38,38,0.05); }
+
+        .orders-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .orders-title { font-size: 20px; font-weight: 800; color: var(--text-dark); }
+        
+        .order-card { background: #fff; border: 1.5px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px; transition: 0.2s; }
+        .order-card:hover { border-color: #ddd; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .order-header-row { display: flex; justify-content: space-between; align-items: flex-start; }
+        .order-id { font-family: monospace; font-size: 14px; font-weight: 700; color: #000; background: #f5f5f5; padding: 4px 8px; border-radius: 6px; }
+        .order-date { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+        .order-status { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .status-pending { background: rgba(255,149,0,0.1); color: #d97706; }
+        .status-confirmed { background: rgba(34,197,94,0.1); color: #16a34a; }
+        .status-shipped { background: rgba(59,130,246,0.1); color: #2563eb; }
+        .status-delivered { background: rgba(34,197,94,0.1); color: #15803d; }
+        .status-cancelled { background: rgba(239,68,68,0.1); color: #dc2626; }
+        
+        .order-items { font-size: 14px; color: var(--text-dark); }
+        .order-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border); padding-top: 12px; margin-top: 4px; }
+        .order-total { font-size: 16px; font-weight: 800; color: var(--primary); }
+        .btn-track { padding: 6px 12px; font-size: 13px; font-weight: 700; background: #f5f5f5; color: #444; border-radius: 8px; text-decoration: none; transition: 0.2s; }
+        .btn-track:hover { background: #e5e5e5; }
+
+        .empty-state { text-align: center; padding: 40px 20px; background: #fff; border: 1.5px dashed var(--border); border-radius: 12px; }
+        .empty-state i { font-size: 48px; color: #ccc; margin-bottom: 16px; display: inline-block; }
+        
+        @media (max-width: 768px) {
+            .profile-layout { grid-template-columns: 1fr; padding: 20px 0; }
+        }
+    </style>
+</head>
+<body style="background: var(--bg-body);">
+
+<!-- Navbar -->
+<nav class="navbar">
+    <a href="index.html" class="nav-icon-btn">←</a>
+    <a href="index.html" class="navbar-brand">
+        <i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> 
+        <span id="navBrand">My Profile</span>
+    </a>
+</nav>
+
+<div class="container">
+    <div class="profile-layout">
+        
+        <!-- Sidebar -->
+        <aside>
+            <div class="profile-card">
+                <div class="profile-avatar" id="userInitial">?</div>
+                <div class="profile-name" id="userName">Loading...</div>
+                <div class="profile-email" id="userEmail">loading@...</div>
+                
+                <button class="profile-menu-item active">
+                    <i data-lucide="package"></i> My Orders
+                </button>
+                <button class="profile-menu-item danger" onclick="logout()">
+                    <i data-lucide="log-out"></i> Sign Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main>
+            <div class="orders-header">
+                <h2 class="orders-title">Order History <button onclick="forceRefresh()" style="background:none;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:4px;" title="Refresh Data">↻</button></h2>
+            </div>
+            
+            <div id="ordersContainer">
+                <div style="text-align:center;padding:40px;">
+                    <div class="spinner" style="width:30px;height:30px;border-width:3px;border-color:var(--primary);border-top-color:transparent;border-radius:50%;display:inline-block;animation:spin 1s linear infinite;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://unpkg.com/lucide@latest"></script>
+<script>
+    const apiBase = (typeof CONFIG !== 'undefined' && CONFIG.API_BASE) ? CONFIG.API_BASE : '';
+    const token = localStorage.getItem('user_token');
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        lucide.createIcons();
+        if (!token) {
+            window.location.href = 'login.html';
+            return;
+        }
+        await fetchProfile();
+        await fetchOrders();
+    });
+
+    function logout() {
+        localStorage.removeItem('user_token');
+        window.location.href = 'login.html';
+    }
+
+    const CACHE_TTL = 3600 * 1000; // 1 hour
+
+    function getCache(key) {
+        const item = localStorage.getItem(key);
+        if (!item) return null;
+        try {
+            const parsed = JSON.parse(item);
+            if (Date.now() - parsed.time > CACHE_TTL) {
+                localStorage.removeItem(key);
+                return null;
+            }
+            return parsed.data;
+        } catch(e) { return null; }
+    }
+
+    function setCache(key, data) {
+        localStorage.setItem(key, JSON.stringify({ data, time: Date.now() }));
+    }
+
+    // Force Refresh Logic with 1-hour rate limit
+    async function forceRefresh() {
+        const lastRefresh = localStorage.getItem('last_refresh_time');
+        if (lastRefresh && (Date.now() - parseInt(lastRefresh)) < CACHE_TTL) {
+            alert('আপনি ইতিমধ্যে ডেটা রিফ্রেশ করেছেন। অনুগ্রহ করে ১ ঘণ্টা পর আবার চেষ্টা করুন।');
+            return;
+        }
+        
+        // Clear caches to force fetch
+        localStorage.removeItem('user_profile');
+        localStorage.removeItem('user_orders');
+        localStorage.setItem('last_refresh_time', Date.now());
+        
+        document.getElementById('ordersContainer').innerHTML = '<div style="text-align:center;padding:40px;"><div class="spinner" style="width:30px;height:30px;border-width:3px;border-color:var(--primary);border-top-color:transparent;border-radius:50%;display:inline-block;animation:spin 1s linear infinite;"></div></div>';
+        
+        await fetchProfile();
+        await fetchOrders();
+    }
+
+    async function fetchProfile() {
+        const cached = getCache('user_profile');
+        if (cached) {
+            renderProfile(cached);
+            return; // STRICTLY NO FETCH IF CACHED
+        }
+
+        try {
+            const res = await fetch(`${apiBase}/api/user/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setCache('user_profile', data.user);
+                renderProfile(data.user);
+            } else { logout(); }
+        } catch (e) { console.error(e); }
+    }
+
+    function renderProfile(user) {
+        document.getElementById('userName').textContent = user.name;
+        document.getElementById('userEmail').textContent = user.email;
+        document.getElementById('userInitial').textContent = user.name.charAt(0).toUpperCase();
+    }
+
+    async function fetchOrders() {
+        const cached = getCache('user_orders');
+        if (cached) {
+            renderOrders(cached);
+            return; // STRICTLY NO FETCH IF CACHED
+        }
+
+        try {
+            const res = await fetch(`${apiBase}/api/user/orders`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setCache('user_orders', data.orders);
+                renderOrders(data.orders);
+            }
+        } catch (e) {
+            document.getElementById('ordersContainer').innerHTML = `<div class="empty-state" style="color:red;border-color:red;">Failed to load orders.</div>`;
+        }
+    }
+
+    function renderOrders(orders) {
+        const container = document.getElementById('ordersContainer');
+        if (!orders || orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i data-lucide="shopping-cart"></i>
+                        <h3>No orders yet</h3>
+                        <p style="color:var(--text-muted);font-size:14px;margin-top:8px;">Looks like you haven't made your first order.</p>
+                        <a href="index.html" class="auth-btn" style="display:inline-flex;width:auto;margin-top:20px;padding:10px 24px;">Start Shopping</a>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            let html = '';
+            orders.forEach(order => {
+                const date = new Date(order.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                
+                let statusClass = 'status-pending';
+                const s = (order.status || 'pending').toLowerCase();
+                if(s === 'confirmed') statusClass = 'status-confirmed';
+                if(s === 'shipped') statusClass = 'status-shipped';
+                if(s === 'delivered') statusClass = 'status-delivered';
+                if(s === 'cancelled') statusClass = 'status-cancelled';
+
+                let itemsHtml = '';
+                try {
+                    const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+                    itemsHtml = items.map(i => `${i.quantity}x ${i.name}`).join('<br>');
+                } catch(e) {}
+
+                html += `
+                    <div class="order-card">
+                        <div class="order-header-row">
+                            <div>
+                                <div class="order-id">#${order.id}</div>
+                                <div class="order-date">${date}</div>
+                            </div>
+                            <div class="order-status ${statusClass}">${order.status}</div>
+                        </div>
+                        <div class="order-items">
+                            ${itemsHtml || 'Order Items'}
+                        </div>
+                        <div class="order-footer">
+                            <div class="order-total">৳${order.final_total}</div>
+                            <a href="track.html?id=${order.id}" class="btn-track">Track Order</a>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            lucide.createIcons();
+    }
+</script>
+</body>
+</html>

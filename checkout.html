@@ -4,6 +4,7 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout — Freelancing By Rifat</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/theme.css?v=2">
     <script src="assets/js/config.js?v=1782024132023"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
@@ -131,8 +132,25 @@
 <nav class="navbar">
     <a href="cart.html" class="nav-icon-btn">←</a>
     <a href="index.html" class="navbar-brand"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> <span id="navBrand">Checkout</span></a>
-    <div style="margin-left:auto;font-size:13px;color:#888;">🔒 Secure Checkout</div>
+    
+    <div class="navbar-actions" style="margin-left:auto;">
+        <a href="login.html" class="nav-icon-btn" id="navAuthBtn" title="Account"><i data-lucide="user" class="lucide-icon"></i></a>
+        <div style="font-size:13px;color:#888;display:flex;align-items:center;margin-left:8px;">🔒 Secure</div>
+    </div>
 </nav>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if(localStorage.getItem('user_token')) {
+            const authBtn = document.getElementById('navAuthBtn');
+            if(authBtn) {
+                authBtn.href = 'profile.html';
+                authBtn.title = 'My Profile';
+                authBtn.innerHTML = '<i data-lucide="user-check" class="lucide-icon" style="color:var(--primary);"></i>';
+            }
+        }
+    });
+</script>
 
 <div class="container">
     <!-- Stepper -->
@@ -2657,7 +2675,43 @@ function copyElementText(elId) {
     </script>
 
     <script src="assets/js/offline-handler.js"></script>
-<script src="assets/js/tracking.js"></script>
+    <script src="assets/js/tracking.js"></script>
+
+    <!-- Autofill logged in user data -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('user_token');
+            if(token) {
+                try {
+                    const apiBase = (typeof CONFIG !== 'undefined' && CONFIG.API_BASE) ? CONFIG.API_BASE : '';
+                    // First try from cache
+                    const cache = localStorage.getItem('user_profile');
+                    let user = cache ? JSON.parse(cache).data : null;
+                    
+                    if (!user) {
+                        const res = await fetch(apiBase + '/api/user/me', { headers: { 'Authorization': 'Bearer ' + token } });
+                        const data = await res.json();
+                        if(res.ok && data.success) user = data.user;
+                    }
+
+                    if(user) {
+                        const n = document.getElementById('custName');
+                        const p = document.getElementById('custPhone');
+                        const e = document.getElementById('custEmail');
+                        
+                        if(n && !n.value) n.value = user.name || '';
+                        if(p && !p.value) p.value = user.phone || '';
+                        if(e && !e.value) {
+                            e.value = user.email || '';
+                            e.readOnly = true;
+                            e.style.background = 'var(--bg-body)';
+                            e.title = "Linked to your account";
+                        }
+                    }
+                } catch(err) {}
+            }
+        });
+    </script>
 </body>
 </html>
 

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hero Banner V2 Demo</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;600;700&family=Lato:wght@400;700&display=swap');
+
+        :root {
+            --primary: #7E33E0;
+            --secondary: #FB2E86;
+            --text-dark: #1A0B2E;
+            --bg-light: #F2F0FF;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background: #fff;
+        }
+
+        /* ── Hero Banner V2 Container ── */
+        .hero-v2 {
+            background-color: var(--bg-light);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            min-height: 450px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        /* Decorative Lamp (Top Left) */
+        .hero-lamp {
+            position: absolute;
+            top: 0;
+            left: 5%;
+            width: 150px;
+            z-index: 1;
+        }
+
+        /* Content Wrapper */
+        .hero-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+            flex-wrap: wrap; /* for mobile */
+        }
+
+        /* Left Side: Text Box */
+        .hero-text-box {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+        }
+
+        .hero-subtitle {
+            color: var(--secondary);
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            font-family: 'Lato', sans-serif;
+        }
+
+        .hero-title {
+            color: #000;
+            font-size: 53px;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            font-family: 'Josefin Sans', sans-serif;
+        }
+
+        .hero-desc {
+            color: #8A8FB9;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 28px;
+            max-width: 450px;
+        }
+
+        .hero-btn {
+            background-color: var(--secondary);
+            color: #fff;
+            padding: 14px 38px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            font-family: 'Josefin Sans', sans-serif;
+        }
+
+        .hero-btn:hover {
+            background-color: var(--primary);
+        }
+
+        /* Right Side: Image with Blob */
+        .hero-image-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .hero-blob {
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            background: #ECD2FA;
+            border-radius: 50%; /* Make it a circle */
+            z-index: 1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .hero-image-box img {
+            position: relative;
+            z-index: 2;
+            max-width: 100%;
+            height: auto;
+            max-height: 400px; /* fit inside */
+        }
+
+        .hero-discount-badge {
+            position: absolute;
+            top: 10%;
+            right: 15%;
+            background: #00C1FE;
+            color: #fff;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            z-index: 3;
+            font-family: 'Josefin Sans', sans-serif;
+        }
+
+        /* Slider Dots */
+        .hero-slider-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--secondary);
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background: var(--secondary);
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .hero-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .hero-title {
+                font-size: 32px;
+            }
+            .hero-desc {
+                margin: 0 auto 28px auto;
+            }
+            .hero-lamp {
+                display: none; /* Hide lamp on mobile for space */
+            }
+            .hero-image-box {
+                margin-top: 30px;
+            }
+            .hero-blob {
+                width: 250px;
+                height: 250px;
+            }
+            .hero-discount-badge {
+                width: 60px;
+                height: 60px;
+                font-size: 14px;
+                top: 0;
+                right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Demo V2 Hero Section -->
+    <div class="hero-v2">
+        <!-- Decorative Lamp -->
+        <img src="https://i.ibb.co/68032Yh/lamp.png" class="hero-lamp" alt="Lamp">
+
+        <div class="hero-content">
+            <!-- Text Content -->
+            <div class="hero-text-box">
+                <div class="hero-subtitle">Best Furniture For Your Castle...</div>
+                <div class="hero-title">New Furniture Collection<br>Trends in 2026</div>
+                <div class="hero-desc">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Magna in est adipiscing in phasellus non in justo.</div>
+                <a href="#" class="hero-btn">Shop Now</a>
+            </div>
+
+            <!-- Image Content -->
+            <div class="hero-image-box">
+                <div class="hero-blob"></div>
+                <div class="hero-discount-badge">50%<br>off</div>
+                <img src="https://i.ibb.co/3sD17G4/sofa.png" alt="Furniture Chair">
+            </div>
+        </div>
+
+        <!-- Dots -->
+        <div class="hero-slider-dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+
+</body>
+</html>

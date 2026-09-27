@@ -5,8 +5,8 @@
     <title>ENV Setup Guide — Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/admin.css">
+    <link rel="stylesheet" href="../assets/css/theme.css?v=2">
     
-    <!-- We still include common scripts so the sidebar works -->
     <script src="../assets/js/config.js?v=1782024132023"></script>
     <script src="assets/js/admin-common.js?v=5"></script>
     <link rel="stylesheet" href="../assets/css/premium-icons.css">
@@ -21,62 +21,29 @@
         }
         .env-card h2 { margin: 0 0 16px 0; font-size: 18px; display: flex; align-items: center; gap: 8px; }
         
-        .env-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        .env-table th, .env-table td {
-            text-align: left;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-        }
+        .env-table { width: 100%; border-collapse: collapse; }
+        .env-table th, .env-table td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); }
         .env-table th { background: var(--bg-primary); font-weight: 600; font-size: 13px; color: #8E8E93; text-transform: uppercase; letter-spacing: 0.5px; }
         .env-table tr:last-child td { border-bottom: none; }
         
         .var-name { font-family: monospace; font-size: 14px; font-weight: 600; color: #007AFF; background: rgba(0,122,255,0.1); padding: 4px 8px; border-radius: 4px; }
         .var-example { font-family: monospace; font-size: 13px; color: #34C759; }
         
-        .tooltip-btn {
-            background: none;
-            border: none;
-            color: #8E8E93;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-        }
+        .tooltip-btn { background: none; border: none; color: #8E8E93; cursor: pointer; padding: 4px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; }
         .tooltip-btn:hover { color: #007AFF; background: rgba(0,122,255,0.1); }
         
-        /* Modal for details */
-        .info-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 9999;
-            align-items: center;
-            justify-content: center;
-        }
+        .info-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
         .info-modal.active { display: flex; }
-        .info-modal-content {
-            background: var(--bg-primary);
-            width: 90%;
-            max-width: 500px;
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
+        .info-modal-content { background: var(--bg-primary); width: 90%; max-width: 500px; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); position: relative; }
         .info-modal h3 { margin: 0 0 12px 0; color: #007AFF; font-family: monospace; font-size: 18px; }
         .info-modal p { line-height: 1.6; margin-bottom: 16px; font-size: 14.5px; }
         .info-modal .step-box { background: var(--bg-secondary); padding: 12px; border-radius: 8px; font-size: 13px; line-height: 1.5; font-family: monospace; }
         .close-modal-btn { background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; margin-top: 16px; }
+        .badge-core { background: rgba(255,149,0,0.1); color: #FF9500; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 8px; font-weight: 600; }
+        .badge-new { background: rgba(52,199,89,0.1); color: #34C759; padding: 2px 6px; border-radius: 4px; font-size: 11px; margin-left: 8px; font-weight: 600; }
     </style>
 </head>
 <body>
-<!-- Loader if needed -->
 <div class="page-loader" id="pageLoader"><div class="spinner"></div></div>
 
 <main class="admin-main" id="adminMain" style="display:none;">
@@ -85,39 +52,36 @@
             <button class="hamburger-btn" onclick="openSidebar()">☰</button>
             <div>
                 <div class="page-title">Environment Variables</div>
-                <div class="page-subtitle">Setup guide for new clients</div>
+                <div class="page-subtitle">Complete Setup Guide for New Clients</div>
             </div>
         </div>
     </header>
 
     <div class="admin-content">
-        
-        <!-- SECTION: CLOUDFLARE BINDINGS -->
+
+        <!-- SECTION: CORE BINDINGS -->
         <div class="env-card">
-            <h2><i data-lucide="layers" class="lucide-icon"></i> Cloudflare Bindings (Pages Settings)</h2>
-            <p style="font-size:14px;color:#8E8E93;margin-bottom:16px;">Cloudflare Dashboard → Pages → Settings → Functions</p>
+            <h2><i data-lucide="layers" class="lucide-icon"></i> Cloudflare Bindings <span style="font-size: 14px; font-weight: normal; color: #8E8E93;">(Pages Settings → Functions)</span></h2>
             <table class="env-table">
-                <thead>
-                    <tr><th>Variable Name</th><th>Type</th><th>Help</th></tr>
-                </thead>
+                <thead><tr><th>Variable Name</th><th>Type</th><th>Help</th></tr></thead>
                 <tbody>
                     <tr>
-                        <td><span class="var-name">DB</span></td>
+                        <td><span class="var-name">DB</span><span class="badge-core">Core</span></td>
                         <td>D1 Database Binding</td>
                         <td><button class="tooltip-btn" onclick="showInfo('DB', 'D1 Database Binding', 'Create a D1 database named smiee_db. Bind it here with the variable name DB.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
                     <tr>
-                        <td><span class="var-name">USERS_KV</span></td>
+                        <td><span class="var-name">USERS_KV</span><span class="badge-new">Auth Addon</span></td>
                         <td>KV Namespace Binding</td>
                         <td><button class="tooltip-btn" onclick="showInfo('USERS_KV', 'KV Binding for Users', 'Create a KV namespace named USERS_KV. Bind it here.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
                     <tr>
-                        <td><span class="var-name">MOD_KV</span></td>
+                        <td><span class="var-name">MOD_KV</span><span class="badge-new">Auth Addon</span></td>
                         <td>KV Namespace Binding</td>
                         <td><button class="tooltip-btn" onclick="showInfo('MOD_KV', 'KV Binding for Moderators', 'Create a KV namespace named MOD_KV. Bind it here.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
                     <tr>
-                        <td><span class="var-name">EMAIL</span></td>
+                        <td><span class="var-name">EMAIL</span><span class="badge-new">Auth Addon</span></td>
                         <td>Send Email Binding</td>
                         <td><button class="tooltip-btn" onclick="showInfo('EMAIL', 'Cloudflare Email Workers', 'Add a Send Email binding. Enter the domain email (e.g. noreply@domain.com). Make sure Email Routing is enabled for the domain.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
@@ -127,57 +91,77 @@
 
         <!-- SECTION: CLOUDFLARE ENVs -->
         <div class="env-card">
-            <h2><i data-lucide="server" class="lucide-icon"></i> Cloudflare Environment Variables</h2>
-            <p style="font-size:14px;color:#8E8E93;margin-bottom:16px;">Cloudflare Dashboard → Pages → Settings → Environment variables</p>
+            <h2><i data-lucide="server" class="lucide-icon"></i> Cloudflare Environment Variables <span style="font-size: 14px; font-weight: normal; color: #8E8E93;">(Pages Settings → Environment variables)</span></h2>
             <table class="env-table">
-                <thead>
-                    <tr><th>Variable Name</th><th>Example Value</th><th>Help</th></tr>
-                </thead>
+                <thead><tr><th>Variable Name</th><th>Example Value</th><th>Help</th></tr></thead>
                 <tbody>
+                    <!-- CORE EXISTING VARS -->
                     <tr>
-                        <td><span class="var-name">JWT_SECRET</span></td>
-                        <td><span class="var-example">8f3c... (32 chars)</span></td>
-                        <td><button class="tooltip-btn" onclick="showInfo('JWT_SECRET', 'JWT Secret Key', 'A random 32+ character string used to encrypt user login sessions. Generate using an online random string generator or terminal (openssl rand -hex 32).')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
-                    </tr>
-                    <tr>
-                        <td><span class="var-name">ADMIN_USERNAME</span></td>
+                        <td><span class="var-name">ADMIN_USERNAME</span><span class="badge-core">Core</span></td>
                         <td><span class="var-example">admin</span></td>
                         <td><button class="tooltip-btn" onclick="showInfo('ADMIN_USERNAME', 'Super Admin Username', 'The username used to log into this admin panel.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
                     <tr>
-                        <td><span class="var-name">ADMIN_PASSWORD</span></td>
+                        <td><span class="var-name">ADMIN_PASSWORD</span><span class="badge-core">Core</span></td>
                         <td><span class="var-example">secret123</span></td>
                         <td><button class="tooltip-btn" onclick="showInfo('ADMIN_PASSWORD', 'Super Admin Password', 'The password used to log into this admin panel.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
                     <tr>
-                        <td><span class="var-name">STORE_NAME</span></td>
+                        <td><span class="var-name">ADMIN_SECRET_TOKEN</span><span class="badge-core">Core</span></td>
+                        <td><span class="var-example">random_token_string</span></td>
+                        <td><button class="tooltip-btn" onclick="showInfo('ADMIN_SECRET_TOKEN', 'Admin Auth Token', 'Used in the frontend to securely verify the admin session.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td><span class="var-name">CLOUDFLARE_ZONE_ID</span><span class="badge-core">Core</span></td>
+                        <td><span class="var-example">023e105f4ecef8ad9...</span></td>
+                        <td><button class="tooltip-btn" onclick="showInfo('CLOUDFLARE_ZONE_ID', 'Cloudflare Zone ID', 'Required for Cache Purging when adding/updating products. Find it on the Overview page of your domain in Cloudflare.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td><span class="var-name">CLOUDFLARE_API_TOKEN</span><span class="badge-core">Core</span></td>
+                        <td><span class="var-example">abc123def456ghi...</span></td>
+                        <td><button class="tooltip-btn" onclick="showInfo('CLOUDFLARE_API_TOKEN', 'Cloudflare API Token', 'Required for Cache Purging. Create an API Token from Cloudflare Profile -> API Tokens -> Create Token (Zone.Cache Purge).')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td><span class="var-name">GITHUB_TOKEN</span><span class="badge-core">Core</span></td>
+                        <td><span class="var-example">ghp_abc123...</span></td>
+                        <td><button class="tooltip-btn" onclick="showInfo('GITHUB_TOKEN', 'GitHub Personal Access Token', 'Required for Admin Tracking updates and Marketing emails. Generate from GitHub -> Developer Settings -> Personal Access Tokens (Classic). Needs `repo` and `workflow` scopes.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td><span class="var-name">GITHUB_OWNER</span><span class="badge-core">Core</span></td>
+                        <td><span class="var-example">rifat16700</span></td>
+                        <td><button class="tooltip-btn" onclick="showInfo('GITHUB_OWNER', 'GitHub Username/Owner', 'Your GitHub username (e.g., rifat16700). Used to trigger GitHub Actions.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td><span class="var-name">GITHUB_REPO</span><span class="badge-core">Core</span></td>
+                        <td><span class="var-example">freelancingbyrifat</span></td>
+                        <td><button class="tooltip-btn" onclick="showInfo('GITHUB_REPO', 'GitHub Repository', 'The repository name (e.g., freelancingbyrifat).')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
+                    </tr>
+                    
+                    <!-- NEW EMAIL/AUTH VARS -->
+                    <tr>
+                        <td><span class="var-name">JWT_SECRET</span><span class="badge-new">Auth Addon</span></td>
+                        <td><span class="var-example">8f3c... (32 chars)</span></td>
+                        <td><button class="tooltip-btn" onclick="showInfo('JWT_SECRET', 'JWT Secret Key', 'A random 32+ character string used to encrypt user login sessions. Generate using an online random string generator.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td><span class="var-name">STORE_NAME</span><span class="badge-new">Auth Addon</span></td>
                         <td><span class="var-example">Smiee Shop</span></td>
                         <td><button class="tooltip-btn" onclick="showInfo('STORE_NAME', 'Store Name', 'The public name of the store. Used in emails and invoices.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
                     <tr>
-                        <td><span class="var-name">STORE_URL</span></td>
+                        <td><span class="var-name">STORE_URL</span><span class="badge-new">Auth Addon</span></td>
                         <td><span class="var-example">https://smiee.shop</span></td>
                         <td><button class="tooltip-btn" onclick="showInfo('STORE_URL', 'Store URL', 'The full URL of the live website, starting with https://. Used in email links.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
                     <tr>
-                        <td><span class="var-name">EMAIL_DOMAIN</span></td>
+                        <td><span class="var-name">EMAIL_DOMAIN</span><span class="badge-new">Auth Addon</span></td>
                         <td><span class="var-example">smiee.shop</span></td>
                         <td><button class="tooltip-btn" onclick="showInfo('EMAIL_DOMAIN', 'Email Domain', 'The custom domain name used for sending emails via Cloudflare.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
                     <tr>
-                        <td><span class="var-name">EMAIL_FROM</span></td>
+                        <td><span class="var-name">EMAIL_FROM</span><span class="badge-new">Auth Addon</span></td>
                         <td><span class="var-example">noreply@smiee.shop</span></td>
                         <td><button class="tooltip-btn" onclick="showInfo('EMAIL_FROM', 'Sender Email', 'The full email address that OTP and Order emails will be sent from.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
-                    </tr>
-                    <tr>
-                        <td><span class="var-name">GH_TOKEN</span></td>
-                        <td><span class="var-example">ghp_abc123...</span></td>
-                        <td><button class="tooltip-btn" onclick="showInfo('GH_TOKEN', 'GitHub Personal Access Token', 'Required to trigger the GitHub Action for sending marketing emails. Generate from GitHub -> Developer Settings -> Personal Access Tokens (Fine-grained or Classic). Needs `workflow` permission.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
-                    </tr>
-                    <tr>
-                        <td><span class="var-name">GH_REPO</span></td>
-                        <td><span class="var-example">rifat/smiee-shop</span></td>
-                        <td><button class="tooltip-btn" onclick="showInfo('GH_REPO', 'GitHub Repository', 'Your GitHub username and repository name where the code is hosted. E.g., username/repo')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
                 </tbody>
             </table>
@@ -185,12 +169,10 @@
 
         <!-- SECTION: GITHUB SECRETS -->
         <div class="env-card">
-            <h2><i data-lucide="github" class="lucide-icon"></i> GitHub Repository Secrets (For Marketing Emails)</h2>
+            <h2><i data-lucide="github" class="lucide-icon"></i> GitHub Repository Secrets <span style="font-size: 14px; font-weight: normal; color: #8E8E93;">(For Marketing Emails)</span></h2>
             <p style="font-size:14px;color:#8E8E93;margin-bottom:16px;">GitHub Repo → Settings → Secrets and variables → Actions → New repository secret</p>
             <table class="env-table">
-                <thead>
-                    <tr><th>Secret Name</th><th>Example Value</th><th>Help</th></tr>
-                </thead>
+                <thead><tr><th>Secret Name</th><th>Example Value</th><th>Help</th></tr></thead>
                 <tbody>
                     <tr>
                         <td><span class="var-name">GMAIL_USER</span></td>
@@ -215,12 +197,12 @@
                     <tr>
                         <td><span class="var-name">STORE_NAME</span></td>
                         <td><span class="var-example">Smiee Shop</span></td>
-                        <td><button class="tooltip-btn" onclick="showInfo('STORE_NAME_GH', 'Store Name (GitHub)', 'Same as Cloudflare ENV STORE_NAME, used in marketing email templates.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
+                        <td><button class="tooltip-btn" onclick="showInfo('STORE_NAME', 'Store Name (GitHub)', 'Same as Cloudflare ENV STORE_NAME, used in marketing email templates.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
                     <tr>
                         <td><span class="var-name">STORE_URL</span></td>
                         <td><span class="var-example">https://smiee.shop</span></td>
-                        <td><button class="tooltip-btn" onclick="showInfo('STORE_URL_GH', 'Store URL (GitHub)', 'Same as Cloudflare ENV STORE_URL, used for links in marketing emails.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
+                        <td><button class="tooltip-btn" onclick="showInfo('STORE_URL', 'Store URL (GitHub)', 'Same as Cloudflare ENV STORE_URL, used for links in marketing emails.')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
                     </tr>
                 </tbody>
             </table>
@@ -230,8 +212,9 @@
 </main>
 
 <!-- Info Modal -->
-<div class="info-modal" id="infoModal">
-    <div class="info-modal-content">
+<div class="info-modal" id="infoModal" onclick="if(event.target === this) closeInfo()">
+    <div class="info-modal-content" style="position: relative;">
+        <button onclick="closeInfo()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; cursor: pointer; color: #8E8E93;"><i data-lucide="x" class="lucide-icon"></i></button>
         <h3 id="modalTitle">VAR_NAME</h3>
         <p id="modalDesc">Description goes here.</p>
         <div class="step-box" id="modalSteps">Steps to get this...</div>
@@ -241,32 +224,30 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Fake the adminInit so the sidebar works without actually needing DB for this page
     if (typeof adminInit === 'function') {
-        // Just mock the verification since this is a static reference page
         document.getElementById('pageLoader').style.display = 'none';
         document.getElementById('adminMain').style.display  = 'flex';
-        // Add current page class to sidebar if needed
     }
 });
 
 function showInfo(varName, title, description) {
     document.getElementById('modalTitle').textContent = varName;
     
-    // Detailed instructions based on varName
     let steps = '';
     
     if (varName === 'GMAIL_APP_PASS') {
         steps = "1. Manage Google Account<br>2. Security<br>3. Enable 2-Step Verification<br>4. App Passwords<br>5. Select 'Mail' and 'Windows Computer'<br>6. Copy 16-char code";
-    } else if (varName === 'GH_TOKEN') {
-        steps = "1. github.com/settings/tokens<br>2. Generate new token (classic)<br>3. Check 'workflow' scope<br>4. Generate token and copy";
+    } else if (varName === 'GITHUB_TOKEN') {
+        steps = "1. github.com/settings/tokens<br>2. Generate new token (classic)<br>3. Check 'repo' and 'workflow' scope<br>4. Generate token and copy";
     } else if (varName === 'EMAIL') {
         steps = "1. CF Dashboard -> Domain -> Email Routing -> Enable<br>2. CF Pages -> Settings -> Functions -> Email Bindings<br>3. Add 'EMAIL' and select your sender address";
     } else if (varName.includes('KV')) {
         steps = "1. CF Dashboard -> Workers & Pages -> KV<br>2. Create namespace<br>3. CF Pages -> Settings -> Functions -> KV Bindings<br>4. Bind the name to the namespace";
+    } else if (varName === 'CLOUDFLARE_API_TOKEN') {
+        steps = "1. CF Dashboard -> My Profile -> API Tokens<br>2. Create Token<br>3. Custom Token<br>4. Permissions: Zone, Cache Purge, Purge<br>5. Generate and copy";
     } else {
         steps = description; 
-        description = title; // swap for simple vars
+        description = title; 
     }
     
     document.getElementById('modalDesc').innerHTML = description;
@@ -275,12 +256,9 @@ function showInfo(varName, title, description) {
     document.getElementById('infoModal').classList.add('active');
 }
 
-function closeInfo() {
-    document.getElementById('infoModal').classList.remove('active');
-}
+function closeInfo() { document.getElementById('infoModal').classList.remove('active'); }
 </script>
 
-<!-- Icons -->
 <script src="https://unpkg.com/lucide@latest"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {

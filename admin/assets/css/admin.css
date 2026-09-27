@@ -26,9 +26,9 @@
     --text-muted:    #B08080;
 
     /* Maroon accent (replaces blue) */
-    --accent:        #800000;
-    --accent-hover:  #5C0000;
-    --accent-glow:   rgba(128,0,0,0.18);
+    --accent:        var(--primary, #800000);
+    --accent-hover:  var(--primary-light, #5C0000);
+    --accent-glow:   var(--primary-soft, rgba(128,0,0,0.18));
 
     /* Status colours */
     --success:       #2e7d32;
