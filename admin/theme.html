@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/admin.css">
     <link rel="stylesheet" href="../assets/css/theme.css?v=2">
+    <script src="../assets/js/layout-config.js"></script>
     <script src="../assets/js/config.js?v=1782024132023"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../assets/js/supabase-init.js"></script>
@@ -167,6 +168,16 @@
                         <option value="v1">Version 1 (Classic Style)</option>
                         <option value="v2">Version 2 (Modern Tailwind Style)</option>
                     </select>
+                    <script>
+                        // Try to auto-select current layout if available
+                        setTimeout(() => {
+                            if(window.THEME_LAYOUT && window.THEME_LAYOUT.hero) {
+                                document.getElementById('themeLayout').value = window.THEME_LAYOUT.hero;
+                            } else {
+                                document.getElementById('themeLayout').value = 'v2'; // default
+                            }
+                        }, 500);
+                    </script>
                 </div>
 
                 <div class="form-group" style="margin-top:16px;">
