@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/theme.css?v=2">
     <script src="assets/js/layout-config.js?v=1"></script>
+    <script src="assets/js/template-v2.js?v=1"></script>
     <script src="assets/js/config.js?v=1782024132023"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
@@ -292,13 +293,27 @@ function loadSiteData() {
 
         applySettings(settings);
         if (window.THEME_LAYOUT && window.THEME_LAYOUT.hero === 'v2') {
+            // Load Tailwind & FontAwesome dynamically for V2 Template without breaking V1!
+            if (!document.getElementById('tailwindScript')) {
+                var tw = document.createElement('script'); tw.id = 'tailwindScript'; tw.src = 'https://cdn.tailwindcss.com';
+                document.head.appendChild(tw);
+                var twConf = document.createElement('script');
+                twConf.innerHTML = `tailwind.config = { corePlugins: { preflight: false }, theme: { extend: { colors: { primary: 'var(--primary)', secondary: 'var(--text-dark)', 'top-bar': 'var(--primary-dark)', 'bg-light': 'var(--bg-light)', 'hover-blue': '#2F1AC4' }, fontFamily: { josefin: ['"Josefin Sans"', 'sans-serif'], lato: ['Lato', 'sans-serif'] } } } }`;
+                document.head.appendChild(twConf);
+                var fa = document.createElement('link'); fa.rel = 'stylesheet'; fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css';
+                document.head.appendChild(fa);
+            }
             renderHeroV2(banners);
         } else {
             renderHero(banners);
         }
         renderCategories(cats);
         renderFlashDeals();
-        renderHomeSections(homeSects);
+        if (window.THEME_LAYOUT && window.THEME_LAYOUT.hero === 'v2') {
+            renderHomeSectionsV2(homeSects);
+        } else {
+            renderHomeSections(homeSects);
+        }
 
         document.getElementById('pageLoader').style.display = 'none';
     }).catch(function(err) {
@@ -430,128 +445,6 @@ function renderHero(banners) {
     if (banners.length > 1) startSlider(banners.length);
 }
 
-function renderHeroV2(banners) {
-    var section = document.getElementById('heroSection');
-    // Fallback to beautiful DEMO item if no banners exist in database
-    if (!banners || !banners.length) {
-        banners = [{
-            image_url: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&q=80&w=1200&h=500',
-            title: 'New Furniture Collection Trends in 2026',
-            link_url: ''
-        }];
-        section.style.display = 'block';
-    }
-
-    var slidesHtml = banners.map(function(b) {
-        var rawLink = (b.link_url || '').trim();
-        var linkData = null;
-        if (rawLink.startsWith('{') && rawLink.endsWith('}')) {
-            try { linkData = JSON.parse(rawLink); } catch(e){}
-        }
-
-        var fullUrl = rawLink;
-        var isArea = false;
-        if (linkData) {
-            fullUrl = linkData.url || '';
-            isArea = linkData.type === 'area';
-        }
-
-        if (fullUrl && !fullUrl.startsWith('http') && !fullUrl.startsWith('/') && !fullUrl.startsWith('.')) fullUrl = 'https://' + fullUrl;
-
-        var slideInner = '<img src="' + b.image_url + '" alt="' + (b.title||'Banner') + '" loading="lazy" style="width:100%; height:auto; display:block; object-fit:contain; border-radius:var(--radius-lg);">';
-
-        if (isArea && fullUrl) {
-            var areaStyle = 'position:absolute;top:'+linkData.y+'%;left:'+linkData.x+'%;width:'+linkData.w+'%;height:'+linkData.h+'%;z-index:20;display:block;';
-            slideInner += '<a href="' + fullUrl + '" style="' + areaStyle + '"></a>';
-        } else if (fullUrl) {
-            var areaStyle = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:20;display:block;';
-            slideInner += '<a href="' + fullUrl + '" style="' + areaStyle + '"></a>';
-        }
-
-        return '<div class="slide" style="position:relative; min-width:100%; flex-shrink:0; background:transparent;">' + slideInner + '</div>';
-    }).join('');
-
-    var dotsHtml = banners.map(function(b, i) {
-        return '<div class="dot' + (i===0?' active':'') + '" onclick="goSlide(' + i + ')"></div>';
-    }).join('');
-
-    section.innerHTML =
-        '<div class="hero-slider" style="background:transparent; box-shadow:none; overflow:hidden; position:relative; margin-top:0;">' +
-            '<div class="slider-track" id="sliderTrack" style="display:flex; transition: transform 0.5s ease;">' + slidesHtml + '</div>' +
-            (banners.length > 1 ? '<button class="slider-btn slider-prev" onclick="prevSlide()">‹</button><button class="slider-btn slider-next" onclick="nextSlide()">›</button><div class="slider-dots" style="bottom:12px;">' + dotsHtml + '</div>' : '') +
-        '</div>';
-
-    if (banners.length > 1) startSlider(banners.length);
-}
-
-function renderHeroV2(banners) {
-    var section = document.getElementById('heroSection');
-    if (!banners.length) { section.style.display = 'none'; return; }
-
-    var slidesHtml = banners.map(function(b) {
-        var rawLink = (b.link_url || '').trim();
-        var linkData = null;
-        if (rawLink.startsWith('{') && rawLink.endsWith('}')) {
-            try { linkData = JSON.parse(rawLink); } catch(e){}
-        }
-
-        var fullUrl = rawLink;
-        var isArea = false;
-        if (linkData) {
-            fullUrl = linkData.url || '';
-            isArea = linkData.type === 'area';
-        }
-
-        if (fullUrl && !fullUrl.startsWith('http') && !fullUrl.startsWith('/') && !fullUrl.startsWith('.')) fullUrl = 'https://' + fullUrl;
-
-        var slideInner = '<img src="' + b.image_url + '" alt="' + (b.title||'Banner') + '" loading="lazy" style="width:100%; height:auto; display:block; object-fit:contain; border-radius:var(--radius-lg);">';
-
-        if (isArea && fullUrl) {
-            var areaStyle = 'position:absolute;top:'+linkData.y+'%;left:'+linkData.x+'%;width:'+linkData.w+'%;height:'+linkData.h+'%;z-index:20;display:block;';
-            slideInner += '<a href="' + fullUrl + '" style="' + areaStyle + '"></a>';
-        } else if (fullUrl) {
-            var areaStyle = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:20;display:block;';
-            slideInner += '<a href="' + fullUrl + '" style="' + areaStyle + '"></a>';
-        }
-
-        return '<div class="slide" style="position:relative; min-width:100%; flex-shrink:0; background:transparent;">' + slideInner + '</div>';
-    }).join('');
-
-    var dotsHtml = banners.map(function(b, i) {
-        return '<div class="dot' + (i===0?' active':'') + '" onclick="goSlide(' + i + ')"></div>';
-    }).join('');
-
-    section.innerHTML =
-        '<div class="hero-slider" style="background:transparent; box-shadow:none; overflow:hidden; position:relative; margin-top:0;">' +
-            '<div class="slider-track" id="sliderTrack" style="display:flex; transition: transform 0.5s ease;">' + slidesHtml + '</div>' +
-            (banners.length > 1 ? '<button class="slider-btn slider-prev" onclick="prevSlide()">‹</button><button class="slider-btn slider-next" onclick="nextSlide()">›</button><div class="slider-dots" style="bottom:12px;">' + dotsHtml + '</div>' : '') +
-        '</div>';
-
-    if (banners.length > 1) startSlider(banners.length);
-}
-
-function startSlider(count) {
-    clearInterval(slideTimer);
-    slideTimer = setInterval(function() { nextSlide(count); }, 4000);
-}
-
-function goSlide(i) {
-    slideIdx = i;
-    document.getElementById('sliderTrack').style.transform = 'translateX(-' + (i * 100) + '%)';
-    document.querySelectorAll('.dot').forEach(function(d, j) { d.classList.toggle('active', j===i); });
-}
-
-function nextSlide(count) {
-    var total = count || document.querySelectorAll('.slide').length;
-    goSlide((slideIdx + 1) % total);
-}
-
-function prevSlide() {
-    var total = document.querySelectorAll('.slide').length;
-    goSlide((slideIdx - 1 + total) % total);
-}
-
-// ── Categories ────────────────────────────────────────────────
 function renderCategories(cats) {
     var row = document.getElementById('catRow');
     if (!cats.length) { row.parentElement.style.display = 'none'; return; }

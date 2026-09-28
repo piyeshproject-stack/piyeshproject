@@ -6,6 +6,9 @@ on:
       css_payload:
         description: 'Raw CSS content for theme variables'
         required: true
+      layout_payload:
+        description: 'Raw JS content for layout config'
+        required: false
 
 permissions:
   contents: write
@@ -17,15 +20,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Update theme.css
+      - name: Update theme.css and layout-config.js
         run: |
           mkdir -p assets/css
+          mkdir -p assets/js
           echo '${{ github.event.inputs.css_payload }}' > assets/css/theme.css
+          echo '${{ github.event.inputs.layout_payload }}' > assets/js/layout-config.js
           
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/css/theme.css
-          git commit -m "chore: update theme styling from admin panel" || echo "No changes to commit"
+          git add assets/css/theme.css assets/js/layout-config.js
+          git commit -m "chore: update theme styling and layout from admin panel" || echo "No changes to commit"
           git push
