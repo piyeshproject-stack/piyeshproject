@@ -157,3 +157,42 @@ function renderHomeSectionsV2(homeSects) {
     
     container.innerHTML = html;
 }
+
+function renderShopexOfferV2() {
+    var container = document.getElementById('shopexOfferContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'shopexOfferContainer';
+        var hs = document.getElementById('homeSectionsContainer');
+        if (hs) hs.parentNode.insertBefore(container, hs.nextSibling);
+    }
+    
+    container.innerHTML = `
+    <section class="py-10 md:py-16 bg-white">
+        <div class="container mx-auto px-4 lg:px-24">
+            <h2 class="text-xl md:text-4xl font-bold font-josefin text-center mb-6 md:mb-12 text-secondary">What Shopex Offer!</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-8">
+                <div class="bg-white p-4 md:p-8 text-center shadow-[0_4px_25px_rgba(0,0,0,0.08)] rounded hover:scale-105 transition-transform">
+                    <img src="https://cdn-icons-png.flaticon.com/512/411/411776.png" alt="Delivery" class="w-8 h-8 md:w-16 md:h-16 mx-auto mb-2 md:mb-5 opacity-70">
+                    <h3 class="text-[12px] md:text-xl font-josefin font-bold text-secondary mb-1 md:mb-4">24/7 Support</h3>
+                    <p class="text-gray-400 text-[9px] md:text-sm leading-relaxed font-lato">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                </div>
+                <div class="bg-white p-4 md:p-8 text-center shadow-[0_4px_25px_rgba(0,0,0,0.08)] rounded hover:scale-105 transition-transform">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2830/2830305.png" alt="Cashback" class="w-8 h-8 md:w-16 md:h-16 mx-auto mb-2 md:mb-5 opacity-70">
+                    <h3 class="text-[12px] md:text-xl font-josefin font-bold text-secondary mb-1 md:mb-4">Cashback</h3>
+                    <p class="text-gray-400 text-[9px] md:text-sm leading-relaxed font-lato">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                </div>
+                <div class="bg-white p-4 md:p-8 text-center shadow-[0_4px_25px_rgba(0,0,0,0.08)] rounded hover:scale-105 transition-transform">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1067/1067566.png" alt="Quality" class="w-8 h-8 md:w-16 md:h-16 mx-auto mb-2 md:mb-5 opacity-70">
+                    <h3 class="text-[12px] md:text-xl font-josefin font-bold text-secondary mb-1 md:mb-4">Premium Quality</h3>
+                    <p class="text-gray-400 text-[9px] md:text-sm leading-relaxed font-lato">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                </div>
+                <div class="bg-white p-4 md:p-8 text-center shadow-[0_4px_25px_rgba(0,0,0,0.08)] rounded hover:scale-105 transition-transform">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3358/3358864.png" alt="Hours" class="w-8 h-8 md:w-16 md:h-16 mx-auto mb-2 md:mb-5 opacity-70">
+                    <h3 class="text-[12px] md:text-xl font-josefin font-bold text-secondary mb-1 md:mb-4">Fast Delivery</h3>
+                    <p class="text-gray-400 text-[9px] md:text-sm leading-relaxed font-lato">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                </div>
+            </div>
+        </div>
+    </section>`;
+}
