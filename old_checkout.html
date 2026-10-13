@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checkout GÇö Freelancing By Rifat</title>
+    <title>Checkout Gï¿½ï¿½ Freelancing By Rifat</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <script src="assets/js/config.js?v=1791100000002"></script>
+    <script src="assets/js/config.js?v=1791913142855"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
@@ -21,7 +21,7 @@
         .payment-desc  { font-size: 12px; color: var(--text-muted); }
         .manual-pay-box { background: rgba(255,77,77,0.05); border: 1.5px dashed var(--primary); border-radius: var(--radius-md); padding: 16px; margin-top: 12px; display: none; }
 
-        /* GöÇGöÇ Accordion Payment Cards GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ */
+        /* Gï¿½ï¿½Gï¿½ï¿½ Accordion Payment Cards Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½ */
         .pay-card { border: 2px solid var(--border); border-radius: 14px; margin-bottom: 10px; overflow: hidden; transition: border-color 0.2s; }
         .pay-card.selected { border-color: var(--primary); }
         .pay-card-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; user-select: none; transition: background 0.15s; }
@@ -62,7 +62,7 @@
         .order-item-row2 { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
         @media (max-width: 900px) { .checkout-layout { grid-template-columns: 1fr; } }
 
-        /* GöÇGöÇ International Transfer UI GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ */
+        /* Gï¿½ï¿½Gï¿½ï¿½ International Transfer UI Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½ */
         .transfer-tab-bar { display:flex; border:2px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:18px; }
         .transfer-tab-btn { flex:1; padding:13px 10px; font-size:13px; font-weight:700; border:none; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:7px; }
         .transfer-tab-btn.active { background:var(--primary); color:#fff; }
@@ -109,7 +109,7 @@
         .verify-status.error   { background:rgba(239,68,68,0.06); color:#b91c1c; border:1px solid rgba(239,68,68,0.2); display:block; }
         .verify-status.loading { background:rgba(98,126,234,0.08); color:#3730a3; border:1px solid rgba(98,126,234,0.2); display:block; }
         .backup-badge { font-size:10px; background:rgba(255,149,0,0.12); color:#c2610b; border:1px solid rgba(255,149,0,0.3); border-radius:20px; padding:2px 8px; font-weight:700; display:inline-block; vertical-align:middle; margin-left:6px; }
-        /* GöÇGöÇ Add-Once Section GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ */
+        /* Gï¿½ï¿½Gï¿½ï¿½ Add-Once Section Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½ */
         .add-once-card { border: 1.5px solid rgba(98,126,234,0.25); border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; background: #fff; margin-bottom: 8px; }
         .add-once-card:hover { border-color: #627EEA; background: rgba(98,126,234,0.04); transform: translateY(-1px); }
         .add-once-card.selected { border-color: #627EEA; background: rgba(98,126,234,0.08); }
@@ -129,9 +129,9 @@
 </div>
 
 <nav class="navbar">
-    <a href="cart.html" class="nav-icon-btn">GåÉ</a>
+    <a href="cart.html" class="nav-icon-btn">Gï¿½ï¿½</a>
     <a href="index.html" class="navbar-brand"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> <span id="navBrand">Checkout</span></a>
-    <div style="margin-left:auto;font-size:13px;color:#888;">=ƒöÆ Secure Checkout</div>
+    <div style="margin-left:auto;font-size:13px;color:#888;">=ï¿½ï¿½ï¿½ Secure Checkout</div>
 </nav>
 
 <div class="container">
@@ -159,7 +159,7 @@
 
             <!-- STEP 1: Customer Info -->
             <div id="step1" class="section-card">
-                <div class="section-card-title">=ƒæñ Step 1: Customer Information</div>
+                <div class="section-card-title">=ï¿½ï¿½ï¿½ Step 1: Customer Information</div>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Full Name *</label>
@@ -201,7 +201,7 @@
 
                 <!-- Delivery charge display -->
                 <div id="deliveryInfo" class="adv-box" style="display:none;background:rgba(52,199,89,0.06);border-color:rgba(52,199,89,0.3);">
-                    <div style="font-size:13px;font-weight:700;color:#22C55E;"><i data-lucide="truck" class="lucide-icon icon-bounce"></i> Delivery Charge: <span id="deliveryChargeLabel">aº¦0</span></div>
+                    <div style="font-size:13px;font-weight:700;color:#22C55E;"><i data-lucide="truck" class="lucide-icon icon-bounce"></i> Delivery Charge: <span id="deliveryChargeLabel">aï¿½ï¿½0</span></div>
                 </div>
 
                 <!-- Addons -->
@@ -213,11 +213,11 @@
                 <!-- Add-Once Products -->
                 <div id="addOnceSection" style="display:none; margin-top:16px;">
                     <div style="font-size:13px;font-weight:800;color:#627EEA;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-                        =ƒ¢ìn+Å Add-Once Products <span style="font-size:11px;font-weight:500;color:#888;">(Optional)</span>
+                        =ï¿½ï¿½ï¿½n+ï¿½ Add-Once Products <span style="font-size:11px;font-weight:500;color:#888;">(Optional)</span>
                     </div>
                     <div id="addOncePreviewList"></div>
                     <button id="addOnceViewMoreBtn" onclick="openAddOnceSheet()" style="display:none; width:100%; margin-top:4px; padding:10px; border:1.5px dashed rgba(98,126,234,0.4); border-radius:10px; background:rgba(98,126,234,0.04); color:#627EEA; font-size:13px; font-weight:700; cursor:pointer; transition:all 0.2s;">
-                        =ƒ¢ìn+Å View More Add-Once Products
+                        =ï¿½ï¿½ï¿½n+ï¿½ View More Add-Once Products
                     </button>
                 </div>
 
@@ -239,30 +239,30 @@
 
                 <!-- Advance payment info -->
                 <div id="advanceSection" class="adv-box" style="display:none;">
-                    <div style="font-size:13px;font-weight:700;color:#FF9500;margin-bottom:4px;">GÜán+Å Advance Required</div>
+                    <div style="font-size:13px;font-weight:700;color:#FF9500;margin-bottom:4px;">Gï¿½ï¿½n+ï¿½ Advance Required</div>
                     <div style="font-size:13px;color:#666;" id="advanceInfoText"></div>
-                    <div style="font-size:20px;font-weight:900;color:var(--text-dark);margin-top:6px;">Advance: <span id="advanceAmountLabel" style="color:var(--primary);">aº¦0</span></div>
+                    <div style="font-size:20px;font-weight:900;color:var(--text-dark);margin-top:6px;">Advance: <span id="advanceAmountLabel" style="color:var(--primary);">aï¿½ï¿½0</span></div>
                 </div>
 
-                <!-- GöÇGöÇ Transfer Type Tab Bar GöÇGöÇ -->
+                <!-- Gï¿½ï¿½Gï¿½ï¿½ Transfer Type Tab Bar Gï¿½ï¿½Gï¿½ï¿½ -->
                 <div class="transfer-tab-bar" id="transferTabBar">
                     <button class="transfer-tab-btn active" id="tabNational" onclick="switchTransferTab('national')">
-                        =ƒçº=ƒç¬ National Transfer
+                        =ï¿½ï¿½=ï¿½ï¿½ National Transfer
                     </button>
                     <button class="transfer-tab-btn" id="tabInternational" onclick="switchTransferTab('international')">
-                        =ƒîÉ International Transfer
+                        =ï¿½ï¿½ï¿½ International Transfer
                     </button>
                 </div>
 
-                <!-- GöÇGöÇ NATIONAL PANEL GöÇGöÇ -->
+                <!-- Gï¿½ï¿½Gï¿½ï¿½ NATIONAL PANEL Gï¿½ï¿½Gï¿½ï¿½ -->
                 <div id="nationalPayPanel">
-                    <!-- Accordion Payment Options GÇö built by buildPaymentOptions() -->
+                    <!-- Accordion Payment Options Gï¿½ï¿½ built by buildPaymentOptions() -->
                     <div id="paymentOptions"></div>
 
                     <!-- Legacy manualPayBox kept for COD+advance compatibility -->
                     <div class="manual-pay-box" id="manualPayBox" style="display:none;">
                         <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
-                            Send <span id="manualPayAmt" style="color:var(--primary);font-size:16px;">aº¦0</span>
+                            Send <span id="manualPayAmt" style="color:var(--primary);font-size:16px;">aï¿½ï¿½0</span>
                             <button type="button" onclick="copyElementText('manualPayAmt')" style="background:none;border:none;cursor:pointer;color:#888;padding:2px;"><i data-lucide="copy" class="lucide-icon" style="width:14px;height:14px;"></i></button> to:
                         </div>
                         <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
@@ -281,14 +281,14 @@
                     </div>
                 </div>
 
-                <!-- GöÇGöÇ INTERNATIONAL PANEL GöÇGöÇ -->
+                <!-- Gï¿½ï¿½Gï¿½ï¿½ INTERNATIONAL PANEL Gï¿½ï¿½Gï¿½ï¿½ -->
                 <div id="internationalPayPanel" style="display:none;">
 
                     <!-- USDT Amount Display -->
                     <div class="intl-amount-box" id="intlAmountBox">
                         <div class="intl-amount-usdt" id="intlUsdtAmt">0.00 USDT</div>
-                        <div class="intl-amount-bdt" id="intlBdtAmt">= aº¦0</div>
-                        <div class="intl-amount-rate" id="intlRateLabel">Rate: 1 USD = aº¦110</div>
+                        <div class="intl-amount-bdt" id="intlBdtAmt">= aï¿½ï¿½0</div>
+                        <div class="intl-amount-rate" id="intlRateLabel">Rate: 1 USD = aï¿½ï¿½110</div>
                     </div>
 
                     <!-- Crypto Payment Options (Binance Pay + Coins) -->
@@ -305,7 +305,7 @@
 
                     <!-- TxID Input -->
                     <div class="txid-input-wrap" id="cryptoTxidWrap" style="display:none;">
-                        <label class="form-label" style="font-weight:700;font-size:13px;">=ƒôï Transaction ID / TxHash *</label>
+                        <label class="form-label" style="font-weight:700;font-size:13px;">=ï¿½ï¿½ï¿½ Transaction ID / TxHash *</label>
                         <input class="form-input" id="cryptoTxidInput" placeholder="Paste your Transaction ID or TxHash here" style="font-size:13px;">
                         <div style="font-size:11px;color:#888;margin-top:5px;">Binance Pay: Transaction ID from Binance app. Crypto: TxHash from blockchain explorer.</div>
                     </div>
@@ -315,7 +315,7 @@
 
                     <!-- Verify & Pay Button -->
                     <button class="verify-btn" id="verifyCryptoBtn" onclick="verifyCryptoCheck(event)" style="display:none;">
-                        G£à Verify & Pay
+                        Gï¿½ï¿½ Verify & Pay
                     </button>
                 </div>
 
@@ -323,10 +323,10 @@
                 <div style="margin-top:16px;display:flex;gap:8px;align-items:center;">
                     <div style="position:relative; flex:1;">
                         <input class="form-input" id="promoInput" placeholder="Promo code (optional)" style="width:100%; padding-right:32px;" oninput="document.getElementById('removePromoBtn').style.display=this.value.trim()?'block':'none'">
-                        <button id="removePromoBtn" onclick="removePromo()" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:#ff3b30; font-size:16px; font-weight:bold; cursor:pointer; display:none; padding:4px; line-height:1;" title="Remove Promo">G£ò</button>
+                        <button id="removePromoBtn" onclick="removePromo()" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:#ff3b30; font-size:16px; font-weight:bold; cursor:pointer; display:none; padding:4px; line-height:1;" title="Remove Promo">Gï¿½ï¿½</button>
                     </div>
                     <button class="btn btn-ghost" onclick="applyPromo()" style="padding: 10px 14px;">Apply</button>
-                    <button class="btn btn-outline" onclick="openAllCouponsModal()" style="border:1px dashed var(--primary);font-size:12px;white-space:nowrap;padding:10px 12px;background:rgba(255,77,77,0.03);border-radius:12px;font-weight:700;">=ƒÄƒn+Å Coupons</button>
+                    <button class="btn btn-outline" onclick="openAllCouponsModal()" style="border:1px dashed var(--primary);font-size:12px;white-space:nowrap;padding:10px 12px;background:rgba(255,77,77,0.03);border-radius:12px;font-weight:700;">=ï¿½Äƒn+ï¿½ Coupons</button>
                 </div>
                 <div id="promoMsg" style="font-size:13px;margin-top:6px;"></div>
 
@@ -345,22 +345,22 @@
                         <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; margin: 0;">
                             <input type="checkbox" id="funPromiseCheck1" style="margin-top: 3px; width: 20px; height: 20px; cursor: pointer; accent-color: #FF3B30;">
                             <span style="font-size: 14.5px; color: #1C1C1E; line-height: 1.5; text-align: left; font-weight: 600;">
-                                aªåaª«aª+ aª¿aª+aª¦aºìaªÜaª+aªñ, aªÅaªç aªàaª¦aºìaªíaª+aª¦ aª+aªñaºìaª»aª+aªç aª¿aª+aªñaºç aª¬aºìaª¦aªñaª+aª¦aºìaª¦aºüaªñaª+aª¼aªªaºìaªºaÑñ aª¦aª+aª+aª+aª¡ aª¿aª+ aªòaª¦aª¦aºç aªåaª¦aºìaª¦aª+aª¦aª¦ aªùaª£aª¼ aªåaª«aª+aª¦ aªëaª¬aª¦ aª¬aº£aª¼aºç aªÅaª¼aªé aª¬aª¦aªòaª+aª¦aºç aªòaªáaºïaª¦ aª¦aª+aª+aºìaªñaª+ aª¦aª¼aºçaÑñ
+                                aï¿½ï¿½aï¿½ï¿½aï¿½+ aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½, aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½+aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½+ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½+ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½
                             </span>
                         </label>
                         <div id="funTooltip1" style="position: absolute; top: -40px; left: 50%; transform: translateX(-50%) translateY(10px); opacity: 0; visibility: hidden; background: #34C759; color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; white-space: nowrap; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 6px 15px rgba(52, 199, 89, 0.25); z-index: 100;">
-                            aª«aª+aª¦aª+aªåaª¦aºìaª¦aª+aª¦! aªåaª¬aª¿aª+aª¦ aª¿aª+aºƒaªñ aª¬aª¦aª+aª+aºìaªòaª+aª¦ =ƒÿç
+                            aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½! aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½ =ï¿½ï¿½ï¿½
                             <div style="position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 6px; border-style: solid; border-color: #34C759 transparent transparent transparent;"></div>
                         </div>
 
                         <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; margin: 0; padding-top: 10px; border-top: 1px solid rgba(255, 59, 48, 0.2);">
                             <input type="checkbox" id="funPromiseCheck2" style="margin-top: 3px; width: 20px; height: 20px; cursor: pointer; accent-color: #34C759;">
                             <span style="font-size: 14.5px; color: #1C1C1E; line-height: 1.5; text-align: left; font-weight: 600;">
-                                aª¬aªúaºìaª» aª¦aª+aªñaºç aª¬aºçaºƒaºç aªíaºçaª¦aª+aª¡aª+aª¦aª+ aª«aºìaª»aª+aª¿aºçaª¦ aªòaª+aª¢aºç aª«aºéaª¦aºìaª» aª¬aª¦aª+aª¦aºïaªº aªòaª¦aºüaª¿
+                                aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½+ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½
                             </span>
                         </label>
                         <div id="funTooltip2" style="position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%) translateY(-10px); opacity: 0; visibility: hidden; background: #007AFF; color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; white-space: nowrap; transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); box-shadow: 0 6px 15px rgba(0, 122, 255, 0.25); z-index: 100;">
-                            aªºaª¿aºìaª»aª¼aª+aªª! <i data-lucide="truck" class="lucide-icon icon-bounce"></i>
+                            aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½! <i data-lucide="truck" class="lucide-icon icon-bounce"></i>
                             <div style="position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); border-width: 6px; border-style: solid; border-color: transparent transparent #007AFF transparent;"></div>
                         </div>
                     </div>
@@ -382,13 +382,13 @@
                 <div class="section-card-title"><i data-lucide="clipboard-list" class="lucide-icon"></i> Order Summary</div>
                 <div id="summaryItems"></div>
                 <div style="margin-top:14px;">
-                    <div class="summary-line"><span>Subtotal</span><span id="smSubtotal">aº¦0</span></div>
-                    <div class="summary-line" id="addonLine" style="display:none;"><span>Add-ons</span><span id="smAddon">aº¦0</span></div>
-                    <div class="summary-line"><span>Delivery</span><span id="smDelivery">GÇö</span></div>
-                    <div class="summary-line" id="promoLine" style="display:none;color:var(--success);"><span>Promo Discount</span><span id="smPromo">-aº¦0</span></div>
-                    <div class="summary-line summary-total"><span>Total</span><span id="smTotal" style="color:var(--primary);">aº¦0</span></div>
-                    <div class="summary-line" id="advPayLine" style="display:none;color:var(--warning);"><span>To Pay Now (Advance)</span><span id="smAdvPay">aº¦0</span></div>
-                    <div class="summary-line" id="codPayLine" style="display:none;color:#888;"><span>Cash on Delivery</span><span id="smCod">aº¦0</span></div>
+                    <div class="summary-line"><span>Subtotal</span><span id="smSubtotal">aï¿½ï¿½0</span></div>
+                    <div class="summary-line" id="addonLine" style="display:none;"><span>Add-ons</span><span id="smAddon">aï¿½ï¿½0</span></div>
+                    <div class="summary-line"><span>Delivery</span><span id="smDelivery">Gï¿½ï¿½</span></div>
+                    <div class="summary-line" id="promoLine" style="display:none;color:var(--success);"><span>Promo Discount</span><span id="smPromo">-aï¿½ï¿½0</span></div>
+                    <div class="summary-line summary-total"><span>Total</span><span id="smTotal" style="color:var(--primary);">aï¿½ï¿½0</span></div>
+                    <div class="summary-line" id="advPayLine" style="display:none;color:var(--warning);"><span>To Pay Now (Advance)</span><span id="smAdvPay">aï¿½ï¿½0</span></div>
+                    <div class="summary-line" id="codPayLine" style="display:none;color:#888;"><span>Cash on Delivery</span><span id="smCod">aï¿½ï¿½0</span></div>
                 </div>
             </div>
         </div>
@@ -396,7 +396,7 @@
 </div>
 
 <script>
-// GöÇGöÇ State GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ State Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 var cart = [], settings = {}, zones = [], addons = [];
 var addOnceProducts = []; // Add-Once products list
 var currentStep  = 1;
@@ -409,13 +409,13 @@ var draftSent = false;
 var promoPaymentRestrictions = []; // payment methods required by applied coupon
 var promoFreeDelivery = false;     // if coupon gives free delivery
 var isPickup = new URLSearchParams(window.location.search).get('pickup') === '1';
-// Direct Order (Buy Now) GÇö main cart aªÑaºçaªòaºç aªåaª¦aª+aªªaª+
+// Direct Order (Buy Now) Gï¿½ï¿½ main cart aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½+
 var isDirectOrder = new URLSearchParams(window.location.search).get('direct') === '1';
 var DIRECT_KEY = (typeof CONFIG !== 'undefined' && CONFIG.DIRECT_ORDER_KEY) ? CONFIG.DIRECT_ORDER_KEY : 'fbr_direct_order';
 
-// GöÇGöÇ Init GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Init Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 document.addEventListener('DOMContentLoaded', function() {
-    // Direct Order aª¦aª¦aºç aªåaª¦aª+aªªaª+ key aªÑaºçaªòaºç load aªòaª¦aºï, main cart untouched
+    // Direct Order aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½+ key aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ load aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½, main cart untouched
     if (isDirectOrder) {
         try { cart = JSON.parse(localStorage.getItem(DIRECT_KEY) || '[]'); } catch(e) { cart = []; }
         if (!cart.length) { window.location.href = 'shop.html'; return; }
@@ -519,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// GöÇGöÇ Render Order Summary Items GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Render Order Summary Items Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function renderSummaryItems() {
     var subtotal = 0;
     var html = cart.map(function(item) {
@@ -529,14 +529,14 @@ function renderSummaryItems() {
             (item.image ? '<img src="' + item.image + '" style="width:48px;height:48px;border-radius:8px;object-fit:cover;background:#f5f5f5;flex-shrink:0;">' : '') +
             '<div style="flex:1;font-size:13px;">' +
                 '<div style="font-weight:700;">' + item.productName + '</div>' +
-                '<div style="color:#888;">' + (item.color||'') + ' / ' + (item.size||'') + ' +ù ' + (item.quantity||1) + '</div>' +
+                '<div style="color:#888;">' + (item.color||'') + ' / ' + (item.size||'') + ' +ï¿½ ' + (item.quantity||1) + '</div>' +
             '</div>' +
-            '<div style="font-weight:800;font-size:14px;color:var(--primary);">aº¦' + lineTotal + '</div>' +
+            '<div style="font-weight:800;font-size:14px;color:var(--primary);">aï¿½ï¿½' + lineTotal + '</div>' +
         '</div>';
     }).join('');
 
     document.getElementById('summaryItems').innerHTML = html;
-    document.getElementById('smSubtotal').textContent = 'aº¦' + subtotal;
+    document.getElementById('smSubtotal').textContent = 'aï¿½ï¿½' + subtotal;
     updateSummaryTotals();
 }
 
@@ -590,16 +590,16 @@ function updateSummaryTotals() {
     
     var total = subtotal + addonTotal + effectiveDelivery - prodDisc;
     
-    document.getElementById('smAddon').textContent   = 'aº¦' + addonTotal;
+    document.getElementById('smAddon').textContent   = 'aï¿½ï¿½' + addonTotal;
     
     if (delDisc > 0) {
-        document.getElementById('smDelivery').innerHTML = '<del style="color:#aaa;font-size:11px;">aº¦' + deliveryCharge + '</del> ' + (effectiveDelivery > 0 ? 'aº¦' + effectiveDelivery : '<span style="color:var(--success);">Free</span>');
+        document.getElementById('smDelivery').innerHTML = '<del style="color:#aaa;font-size:11px;">aï¿½ï¿½' + deliveryCharge + '</del> ' + (effectiveDelivery > 0 ? 'aï¿½ï¿½' + effectiveDelivery : '<span style="color:var(--success);">Free</span>');
     } else {
-        document.getElementById('smDelivery').textContent = deliveryCharge > 0 ? 'aº¦' + deliveryCharge : 'GÇö';
+        document.getElementById('smDelivery').textContent = deliveryCharge > 0 ? 'aï¿½ï¿½' + deliveryCharge : 'Gï¿½ï¿½';
     }
     
-    document.getElementById('smPromo').textContent    = '-aº¦' + prodDisc.toFixed(0);
-    document.getElementById('smTotal').textContent    = 'aº¦' + total.toFixed(0);
+    document.getElementById('smPromo').textContent    = '-aï¿½ï¿½' + prodDisc.toFixed(0);
+    document.getElementById('smTotal').textContent    = 'aï¿½ï¿½' + total.toFixed(0);
     
     document.getElementById('addonLine').style.display  = addonTotal > 0 ? 'flex' : 'none';
     document.getElementById('promoLine').style.display  = prodDisc > 0 ? 'flex' : 'none';
@@ -607,7 +607,7 @@ function updateSummaryTotals() {
     return total;
 }
 
-// GöÇGöÇ Add-Once Products GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Add-Once Products Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 var selectedAddOnce = []; // {id, name, price}
 
 function getAddOncePrice(p) {
@@ -649,8 +649,8 @@ function buildAddOnceCardHtml(p) {
         (img ? '<img src="' + img + '" class="add-once-img" onerror="this.style.display=\'none\'">' : '') +
         '<div style="flex:1;">' +
             '<div style="font-weight:700;font-size:14px;color:var(--text-dark);">' + (p.name||'') + '</div>' +
-            (p.flash_sale_price > 0 ? '<div style="font-size:12px;color:#888;"><del>aº¦' + p.base_price + '</del></div>' : '') +
-            '<div style="font-size:15px;font-weight:800;color:#627EEA;">+aº¦' + price + '</div>' +
+            (p.flash_sale_price > 0 ? '<div style="font-size:12px;color:#888;"><del>aï¿½ï¿½' + p.base_price + '</del></div>' : '') +
+            '<div style="font-size:15px;font-weight:800;color:#627EEA;">+aï¿½ï¿½' + price + '</div>' +
         '</div>' +
         '<div style="width:22px;height:22px;border-radius:50%;border:2px solid ' + (isSel ? '#627EEA' : '#ddd') + ';background:' + (isSel ? '#627EEA' : 'transparent') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;">' +
             (isSel ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '') +
@@ -709,7 +709,7 @@ function closeAddOnceSheet() {
     renderAddOnce();
 }
 
-// GöÇGöÇ Addons GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Addons Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function renderAddons() {
     if (!addons.length) { document.getElementById('addonsSection').style.display = 'none'; return; }
     var html = addons.map(function(a) {
@@ -717,7 +717,7 @@ function renderAddons() {
         return '<div class="addon-item" onclick="toggleAddon(\'' + a.id + '\',this)" data-id="' + a.id + '" data-price="' + a.price + '">' +
             '<span style="font-size:22px;">' + (a.icon ? a.icon.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '') : '<i data-lucide="gift" class="lucide-icon icon-bounce"></i>') + '</span>' +
             '<div style="flex:1;"><div style="font-weight:700;font-size:14px;">' + a.name + '</div></div>' +
-            '<div style="font-weight:800;color:var(--primary);">+aº¦' + a.price + '</div>' +
+            '<div style="font-weight:800;color:var(--primary);">+aï¿½ï¿½' + a.price + '</div>' +
             '<input type="checkbox" style="width:18px;height:18px;accent-color:var(--primary);" data-chk="' + a.id + '">' +
         '</div>';
     }).join('');
@@ -740,7 +740,7 @@ function toggleAddon(id, el) {
     updateSummaryTotals();
 }
 
-// GöÇGöÇ BD APIs GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ BD APIs Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function loadBdDivisions() {
     fetch('https://bdapis.com/api/v1.1/divisions').then(function(r){return r.json();}).then(function(d) {
         var sel = document.getElementById('divSelect');
@@ -806,11 +806,11 @@ function calcDelivery() {
     }
 
     document.getElementById('deliveryInfo').style.display = 'block';
-    document.getElementById('deliveryChargeLabel').textContent = 'aº¦' + deliveryCharge;
+    document.getElementById('deliveryChargeLabel').textContent = 'aï¿½ï¿½' + deliveryCharge;
     updateSummaryTotals();
 }
 
-// GöÇGöÇ Stepper GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Stepper Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function goStep(n) {
     currentStep = n;
     ['step1','step2','step3'].forEach(function(id, i) {
@@ -859,7 +859,7 @@ function goStep3() {
     goStep(3);
 }
 
-// GöÇGöÇ Payment Options GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Payment Options Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function buildPaymentOptions() {
     var subtotal = cart.reduce(function(s,i){return s+i.price*(i.quantity||1);},0);
 
@@ -891,12 +891,12 @@ function buildPaymentOptions() {
         advancePayable = 0;
     }
 
-    // Advance section: aª¦aºüaªºaºü COD select aª¦aª¦aºç aªªaºçaªûaª+aª¼aºç GÇö selectPayment() aªÅ control aª¦aª»aª+
-    // Initially hide aªòaª¦aºç aª¦aª+aªûaºï, payment type aª¼aºçaª¢aºç aª¿aª+aª¦aºç aª+aªáaª+aªòaª¡aª+aª¼aºç show/hide aª¦aª¼aºç
+    // Advance section: aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ COD select aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½ Gï¿½ï¿½ selectPayment() aï¿½ï¿½ control aï¿½ï¿½aï¿½ï¿½aï¿½+
+    // Initially hide aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½, payment type aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½ aï¿½+aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½ show/hide aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½
     document.getElementById('advanceSection').style.display = 'none';
     document.getElementById('advPayLine').style.display = 'none';
     document.getElementById('codPayLine').style.display = 'none';
-    // If rebuilding (coupon applied) and COD was already selected GÇö re-show
+    // If rebuilding (coupon applied) and COD was already selected Gï¿½ï¿½ re-show
     if (selectedPayMethod === 'cod' && advancePayable > 0 && !isPickup) {
         var advSec2 = document.getElementById('advanceSection');
         advSec2.style.display = 'block';
@@ -933,22 +933,22 @@ function buildPaymentOptions() {
     var total = updateSummaryTotals();
     var html = '';
 
-    // GöÇGöÇ 1. Auto Payment Gateway GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+    // Gï¿½ï¿½Gï¿½ï¿½ 1. Auto Payment Gateway Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
     if (hasGateway) {
         html += buildPayCard(
             'auto_gateway',
             '<i data-lucide="credit-card" class="lucide-icon"></i>',
             'Auto Payment',
-            'bKash / Nagad / Card GÇö via payment gateway',
+            'bKash / Nagad / Card Gï¿½ï¿½ via payment gateway',
             // body: redirect button rendered by gateway flow
             '<div style="padding:4px 0 2px;">' +
                 '<div style="font-size:12px;color:#666;margin-bottom:10px;">Click "Place Order" below to be redirected to the secure payment gateway.</div>' +
-                '<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#888;"><span>=ƒöÆ</span> Secured by payment gateway</div>' +
+                '<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#888;"><span>=ï¿½ï¿½ï¿½</span> Secured by payment gateway</div>' +
             '</div>'
         );
     }
 
-    // GöÇGöÇ 2. Manual Payment (accordion with sub-options) GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+    // Gï¿½ï¿½Gï¿½ï¿½ 2. Manual Payment (accordion with sub-options) Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
     if (hasManual) {
         var subCards = '';
 
@@ -956,14 +956,14 @@ function buildPaymentOptions() {
             subCards += buildSubCard(
                 'manual_bkash', '<i data-lucide="smartphone" class="lucide-icon" style="color:#e2136e; width:20px; height:20px;"></i>', 'bKash',
                 'Send to ' + settings.bkash_number,
-                buildManualDetail(settings.bkash_number, 'bKash', 'aº¦' + Math.round(total), 'bkash')
+                buildManualDetail(settings.bkash_number, 'bKash', 'aï¿½ï¿½' + Math.round(total), 'bkash')
             );
         }
         if (hasNagad) {
             subCards += buildSubCard(
                 'manual_nagad', '<i data-lucide="smartphone" class="lucide-icon" style="color:#f7931e; width:20px; height:20px;"></i>', 'Nagad',
                 'Send to ' + settings.nagad_number,
-                buildManualDetail(settings.nagad_number, 'Nagad', 'aº¦' + Math.round(total), 'nagad')
+                buildManualDetail(settings.nagad_number, 'Nagad', 'aï¿½ï¿½' + Math.round(total), 'nagad')
             );
         }
         if (hasBinanceM) {
@@ -978,33 +978,33 @@ function buildPaymentOptions() {
             'manual_group',
             '<i data-lucide="wallet" class="lucide-icon"></i>',
             'Manual Payment',
-            'bKash / Nagad / Binance GÇö send & enter TrxID',
+            'bKash / Nagad / Binance Gï¿½ï¿½ send & enter TrxID',
             subCards
         );
     }
 
-    // GöÇGöÇ 3. COD GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+    // Gï¿½ï¿½Gï¿½ï¿½ 3. COD Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
     if (hasCod) {
         var codLabel = advancePayable > 0 ? 'Hybrid COD (Advance + Delivery)' : 'Cash on Delivery';
-        var codDesc  = advancePayable > 0 ? 'Pay aº¦' + advancePayable + ' advance, rest on delivery' : 'Pay when product is received';
+        var codDesc  = advancePayable > 0 ? 'Pay aï¿½ï¿½' + advancePayable + ' advance, rest on delivery' : 'Pay when product is received';
         html += buildPayCard('cod', '<i data-lucide="banknote" class="lucide-icon"></i>', codLabel, codDesc,
-            '<div style="font-size:12px;color:#666;padding:2px 0;">G£à No advance payment needed online. Pay the delivery agent when your order arrives.</div>'
+            '<div style="font-size:12px;color:#666;padding:2px 0;">Gï¿½ï¿½ No advance payment needed online. Pay the delivery agent when your order arrives.</div>'
         );
     }
     if (isPickup) {
         html += buildPayCard('cod', '<i data-lucide="banknote" class="lucide-icon"></i>', 'Pay at Pickup', 'Pay when you collect your order',
-            '<div style="font-size:12px;color:#666;padding:2px 0;">G£à Pay at the store when you arrive to pick up your order.</div>'
+            '<div style="font-size:12px;color:#666;padding:2px 0;">Gï¿½ï¿½ Pay at the store when you arrive to pick up your order.</div>'
         );
     }
 
-    if (!html) html = '<div style="padding:20px;text-align:center;color:#999;font-size:13px;">GÜán+Å No payment method available for this coupon. Please remove the coupon or contact support.</div>';
+    if (!html) html = '<div style="padding:20px;text-align:center;color:#999;font-size:13px;">Gï¿½ï¿½n+ï¿½ No payment method available for this coupon. Please remove the coupon or contact support.</div>';
 
     document.getElementById('paymentOptions').innerHTML = html;
     document.getElementById('manualPayBox').style.display = 'none'; // legacy hidden
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-// GöÇGöÇ Accordion card builders GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Accordion card builders Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function buildPayCard(value, icon, label, desc, bodyHtml) {
     return '<div class="pay-card" id="pc-' + value + '" data-paycard="' + value + '">' +
         '<div class="pay-card-header" onclick="selectPayCard(\'' + value + '\')">' +
@@ -1040,7 +1040,7 @@ function buildManualDetail(number, methodName, amtLabel, methodKey) {
     var tId = 'trxId_' + methodKey;
     return '<div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:6px;">' +
             'Send <span style="color:var(--primary);font-size:16px;">' + amtLabel + '</span>' +
-            ' <button type="button" onclick="copyDirect(this,\'' + amtLabel + '\')" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:14px;padding:2px 4px;border-radius:4px;" title="Copy amount">=ƒôï</button> to:' +
+            ' <button type="button" onclick="copyDirect(this,\'' + amtLabel + '\')" style="background:none;border:none;cursor:pointer;color:#aaa;font-size:14px;padding:2px 4px;border-radius:4px;" title="Copy amount">=ï¿½ï¿½ï¿½</button> to:' +
         '</div>' +
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">' +
             '<div style="font-size:20px;font-weight:900;color:var(--text-dark);">' + number + '</div>' +
@@ -1062,12 +1062,12 @@ function buildBinanceManualDetail(uid, total) {
     var usdtAmt = (total / rate).toFixed(2);
     var tId = 'trxId_binance';
     return '<div style="background:rgba(240,185,11,0.07);border:1.5px solid rgba(240,185,11,0.3);border-radius:10px;padding:12px;margin-bottom:12px;">' +
-        '<div style="font-size:12px;color:#92710B;font-weight:700;margin-bottom:6px;">=ƒƒí Send USDT (Binance Pay)</div>' +
+        '<div style="font-size:12px;color:#92710B;font-weight:700;margin-bottom:6px;">=ï¿½ï¿½ï¿½ Send USDT (Binance Pay)</div>' +
         '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">' +
             '<div style="font-size:18px;font-weight:900;color:#B8860B;">' + uid + '</div>' +
             '<button type="button" onclick="copyDirect(this,\'' + uid + '\')" style="background:rgba(240,185,11,0.15);border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:11px;font-weight:700;color:#92710B;">Copy UID</button>' +
         '</div>' +
-        '<div style="font-size:12px;color:#888;">Amount: ~' + usdtAmt + ' USDT <span style="color:#aaa;">(aº¦' + Math.round(total) + ' ++ ' + rate + ')</span></div>' +
+        '<div style="font-size:12px;color:#888;">Amount: ~' + usdtAmt + ' USDT <span style="color:#aaa;">(aï¿½ï¿½' + Math.round(total) + ' ++ ' + rate + ')</span></div>' +
         '<div style="margin-top:6px;">' +
             '<button type="button" onclick="copyDirect(this,\'' + usdtAmt + '\')" style="background:rgba(240,185,11,0.15);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:700;color:#92710B;">Copy Amount</button>' +
         '</div>' +
@@ -1075,7 +1075,7 @@ function buildBinanceManualDetail(uid, total) {
     '<div class="form-group" style="margin-bottom:0;">' +
         '<label class="form-label">Binance Transaction ID / TxID *</label>' +
         '<input class="form-input" id="' + tId + '" data-role="trxInput" placeholder="Binance Pay Transaction ID">' +
-        '<div style="font-size:11px;color:#aaa;margin-top:4px;">Binance App GåÆ Pay History GåÆ aª+aºçaªç transaction aªÅaª¦ ID aªªaª+aªô</div>' +
+        '<div style="font-size:11px;color:#aaa;margin-top:4px;">Binance App Gï¿½ï¿½ Pay History Gï¿½ï¿½ aï¿½+aï¿½ï¿½aï¿½ï¿½ transaction aï¿½ï¿½aï¿½ï¿½ ID aï¿½ï¿½aï¿½+aï¿½ï¿½</div>' +
     '</div>';
 }
 
@@ -1088,7 +1088,7 @@ function payOpt(value, icon, name, desc, badge) {
     '</div>';
 }
 
-// GöÇGöÇ Accordion: select a top-level pay card GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Accordion: select a top-level pay card Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function selectPayCard(value) {
     // Toggle: click same card again to collapse
     var isSame = (selectedPayMethod === value || (value === 'manual_group' && selectedPayMethod && selectedPayMethod.startsWith('manual_')));
@@ -1113,7 +1113,7 @@ function selectPayCard(value) {
     var total = updateSummaryTotals();
 
     if (value === 'manual_group') {
-        // Don't set selectedPayMethod yet GÇö wait for sub-card selection
+        // Don't set selectedPayMethod yet Gï¿½ï¿½ wait for sub-card selection
         // Clear any previous manual selection
         if (!selectedPayMethod || !selectedPayMethod.startsWith('manual_')) {
             selectedPayMethod = '';
@@ -1129,8 +1129,8 @@ function selectPayCard(value) {
         var autoAdvCheck = settings.advance_method && settings.advance_method.toString().includes('auto');
         if (isCod && advancePayable > 0 && !autoAdvCheck) {
             document.getElementById('manualPayNumber').textContent     = settings.bkash_number || '';
-            document.getElementById('manualPayMethodName').textContent = 'bKash (Advance GÇö aº¦' + advancePayable + ')';
-            document.getElementById('manualPayAmt').textContent        = 'aº¦' + advancePayable;
+            document.getElementById('manualPayMethodName').textContent = 'bKash (Advance Gï¿½ï¿½ aï¿½ï¿½' + advancePayable + ')';
+            document.getElementById('manualPayAmt').textContent        = 'aï¿½ï¿½' + advancePayable;
             manualBox.style.display = 'block';
         } else {
             manualBox.style.display = 'none';
@@ -1138,7 +1138,7 @@ function selectPayCard(value) {
     }
 }
 
-// GöÇGöÇ Accordion: select a sub-card inside Manual group GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Accordion: select a sub-card inside Manual group Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function selectSubCard(value) {
     // Deselect all sub-cards
     document.querySelectorAll('.pay-sub-card').forEach(function(c){ c.classList.remove('selected'); c.querySelector('.pay-sub-radio').checked = false; });
@@ -1154,7 +1154,7 @@ function selectSubCard(value) {
     document.getElementById('manualPayBox').style.display = 'none';
 }
 
-// GöÇGöÇ Shared advance + fun-checkbox UI updater GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Shared advance + fun-checkbox UI updater Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function _updateAdvanceFunUI(isCod, advAmt, total) {
     var advSection = document.getElementById('advanceSection');
     var advPayLine = document.getElementById('advPayLine');
@@ -1164,10 +1164,10 @@ function _updateAdvanceFunUI(isCod, advAmt, total) {
         advSection.style.display = 'block';
         advPayLine.style.display = 'flex';
         codPayLine.style.display = 'flex';
-        document.getElementById('advanceInfoText').textContent    = 'Remaining aº¦' + Math.round(total - advAmt) + ' will be paid on delivery.';
-        document.getElementById('advanceAmountLabel').textContent = 'aº¦' + advAmt;
-        document.getElementById('smAdvPay').textContent           = 'aº¦' + advAmt;
-        document.getElementById('smCod').textContent              = 'aº¦' + Math.round(total - advAmt);
+        document.getElementById('advanceInfoText').textContent    = 'Remaining aï¿½ï¿½' + Math.round(total - advAmt) + ' will be paid on delivery.';
+        document.getElementById('advanceAmountLabel').textContent = 'aï¿½ï¿½' + advAmt;
+        document.getElementById('smAdvPay').textContent           = 'aï¿½ï¿½' + advAmt;
+        document.getElementById('smCod').textContent              = 'aï¿½ï¿½' + Math.round(total - advAmt);
     } else {
         advSection.style.display = 'none';
         advPayLine.style.display = 'none';
@@ -1190,7 +1190,7 @@ function _updateAdvanceFunUI(isCod, advAmt, total) {
     }
 }
 
-// GöÇGöÇ copyDirect: pass text directly GÇö no ID needed, most reliable GöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ copyDirect: pass text directly Gï¿½ï¿½ no ID needed, most reliable Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function copyDirect(btn, text) {
     var fallback = function() {
         var ta = document.createElement('textarea');
@@ -1204,7 +1204,7 @@ function copyDirect(btn, text) {
     var done = function() {
         var orig = btn.textContent;
         var origColor = btn.style.color;
-        btn.textContent = 'G£à Copied!';
+        btn.textContent = 'Gï¿½ï¿½ Copied!';
         btn.style.color = '#15803d';
         setTimeout(function() {
             btn.textContent = orig;
@@ -1218,7 +1218,7 @@ function copyDirect(btn, text) {
     }
 }
 
-// GöÇGöÇ copyText helper GÇö delegates to copyElementText with button feedback
+// Gï¿½ï¿½Gï¿½ï¿½ copyText helper Gï¿½ï¿½ delegates to copyElementText with button feedback
 function copyText(elId) {
     var el = document.getElementById(elId);
     if (!el) return;
@@ -1230,12 +1230,12 @@ function copyText(elId) {
     if (btn) {
         copyDirect(btn, text);
     } else {
-        // no button found GÇö just copy silently
+        // no button found Gï¿½ï¿½ just copy silently
         copyDirect({ textContent: '', style: {} }, text);
     }
 }
 
-// GöÇGöÇ Legacy selectPayment GÇö kept for any external callers GöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Legacy selectPayment Gï¿½ï¿½ kept for any external callers Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function selectPayment(value) {
     // Delegate to new accordion system
     if (value === 'manual_bkash' || value === 'manual_nagad' || value === 'manual_binance') {
@@ -1246,7 +1246,7 @@ function selectPayment(value) {
     }
 }
 
-// GöÇGöÇ Promo GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Promo Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function removePromo() {
     document.getElementById('promoInput').value = '';
     document.getElementById('removePromoBtn').style.display = 'none';
@@ -1265,7 +1265,7 @@ function applyPromo(providedCode) {
             promoPaymentRestrictions = [];
             buildPaymentOptions(); // restore all
             updateSummaryTotals();
-            msg.innerHTML = 'Gä¦n+Å Coupon removed.';
+            msg.innerHTML = 'Gï¿½n+ï¿½ Coupon removed.';
             msg.style.color = '#888';
         }
         return;
@@ -1279,11 +1279,11 @@ function applyPromo(providedCode) {
     });
 
     if (!promo) {
-        msg.innerHTML = 'G¢ö Invalid or inactive promo code';
+        msg.innerHTML = 'Gï¿½ï¿½ Invalid or inactive promo code';
         msg.style.color = 'var(--danger)'; return;
     }
     if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
-        msg.innerHTML = 'G¢ö This promo code has expired';
+        msg.innerHTML = 'Gï¿½ï¿½ This promo code has expired';
         msg.style.color = 'var(--danger)'; return;
     }
 
@@ -1301,21 +1301,21 @@ function applyPromo(providedCode) {
 
     // 1. Min spend check
     if (minSpend && subtotal < minSpend) {
-        msg.innerHTML = 'G¢ö Minimum cart value of aº¦' + minSpend + ' required';
+        msg.innerHTML = 'Gï¿½ï¿½ Minimum cart value of aï¿½ï¿½' + minSpend + ' required';
         msg.style.color = 'var(--danger)'; return;
     }
 
     // 2. Product restriction
     if (appProds.length) {
         var matched = cart.some(function(i){ return appProds.indexOf(i.id) > -1; });
-        if (!matched) { msg.innerHTML = 'G¢ö Coupon not valid for products in your cart'; msg.style.color='var(--danger)'; return; }
+        if (!matched) { msg.innerHTML = 'Gï¿½ï¿½ Coupon not valid for products in your cart'; msg.style.color='var(--danger)'; return; }
     }
 
     // 3. District restriction
     if (appDists.length) {
         var dist = document.getElementById('distSelect').value;
         var distOk = dist && appDists.some(function(d){ return d.toLowerCase() === dist.toLowerCase(); });
-        if (!distOk) { msg.innerHTML = 'G¢ö Coupon only valid for: ' + appDists.join(', '); msg.style.color='var(--danger)'; return; }
+        if (!distOk) { msg.innerHTML = 'Gï¿½ï¿½ Coupon only valid for: ' + appDists.join(', '); msg.style.color='var(--danger)'; return; }
     }
 
     activePromoObj = promo;
@@ -1329,11 +1329,11 @@ function applyPromo(providedCode) {
     // 6. Payment restriction enforcement
     promoPaymentRestrictions = appPays;
     
-    var succMsg = 'G£à Coupon "' + promoCode + '" applied! ';
-    if (promoDiscount > 0) succMsg += 'aº¦' + promoDiscount.toFixed(0) + ' discount. ';
-    if (promo.del_reward === 'free') succMsg += '=ƒÜÜ Free Delivery! ';
-    else if (promo.del_reward === 'amount' && promo.del_disc_amount) succMsg += '=ƒÜÜ aº¦' + promo.del_disc_amount + ' delivery discount! ';
-    else if (promo.del_reward === 'percent' && promo.del_disc_amount) succMsg += '=ƒÜÜ ' + promo.del_disc_amount + '% delivery discount! ';
+    var succMsg = 'Gï¿½ï¿½ Coupon "' + promoCode + '" applied! ';
+    if (promoDiscount > 0) succMsg += 'aï¿½ï¿½' + promoDiscount.toFixed(0) + ' discount. ';
+    if (promo.del_reward === 'free') succMsg += '=ï¿½ï¿½ï¿½ Free Delivery! ';
+    else if (promo.del_reward === 'amount' && promo.del_disc_amount) succMsg += '=ï¿½ï¿½ï¿½ aï¿½ï¿½' + promo.del_disc_amount + ' delivery discount! ';
+    else if (promo.del_reward === 'percent' && promo.del_disc_amount) succMsg += '=ï¿½ï¿½ï¿½ ' + promo.del_disc_amount + '% delivery discount! ';
     
     // Always rebuild payment options when coupon has delivery discount OR payment restriction
     // This ensures advance amount reflects delivery discount correctly
@@ -1351,7 +1351,7 @@ function applyPromo(providedCode) {
             }
         }
         if (appPays.length) {
-            msg.innerHTML = succMsg + '<br><small style="color:#FF9500;">GÜán+Å Only specific payment methods available.</small>';
+            msg.innerHTML = succMsg + '<br><small style="color:#FF9500;">Gï¿½ï¿½n+ï¿½ Only specific payment methods available.</small>';
         } else {
             msg.innerHTML = succMsg;
         }
@@ -1361,7 +1361,7 @@ function applyPromo(providedCode) {
     msg.style.color = 'var(--success)';
 }
 
-// GöÇGöÇ View All Coupons GÇö Bottom Sheet GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ View All Coupons Gï¿½ï¿½ Bottom Sheet Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function openAllCouponsModal() {
     // Ensure bottom sheet exists
     if (!document.getElementById('allCouponsSheet')) {
@@ -1373,8 +1373,8 @@ function openAllCouponsModal() {
             '<div style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-height:78vh;overflow-y:auto;padding:0 0 20px;animation:slideUpSheet 0.35s cubic-bezier(0.22,0.61,0.36,1);">' +
                 '<div style="width:40px;height:4px;background:#ddd;border-radius:4px;margin:12px auto 4px;"></div>' +
                 '<div style="padding:14px 20px 10px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #f0f0f0;">' +
-                    '<div style="font-size:16px;font-weight:800;color:var(--text-dark);">=ƒÄƒn+Å Available Coupons</div>' +
-                    '<button onclick="closeAllCouponsModal()" style="border:none;background:rgba(0,0,0,0.06);border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">G£ò</button>' +
+                    '<div style="font-size:16px;font-weight:800;color:var(--text-dark);">=ï¿½Äƒn+ï¿½ Available Coupons</div>' +
+                    '<button onclick="closeAllCouponsModal()" style="border:none;background:rgba(0,0,0,0.06);border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">Gï¿½ï¿½</button>' +
                 '</div>' +
                 '<div id="allCouponsList" style="padding:14px 16px;display:flex;flex-direction:column;gap:10px;"></div>' +
             '</div>';
@@ -1400,7 +1400,7 @@ function openAllCouponsModal() {
         publicCoupons.forEach(function(p) {
             var reqSpend = p.min_spend || 0;
             var discType = p.disc_type || 'flat';
-            var dVal = discType === 'percent' ? (p.disc_val || 0)+'%' : 'aº¦'+(p.disc_val || 0);
+            var dVal = discType === 'percent' ? (p.disc_val || 0)+'%' : 'aï¿½ï¿½'+(p.disc_val || 0);
             var obj = { promo:p, reqSpend:reqSpend, dVal:dVal };
             if (reqSpend <= subtotal) eligible.push(obj);
             else if (reqSpend - subtotal <= 300) closeToEl.push(obj);
@@ -1414,18 +1414,18 @@ function openAllCouponsModal() {
             var isEligible = diff <= 0;
 
             var extras = '';
-            if (p.del_reward === 'free') extras += '<span style="font-size:11px;color:#22C55E;font-weight:700;">=ƒÜÜ + Free Delivery</span> ';
-            if (p.del_reward === 'amount' && p.del_disc_amount) extras += '<span style="font-size:11px;color:#22C55E;font-weight:700;">=ƒÜÜ -aº¦'+p.del_disc_amount+' Delivery</span> ';
-            if (p.del_reward === 'percent' && p.del_disc_amount) extras += '<span style="font-size:11px;color:#22C55E;font-weight:700;">=ƒÜÜ -'+p.del_disc_amount+'% Delivery</span> ';
-            if (!isEligible) extras += '<div style="font-size:11px;color:#FF9500;font-weight:700;margin-top:3px;">Add aº¦'+diff.toFixed(0)+' more to unlock</div>';
+            if (p.del_reward === 'free') extras += '<span style="font-size:11px;color:#22C55E;font-weight:700;">=ï¿½ï¿½ï¿½ + Free Delivery</span> ';
+            if (p.del_reward === 'amount' && p.del_disc_amount) extras += '<span style="font-size:11px;color:#22C55E;font-weight:700;">=ï¿½ï¿½ï¿½ -aï¿½ï¿½'+p.del_disc_amount+' Delivery</span> ';
+            if (p.del_reward === 'percent' && p.del_disc_amount) extras += '<span style="font-size:11px;color:#22C55E;font-weight:700;">=ï¿½ï¿½ï¿½ -'+p.del_disc_amount+'% Delivery</span> ';
+            if (!isEligible) extras += '<div style="font-size:11px;color:#FF9500;font-weight:700;margin-top:3px;">Add aï¿½ï¿½'+diff.toFixed(0)+' more to unlock</div>';
 
             var card = document.createElement('div');
             card.style.cssText = 'border:1.5px solid '+(isEligible?'#22C55E':'var(--border)')+';border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:'+(isEligible?'rgba(34,197,94,0.03)':'#fafafa')+';';
             card.innerHTML =
                 '<div style="flex:1;">' +
                     '<code style="font-size:13px;font-weight:800;color:var(--primary);background:rgba(139,26,26,0.07);padding:3px 8px;border-radius:6px;display:inline-block;margin-bottom:4px;">' + cleanCode + '</code>' +
-                    '<div style="font-size:13px;font-weight:700;color:var(--text-dark);">' + item.dVal + ' Discount' + (p.max_cap?' (Max aº¦'+p.max_cap+')':'') + '</div>' +
-                    '<div style="font-size:12px;color:#777;margin-top:1px;">' + (item.reqSpend?'Min aº¦'+item.reqSpend:'No minimum') + '</div>' +
+                    '<div style="font-size:13px;font-weight:700;color:var(--text-dark);">' + item.dVal + ' Discount' + (p.max_cap?' (Max aï¿½ï¿½'+p.max_cap+')':'') + '</div>' +
+                    '<div style="font-size:12px;color:#777;margin-top:1px;">' + (item.reqSpend?'Min aï¿½ï¿½'+item.reqSpend:'No minimum') + '</div>' +
                     (extras ? '<div style="margin-top:4px;">'+extras+'</div>' : '') +
                 '</div>' +
                 (isEligible
@@ -1452,7 +1452,7 @@ function applyPublicPromo(cleanCode) {
 
 
 
-// GöÇGöÇ Place Order GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Place Order Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function placeOrder() {
     if (!selectedPayMethod) { alert('Please select a payment method'); return; }
 
@@ -1473,7 +1473,7 @@ function placeOrder() {
     var effectiveDeliveryPO = Math.max(0, deliveryCharge - delDiscPO);
     var total    = subtotal + addonTotal + effectiveDeliveryPO - promoDiscount;
 
-    // GöÇGöÇ Manual payment inputs: read from active sub-card GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+    // Gï¿½ï¿½Gï¿½ï¿½ Manual payment inputs: read from active sub-card Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
     var senderNum = '', trxId = '';
     var isManualPay = (selectedPayMethod === 'manual_bkash' || selectedPayMethod === 'manual_nagad' || selectedPayMethod === 'manual_binance');
     var autoAdvCheck = settings.advance_method && settings.advance_method.toString().includes('auto');
@@ -1560,7 +1560,7 @@ function placeOrder() {
     insertPromise.then(function(r) {
         if (r.error) { btn.disabled = false; btn.innerHTML = '<i data-lucide="rocket" class="lucide-icon icon-bounce"></i> Place Order'; if (typeof lucide !== 'undefined') lucide.createIcons(); alert('Error: ' + r.error.message); return; }
         sendOrderNotification(orderData);
-        // Direct Order aª¦aª¦aºç aª¦aºüaªºaºü direct key clear aªòaª¦aºï GÇö main cart aªàaªòaºìaª+aªñ aªÑaª+aªòaª¼aºç
+        // Direct Order aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ direct key clear aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ Gï¿½ï¿½ main cart aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½
         if (isDirectOrder) {
             localStorage.removeItem(DIRECT_KEY);
         } else {
@@ -1570,7 +1570,7 @@ function placeOrder() {
     });
 }
 
-// GöÇGöÇ Auto Gateway Payment GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Auto Gateway Payment Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function initiateGatewayPayment(orderId, total, orderData) {
     var gatewayVersion = (settings.gateway_version || 'v1');
     var proxyUrl = (gatewayVersion === 'v2') 
@@ -1587,7 +1587,7 @@ function initiateGatewayPayment(orderId, total, orderData) {
     var sUrl = baseUrl + '?status=completed&order_id=' + orderId;
     var cUrl = baseUrl + '?status=cancel&order_id=' + orderId;
 
-    // GöÇGöÇ DB-aªñaºç aªåaªùaºç order save aªòaª¦aºï GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+    // Gï¿½ï¿½Gï¿½ï¿½ DB-aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ order save aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
     var insertPromise;
     if (CONFIG.DB_PROVIDER === 'supabase') {
         insertPromise = supabaseClient.from('orders').insert([Object.assign({}, orderData, { payment_status: 'Unpaid', status: 'Pending' })]);
@@ -1604,7 +1604,7 @@ function initiateGatewayPayment(orderId, total, orderData) {
     insertPromise.then(function(r) {
         if (r.error) { alert('Order save failed: ' + r.error.message); return; }
 
-        // GöÇGöÇ =ƒöä Gateway Execution (v1 and v2 now use same JSON logic) GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+        // Gï¿½ï¿½Gï¿½ï¿½ =ï¿½ï¿½ï¿½ Gateway Execution (v1 and v2 now use same JSON logic) Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
         var reqBody = {
             cus_name:    name,
             cus_email:   email,
@@ -1749,16 +1749,16 @@ function verifyGatewayPayment(orderId, trxId) {
     });
 }
 
-// GöÇGöÇ Telegram Notifications GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Telegram Notifications Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function sendOrderNotification(order) {
-    var msg = '=ƒ¢ìn+Å *NEW ORDER* GÇö #' + order.id + '\n\n' +
-              '=ƒæñ ' + (order.customer_name || 'GÇö') + ' | =ƒôP ' + (order.customer_phone || 'GÇö') + '\n' +
-              '=ƒôì ' + (order.district || 'GÇö') + ', ' + (order.division || 'GÇö') + '\n' +
-              '=ƒô¥ Type: ' + (order.order_type === 'pickup' ? '=ƒÜ¦ Pickup' : '=ƒÜÜ Delivery') + '\n' +
-              '=ƒÆ¦ Method: ' + (order.payment_method || 'GÇö') + '\n' +
-              '=ƒÆ¦ Total: aº¦' + (order.grand_total || 0) + '\n' +
-              (order.payment_trx_id ? '=ƒöæ TrxID: `' + order.payment_trx_id + '`\n' : '') +
-              '=ƒôª Items: ' + (Array.isArray(order.items) ? order.items.map(function(i){return i.productName;}).join(', ') : 'GÇö');
+    var msg = '=ï¿½ï¿½ï¿½n+ï¿½ *NEW ORDER* Gï¿½ï¿½ #' + order.id + '\n\n' +
+              '=ï¿½ï¿½ï¿½ ' + (order.customer_name || 'Gï¿½ï¿½') + ' | =ï¿½ï¿½P ' + (order.customer_phone || 'Gï¿½ï¿½') + '\n' +
+              '=ï¿½ï¿½ï¿½ ' + (order.district || 'Gï¿½ï¿½') + ', ' + (order.division || 'Gï¿½ï¿½') + '\n' +
+              '=ï¿½ï¿½ï¿½ Type: ' + (order.order_type === 'pickup' ? '=ï¿½Ü¦ Pickup' : '=ï¿½ï¿½ï¿½ Delivery') + '\n' +
+              '=ï¿½Æ¦ Method: ' + (order.payment_method || 'Gï¿½ï¿½') + '\n' +
+              '=ï¿½Æ¦ Total: aï¿½ï¿½' + (order.grand_total || 0) + '\n' +
+              (order.payment_trx_id ? '=ï¿½ï¿½ï¿½ TrxID: `' + order.payment_trx_id + '`\n' : '') +
+              '=ï¿½ï¿½ï¿½ Items: ' + (Array.isArray(order.items) ? order.items.map(function(i){return i.productName;}).join(', ') : 'Gï¿½ï¿½');
 
     if (order.order_type === 'pickup' && settings.pickup_bot_token && settings.pickup_chat_id) {
         sendTelegram(settings.pickup_bot_token, settings.pickup_chat_id, msg);
@@ -1786,11 +1786,11 @@ function sendDraftNotification() {
     var phone  = document.getElementById('custPhone') ? document.getElementById('custPhone').value.trim() : '';
     var subtotal = cart.reduce(function(s,i){return s+i.price*(i.quantity||1);},0);
 
-    var msg = 'GÜán+Å *DRAFT ORDER* GÇö Tab switched!\n\n' +
-              (name  ? '=ƒæñ ' + name  + '\n' : '') +
-              (phone ? '=ƒôP ' + phone + '\n' : '') +
-              '=ƒ¢Æ Items: ' + cart.length + '\n' +
-              '=ƒÆ¦ Cart Value: aº¦' + subtotal;
+    var msg = 'Gï¿½ï¿½n+ï¿½ *DRAFT ORDER* Gï¿½ï¿½ Tab switched!\n\n' +
+              (name  ? '=ï¿½ï¿½ï¿½ ' + name  + '\n' : '') +
+              (phone ? '=ï¿½ï¿½P ' + phone + '\n' : '') +
+              '=ï¿½ï¿½ï¿½ Items: ' + cart.length + '\n' +
+              '=ï¿½Æ¦ Cart Value: aï¿½ï¿½' + subtotal;
 
     fetch('https://api.telegram.org/bot' + settings.telegram_draft_bot + '/sendMessage', {
         method: 'POST',
@@ -1799,7 +1799,7 @@ function sendDraftNotification() {
     }).catch(function(){});
 }
 
-// GöÇGöÇ Helpers GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Helpers Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function genOrderId() {
     var mustHave = ['A', 'F', 'R', 'S', 'H', 'N'];
     var numbers = '0123456789';
@@ -1831,7 +1831,7 @@ function genOrderId() {
 
 function getCart() { try { return JSON.parse(localStorage.getItem(CONFIG.CART_KEY)||'[]'); } catch(e){ return []; } }
 
-// GöÇGöÇ International Transfer System GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ International Transfer System Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 var currentTransferTab = 'national';
 var intlPayMode       = ''; // 'binance_pay' | 'crypto'
 var intlCoinSymbol    = '';
@@ -1863,8 +1863,8 @@ function buildInternationalOptions() {
     var usdtAmt = (total / usdRate).toFixed(2);
 
     document.getElementById('intlUsdtAmt').textContent  = usdtAmt + ' USDT';
-    document.getElementById('intlBdtAmt').textContent   = '= aº¦' + Math.round(total);
-    document.getElementById('intlRateLabel').textContent = 'Rate: 1 USD = aº¦' + usdRate;
+    document.getElementById('intlBdtAmt').textContent   = '= aï¿½ï¿½' + Math.round(total);
+    document.getElementById('intlRateLabel').textContent = 'Rate: 1 USD = aï¿½ï¿½' + usdRate;
 
     var html = '';
     var hasProxy = !!(settings.binance_proxy_url || CONFIG.BINANCE_PROXY_URL);
@@ -1873,7 +1873,7 @@ function buildInternationalOptions() {
     if (settings.binance_pay_uid) {
         var badge = hasProxy ? '' : '<span class="backup-badge">Manual Review</span>';
         html += '<div class="crypto-opt" id="copt_binance_pay" onclick="selectIntlMethod(\'binance_pay\')">' +
-            '<span style="font-size:26px;">=ƒƒí</span>' +
+            '<span style="font-size:26px;">=ï¿½ï¿½ï¿½</span>' +
             '<div style="flex:1;">' +
                 '<div style="font-weight:800;font-size:14px;">Binance Pay ' + badge + '</div>' +
                 '<div style="font-size:12px;color:#888;">Send via Binance Pay to UID: <strong>' + settings.binance_pay_uid + '</strong></div>' +
@@ -1888,7 +1888,7 @@ function buildInternationalOptions() {
     
     if (hasCoins) {
         html += '<div class="crypto-opt" id="copt_crypto_main" onclick="selectIntlMethod(\'crypto_main\')">' +
-            '<span style="font-size:26px;">=ƒ¬Ö</span>' +
+            '<span style="font-size:26px;">=ï¿½ï¿½ï¿½</span>' +
             '<div style="flex:1;">' +
                 '<div style="font-weight:800;font-size:14px;">Crypto Payment</div>' +
                 '<div style="font-size:12px;color:#888;">Pay via USDT, BTC, ETH, etc.</div>' +
@@ -1899,7 +1899,7 @@ function buildInternationalOptions() {
 
     if (!html) {
         html = '<div style="text-align:center;padding:24px;color:#999;font-size:13px;border:1.5px dashed var(--border);border-radius:12px;">' +
-               'GÜán+Å No international payment method configured.<br>Admin GåÆ Settings GåÆ Crypto & Binance Pay aªÑaºçaªòaºç aª»aºïaªù aªòaª¦aºïaÑñ</div>';
+               'Gï¿½ï¿½n+ï¿½ No international payment method configured.<br>Admin Gï¿½ï¿½ Settings Gï¿½ï¿½ Crypto & Binance Pay aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½</div>';
     }
 
     document.getElementById('cryptoPaymentOptions').innerHTML = html;
@@ -1942,13 +1942,13 @@ function selectIntlMethod(method) {
         document.getElementById('cryptoWalletBox').style.display = 'block';
         document.getElementById('cryptoWalletBox').innerHTML =
             '<div class="wallet-addr-box" style="border-color:#F0B90B;background:rgba(240,185,11,0.05);">' +
-                '<div style="font-size:12px;font-weight:700;color:#B8860B;margin-bottom:6px;">=ƒƒí Binance Pay Instructions</div>' +
+                '<div style="font-size:12px;font-weight:700;color:#B8860B;margin-bottom:6px;">=ï¿½ï¿½ï¿½ Binance Pay Instructions</div>' +
                 '<div style="font-size:13px;color:#555;margin-bottom:6px;display:flex;align-items:center;gap:6px;">Send exactly <strong style="color:#1a1a2e;">' + usdt + ' USDT</strong> <button class="copy-btn" style="background:none;border:none;color:#888;padding:2px;min-width:auto;" onclick="copyText(\'' + usdt + '\',this)" title="Copy Amount"><i data-lucide="copy" class="lucide-icon" style="width:14px;height:14px;"></i></button> to:</div>' +
                 '<div class="wallet-addr-text" style="border-color:rgba(240,185,11,0.4);">' +
                     '<span id="binanceUidDisplay" style="font-size:18px;letter-spacing:2px;font-weight:900;">UID: ' + uid + '</span>' +
-                    '<button class="copy-btn" style="background:#F0B90B;color:#1a1a2e;" onclick="copyText(\'' + uid + '\',this)">=ƒôï Copy</button>' +
+                    '<button class="copy-btn" style="background:#F0B90B;color:#1a1a2e;" onclick="copyText(\'' + uid + '\',this)">=ï¿½ï¿½ï¿½ Copy</button>' +
                 '</div>' +
-                '<div style="font-size:11px;color:#888;">After sending, open Binance app GåÆ Pay GåÆ History GåÆ copy the <strong>Transaction ID</strong>.</div>' +
+                '<div style="font-size:11px;color:#888;">After sending, open Binance app Gï¿½ï¿½ Pay Gï¿½ï¿½ History Gï¿½ï¿½ copy the <strong>Transaction ID</strong>.</div>' +
             '</div>';
 
         document.getElementById('cryptoTxidWrap').style.display = 'block';
@@ -1965,12 +1965,12 @@ function selectIntlMethod(method) {
         setVerifyStatus('', '');
 
         var coins = settings.crypto_coins || [];
-        var coinHtml = '<div style="margin-top:10px;"><div style="font-size:12px;font-weight:700;color:#627EEA;margin-bottom:8px;text-transform:uppercase;">=ƒ¬Ö Select Crypto</div>';
+        var coinHtml = '<div style="margin-top:10px;"><div style="font-size:12px;font-weight:700;color:#627EEA;margin-bottom:8px;text-transform:uppercase;">=ï¿½ï¿½ï¿½ Select Crypto</div>';
         coins.forEach(function(coin) {
             if (!coin.symbol || !coin.networks || !coin.networks.length) return;
             var nets = coin.networks.map(function(n) { return n.name; }).join(' / ');
             coinHtml += '<div class="crypto-opt" id="copt_' + coin.symbol + '" onclick="selectIntlCoin(\'' + coin.symbol + '\')" style="margin-bottom:6px;border-color:rgba(98,126,234,0.3);">' +
-                '<span style="font-size:20px;">=ƒÆá</span>' +
+                '<span style="font-size:20px;">=ï¿½ï¿½ï¿½</span>' +
                 '<div style="flex:1;">' +
                     '<div style="font-weight:800;font-size:13px;">' + coin.symbol +
                         '<span style="font-size:11px;font-weight:400;color:#888;margin-left:6px;">' + (coin.name || '') + '</span></div>' +
@@ -2010,16 +2010,16 @@ function selectIntlCoin(symbol) {
     if (!coin) return;
 
     var netsHtml = '<div style="margin-top:4px;">' +
-        '<div style="font-size:12px;font-weight:700;color:#627EEA;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">G¢ôn+Å Select Network</div>';
+        '<div style="font-size:12px;font-weight:700;color:#627EEA;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Gï¿½ï¿½n+ï¿½ Select Network</div>';
 
     coin.networks.forEach(function(net) {
         var safeNet = (net.name || '').replace(/'/g, "\\'");
         var safeAddr = (net.address || '').replace(/'/g, "\\'");
         var safeQr   = (net.qr_url || '').replace(/'/g, "\\'");
         netsHtml += '<div class="net-opt" id="netopt_' + safeNet + '" onclick="selectIntlNetwork(\'' + safeNet + '\',\'' + safeAddr + '\',\'' + safeQr + '\')">' +
-            '<span style="font-size:18px;">G¢ôn+Å</span>' +
+            '<span style="font-size:18px;">Gï¿½ï¿½n+ï¿½</span>' +
             '<div style="flex:1;">' +
-                '<div style="font-weight:700;font-size:13px;">' + (net.name || 'GÇö') + '</div>' +
+                '<div style="font-weight:700;font-size:13px;">' + (net.name || 'Gï¿½ï¿½') + '</div>' +
                 '<div style="font-size:11px;color:#888;">' + (net.address ? net.address.substring(0,16) + '...' : 'No address') + '</div>' +
             '</div>' +
             '<input type="radio" name="netMethod" style="width:16px;height:16px;accent-color:#627EEA;">' +
@@ -2090,7 +2090,7 @@ function selectIntlNetwork(netName, addr, qrUrl) {
         var addrBoxHtml = 
             '<div style="background:rgba(98,126,234,0.06);border:1.5px dashed rgba(98,126,234,0.3);border-radius:12px;padding:16px;">' +
                 '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">' +
-                    '<div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">=ƒÆ¦ Send to ' + sym + ' (' + netName + ')</div>' +
+                    '<div style="font-size:12px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">=ï¿½Æ¦ Send to ' + sym + ' (' + netName + ')</div>' +
                     (qrUrl ? '<button type="button" onclick="document.getElementById(\'netQrWrap\').style.display=document.getElementById(\'netQrWrap\').style.display===\'none\'?\'block\':\'none\'" style="background:none;border:none;color:#627EEA;font-size:12px;font-weight:700;cursor:pointer;"><i data-lucide="qr-code" class="lucide-icon"></i> Show QR</button>' : '') +
                 '</div>' +
                 (qrUrl ? '<div id="netQrWrap" style="display:none;text-align:center;margin-bottom:16px;"><img src="' + qrUrl + '" style="max-width:150px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.1);"></div>' : '') +
@@ -2104,7 +2104,7 @@ function selectIntlNetwork(netName, addr, qrUrl) {
                     '<input type="text" class="form-input" id="finalWalletAddr" value="' + addr + '" readonly style="flex:1;background:rgba(255,255,255,0.5);font-family:monospace;font-size:12px;">' +
                     '<button type="button" onclick="copyElementText(\'finalWalletAddr\')" style="background:rgba(98,126,234,0.1);color:#627EEA;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Copy</button>' +
                 '</div>' +
-                '<div style="font-size:11px;color:#ff3b30;margin-top:12px;font-weight:600;">GÜán+Å Please make sure to select the correct network (' + netName + '). Otherwise funds will be lost.</div>' +
+                '<div style="font-size:11px;color:#ff3b30;margin-top:12px;font-weight:600;">Gï¿½ï¿½n+ï¿½ Please make sure to select the correct network (' + netName + '). Otherwise funds will be lost.</div>' +
             '</div>';
         
         document.getElementById('cryptoWalletBox').innerHTML = addrBoxHtml;
@@ -2137,11 +2137,11 @@ function placeOrderCheck(event) {
         var funCheck1 = document.getElementById('funPromiseCheck1');
         var funCheck2 = document.getElementById('funPromiseCheck2');
         if (funCheck1 && !funCheck1.checked) {
-            alert('aªàaª¦aºìaªíaª+aª¦ aªòaª¿aª½aª+aª¦aºìaª« aªòaª¦aªñaºç aªªaºƒaª+ aªòaª¦aºç "aªåaª«aª+ aª¿aª+aª¦aºìaªÜaª+aªñ..." aª¼aªòaºìaª+aºç aªƒaª+aªò aªªaª+aª¿!');
+            alert('aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½+ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ "aï¿½ï¿½aï¿½ï¿½aï¿½+ aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½..." aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½!');
             return;
         }
         if (funCheck2 && !funCheck2.checked) {
-            alert('aªàaª¦aºìaªíaª+aª¦ aªòaª¿aª½aª+aª¦aºìaª« aªòaª¦aªñaºç aªªaºƒaª+ aªòaª¦aºç "aª¬aªúaºìaª» aª¦aª+aªñaºç aª¬aºçaºƒaºç..." aª¼aªòaºìaª+aºç aªƒaª+aªò aªªaª+aª¿!');
+            alert('aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½+ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ "aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½..." aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½!');
             return;
         }
     }
@@ -2179,7 +2179,7 @@ function copyText(text, btn) {
     if (!text) return;
     navigator.clipboard.writeText(text).then(function() {
         var orig = btn.textContent;
-        btn.textContent = 'G£à Copied!';
+        btn.textContent = 'Gï¿½ï¿½ Copied!';
         btn.classList.add('copied');
         setTimeout(function() { btn.textContent = orig; btn.classList.remove('copied'); }, 1800);
     }).catch(function() {
@@ -2187,8 +2187,8 @@ function copyText(text, btn) {
         var el = document.createElement('textarea');
         el.value = text; document.body.appendChild(el); el.select();
         document.execCommand('copy'); document.body.removeChild(el);
-        btn.textContent = 'G£à Copied!';
-        setTimeout(function() { btn.textContent = '=ƒôï Copy'; }, 1800);
+        btn.textContent = 'Gï¿½ï¿½ Copied!';
+        setTimeout(function() { btn.textContent = '=ï¿½ï¿½ï¿½ Copy'; }, 1800);
     });
 }
 
@@ -2198,29 +2198,29 @@ function setVerifyStatus(msg, type) {
     el.textContent = msg;
 }
 
-// GöÇGöÇ Crypto Payment Verification GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
-// PRIMARY:  PHP Proxy GåÆ Binance API (no Supabase needed for verify)
+// Gï¿½ï¿½Gï¿½ï¿½ Crypto Payment Verification Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
+// PRIMARY:  PHP Proxy Gï¿½ï¿½ Binance API (no Supabase needed for verify)
 // BACKUP:   Supabase Edge Function (no cPanel/PHP needed)
 // CONTROL:  settings.verify_mode = 'auto' | 'php_only' | 'supabase_only'
 function verifyCryptoPayment() {
     if (intlVerified) { placeCryptoOrder(); return; }
 
     var txid = (document.getElementById('cryptoTxidInput').value || '').trim();
-    if (!txid) { setVerifyStatus('G¥î Please enter your Transaction ID / TxHash.', 'error'); return; }
-    if (!intlPayMode) { setVerifyStatus('G¥î Please select a payment method first.', 'error'); return; }
-    if (intlPayMode === 'crypto' && !intlNetworkName) { setVerifyStatus('G¥î Please select a network first.', 'error'); return; }
+    if (!txid) { setVerifyStatus('Gï¿½ï¿½ Please enter your Transaction ID / TxHash.', 'error'); return; }
+    if (!intlPayMode) { setVerifyStatus('Gï¿½ï¿½ Please select a payment method first.', 'error'); return; }
+    if (intlPayMode === 'crypto' && !intlNetworkName) { setVerifyStatus('Gï¿½ï¿½ Please select a network first.', 'error'); return; }
 
     var btn = document.getElementById('verifyCryptoBtn');
     var verifyMode = (settings.verify_mode || 'auto');
     btn.disabled = true;
-    btn.textContent = '=ƒöì Verifying...';
-    setVerifyStatus('=ƒöì Checking transaction...', 'loading');
+    btn.textContent = '=ï¿½ï¿½ï¿½ Verifying...';
+    setVerifyStatus('=ï¿½ï¿½ï¿½ Checking transaction...', 'loading');
 
     var total = updateSummaryTotals();
     var rate  = parseFloat(settings.usd_to_bdt_rate || 110);
     var targetAmt = intlPayMode === 'binance_pay' ? parseFloat((total / rate).toFixed(2)) : window.expectedCryptoAmt;
 
-    // GöÇGöÇ Layer 1: Quick frontend double-spend pre-check GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+    // Gï¿½ï¿½Gï¿½ï¿½ Layer 1: Quick frontend double-spend pre-check Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
     var checkPromise;
     if (CONFIG.DB_PROVIDER === 'supabase') {
         checkPromise = supabaseClient.from('verified_payments').select('id').eq('transaction_id', txid).maybeSingle();
@@ -2239,30 +2239,30 @@ function verifyCryptoPayment() {
     checkPromise
     .then(function(dupRes) {
         if (!dupRes.error && dupRes.data) {
-            setVerifyStatus('G¥î This Transaction ID has already been used! Double-spend rejected.', 'error');
-            btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+            setVerifyStatus('Gï¿½ï¿½ This Transaction ID has already been used! Double-spend rejected.', 'error');
+            btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
             return;
         }
 
-        // GöÇGöÇ Layer 2: Route based on verify_mode GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+        // Gï¿½ï¿½Gï¿½ï¿½ Layer 2: Route based on verify_mode Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
         //
-        // Gÿün+Å cloudflare  GåÆ /api/binance-cf-proxy  (NEW default GÇö Cloudflare Edge)
-        // =ƒöä auto        GåÆ PHP proxy, fail aª¦aª¦aºç Supabase backup (legacy)
-        // =ƒö¦ php_only    GåÆ PHP proxy only, no fallback (legacy)
-        // =ƒƒá supabase_only GåÆ Supabase Edge Function only (legacy)
+        // Gï¿½ï¿½n+ï¿½ cloudflare  Gï¿½ï¿½ /api/binance-cf-proxy  (NEW default Gï¿½ï¿½ Cloudflare Edge)
+        // =ï¿½ï¿½ï¿½ auto        Gï¿½ï¿½ PHP proxy, fail aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ Supabase backup (legacy)
+        // =ï¿½ï¿½ï¿½ php_only    Gï¿½ï¿½ PHP proxy only, no fallback (legacy)
+        // =ï¿½ï¿½ï¿½ supabase_only Gï¿½ï¿½ Supabase Edge Function only (legacy)
         //
-        // aª+aª¼ legacy path aªàaªòaºìaª+aªñ aªåaª¢aºç GÇö aªòaºïaª¿aºï aªòaª+aª¢aºü delete aªòaª¦aª+ aª¦aª»aª+aª¿aª+
+        // aï¿½+aï¿½ï¿½ legacy path aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ Gï¿½ï¿½ aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½ï¿½ delete aï¿½ï¿½aï¿½ï¿½aï¿½+ aï¿½ï¿½aï¿½ï¿½aï¿½+aï¿½ï¿½aï¿½+
 
         var body = intlPayMode === 'binance_pay'
             ? { action: 'verify-pay',     order_ref: txid, expected_amount: targetAmt }
             : { action: 'verify-deposit', tx_hash: txid, coin: intlCoinSymbol, expected_amount: targetAmt };
 
-        // GöÇGöÇ =ƒñù NEW: Hugging Face API (External) GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+        // Gï¿½ï¿½Gï¿½ï¿½ =ï¿½ï¿½ï¿½ NEW: Hugging Face API (External) Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
         if (verifyMode === 'hugging_face') {
             var hfUrl = (settings.hf_api_url || '').trim();
             if (!hfUrl) {
-                setVerifyStatus('G¥î Hugging Face API URL is not configured.', 'error');
-                btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+                setVerifyStatus('Gï¿½ï¿½ Hugging Face API URL is not configured.', 'error');
+                btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
                 return;
             }
 
@@ -2284,22 +2284,22 @@ function verifyCryptoPayment() {
             .then(function(data) {
                 if (data.success || data.status === 'Verified' || data.status === 'verified') {
                     intlVerified = true;
-                    setVerifyStatus('G£à Verified via Hugging Face! Locking payment & placing order...', 'success');
-                    btn.textContent = 'G£à Verified GÇö Placing Order...';
+                    setVerifyStatus('Gï¿½ï¿½ Verified via Hugging Face! Locking payment & placing order...', 'success');
+                    btn.textContent = 'Gï¿½ï¿½ Verified Gï¿½ï¿½ Placing Order...';
                     setTimeout(function() { placeCryptoOrder(txid, targetAmt, false); }, 700);
                 } else {
-                    setVerifyStatus('G¥î Verification failed: ' + (data.error || 'Transaction rejected by Hugging Face API.'), 'error');
-                    btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+                    setVerifyStatus('Gï¿½ï¿½ Verification failed: ' + (data.error || 'Transaction rejected by Hugging Face API.'), 'error');
+                    btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
                 }
             })
             .catch(function(err) {
-                setVerifyStatus('G¥î Hugging Face API unavailable: ' + err.message, 'error');
-                btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+                setVerifyStatus('Gï¿½ï¿½ Hugging Face API unavailable: ' + err.message, 'error');
+                btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
             });
             return;
         }
 
-        // GöÇGöÇ Gÿün+Å NEW: Cloudflare Edge Proxy (Recommended) GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+        // Gï¿½ï¿½Gï¿½ï¿½ Gï¿½ï¿½n+ï¿½ NEW: Cloudflare Edge Proxy (Recommended) Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
         if (verifyMode === 'cloudflare') {
             var cfTimeout = new Promise(function(_, reject) {
                 setTimeout(function() { reject(new Error('timeout')); }, 15000);
@@ -2316,26 +2316,26 @@ function verifyCryptoPayment() {
                 if (data.success) {
                     saveTxidAndPlace(txid, targetAmt, btn, false);
                 } else {
-                    setVerifyStatus('G¥î Verification failed: ' + (data.error || 'Transaction not confirmed on Binance.'), 'error');
-                    btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+                    setVerifyStatus('Gï¿½ï¿½ Verification failed: ' + (data.error || 'Transaction not confirmed on Binance.'), 'error');
+                    btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
                 }
             })
             .catch(function() {
-                // Cloudflare proxy fail aª¦aª¦aºç Supabase backup
-                setVerifyStatus('GÜán+Å Cloudflare proxy unavailable. Switching to Supabase backup...', 'loading');
+                // Cloudflare proxy fail aï¿½ï¿½aï¿½ï¿½aï¿½ï¿½ Supabase backup
+                setVerifyStatus('Gï¿½ï¿½n+ï¿½ Cloudflare proxy unavailable. Switching to Supabase backup...', 'loading');
                 runSupabaseEdgeBackup(txid, targetAmt, btn);
             });
             return;
         }
 
-        // GöÇGöÇ =ƒƒá Supabase Edge Only (legacy) GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+        // Gï¿½ï¿½Gï¿½ï¿½ =ï¿½ï¿½ï¿½ Supabase Edge Only (legacy) Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
         var proxyUrl = (settings.binance_proxy_url || '').trim();
         if (verifyMode === 'supabase_only' || !proxyUrl) {
             runSupabaseEdgeBackup(txid, targetAmt, btn);
             return;
         }
 
-        // GöÇGöÇ =ƒöä Auto / =ƒö¦ PHP Only (legacy) GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+        // Gï¿½ï¿½Gï¿½ï¿½ =ï¿½ï¿½ï¿½ Auto / =ï¿½ï¿½ï¿½ PHP Only (legacy) Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
         var phpTimeout = new Promise(function(_, reject) {
             setTimeout(function() { reject(new Error('timeout')); }, 12000);
         });
@@ -2350,28 +2350,28 @@ function verifyCryptoPayment() {
         ])
         .then(function(data) {
             if (data.success) {
-                // G£à PHP verified via Binance API
+                // Gï¿½ï¿½ PHP verified via Binance API
                 // Now lock in Supabase from frontend (PHP doesn't touch Supabase)
                 saveTxidAndPlace(txid, targetAmt, btn, false);
             } else {
-                setVerifyStatus('G¥î Verification failed: ' + (data.error || 'Transaction not confirmed on Binance.'), 'error');
-                btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+                setVerifyStatus('Gï¿½ï¿½ Verification failed: ' + (data.error || 'Transaction not confirmed on Binance.'), 'error');
+                btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
             }
         })
         .catch(function() {
             if (verifyMode === 'php_only') {
-                // php_only mode GÇö do not fallback
-                setVerifyStatus('G¥î PHP proxy unavailable. Please check cPanel or switch to Auto mode.', 'error');
-                btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+                // php_only mode Gï¿½ï¿½ do not fallback
+                setVerifyStatus('Gï¿½ï¿½ PHP proxy unavailable. Please check cPanel or switch to Auto mode.', 'error');
+                btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
             } else {
-                setVerifyStatus('GÜán+Å Primary unavailable. Switching to Supabase backup...', 'loading');
+                setVerifyStatus('Gï¿½ï¿½n+ï¿½ Primary unavailable. Switching to Supabase backup...', 'loading');
                 runSupabaseEdgeBackup(txid, targetAmt, btn);
             }
         });
     });
 }
 
-// GöÇGöÇ PRIMARY path: PHP verified GåÆ save TxID lock to Supabase GåÆ place order GöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ PRIMARY path: PHP verified Gï¿½ï¿½ save TxID lock to Supabase Gï¿½ï¿½ place order Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function saveTxidAndPlace(txid, usdt, btn, isBackup) {
     var coinVal = intlPayMode === 'binance_pay' ? 'USDT' : intlCoinSymbol;
     var netVal  = intlPayMode === 'binance_pay' ? 'Binance Pay' : intlNetworkName;
@@ -2402,26 +2402,26 @@ function saveTxidAndPlace(txid, usdt, btn, isBackup) {
     }
     insPromise.then(function(insRes) {
         if (insRes.error && insRes.error.code === '23505') {
-            setVerifyStatus('G¥î Transaction ID already recorded. Double-spend blocked.', 'error');
-            btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+            setVerifyStatus('Gï¿½ï¿½ Transaction ID already recorded. Double-spend blocked.', 'error');
+            btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
             return;
         }
         intlVerified = true;
-        setVerifyStatus('G£à Verified on Binance! Locking payment & placing order...', 'success');
-        btn.textContent = 'G£à Verified GÇö Placing Order...';
+        setVerifyStatus('Gï¿½ï¿½ Verified on Binance! Locking payment & placing order...', 'success');
+        btn.textContent = 'Gï¿½ï¿½ Verified Gï¿½ï¿½ Placing Order...';
         setTimeout(function() { placeCryptoOrder(txid, usdt, false); }, 700);
     });
 }
 
-// GöÇGöÇ BACKUP path: Supabase Edge Function (no cPanel/PHP needed) GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ BACKUP path: Supabase Edge Function (no cPanel/PHP needed) Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function runSupabaseEdgeBackup(txid, usdt, btn) {
     var edgeUrl  = (settings.supabase_edge_url || '').trim();
     if (!edgeUrl) {
-        setVerifyStatus('G¥î Supabase Edge Function URL is not configured.', 'error');
-        btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+        setVerifyStatus('Gï¿½ï¿½ Supabase Edge Function URL is not configured.', 'error');
+        btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
         return;
     }
-    setVerifyStatus('=ƒöä Connecting to backup system (Supabase)...', 'loading');
+    setVerifyStatus('=ï¿½ï¿½ï¿½ Connecting to backup system (Supabase)...', 'loading');
 
     var anonKey  = CONFIG.SUPABASE_ANON_KEY;
     var coinVal  = intlPayMode === 'binance_pay' ? 'USDT' : intlCoinSymbol;
@@ -2448,18 +2448,18 @@ function runSupabaseEdgeBackup(txid, usdt, btn) {
     .then(function(data) {
         if (data.success) {
             intlVerified = true;
-            setVerifyStatus('G£à Recorded via Supabase backup. Admin will verify manually. Placing order...', 'success');
-            btn.textContent = 'G£à Recorded GÇö Placing Order...';
+            setVerifyStatus('Gï¿½ï¿½ Recorded via Supabase backup. Admin will verify manually. Placing order...', 'success');
+            btn.textContent = 'Gï¿½ï¿½ Recorded Gï¿½ï¿½ Placing Order...';
             setTimeout(function() { placeCryptoOrder(txid, usdt, true); }, 700);
         } else {
             var errMsg = data.message || 'Backup verification failed.';
-            setVerifyStatus('G¥î ' + errMsg, 'error');
-            btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+            setVerifyStatus('Gï¿½ï¿½ ' + errMsg, 'error');
+            btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
         }
     })
     .catch(function(err) {
-        setVerifyStatus('GÜán+Å Both systems unavailable. Please check your internet and try again.', 'error');
-        btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+        setVerifyStatus('Gï¿½ï¿½n+ï¿½ Both systems unavailable. Please check your internet and try again.', 'error');
+        btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
     });
 }
 
@@ -2525,9 +2525,9 @@ function placeCryptoOrder(txid, usdt, isBackup) {
     }
     insertOrderPromise.then(function(r) {
         if (r.error) {
-            setVerifyStatus('G¥î Order save error: ' + r.error.message, 'error');
+            setVerifyStatus('Gï¿½ï¿½ Order save error: ' + r.error.message, 'error');
             var btn = document.getElementById('verifyCryptoBtn');
-            btn.disabled = false; btn.textContent = 'G£à Verify & Pay';
+            btn.disabled = false; btn.textContent = 'Gï¿½ï¿½ Verify & Pay';
             return;
         }
         // Update verified_payments with real order_id
@@ -2550,11 +2550,11 @@ function placeCryptoOrder(txid, usdt, isBackup) {
     });
 }
 
-// GöÇGöÇ Utils GöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇGöÇ
+// Gï¿½ï¿½Gï¿½ï¿½ Utils Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½Gï¿½ï¿½
 function copyElementText(elId) {
     var el = document.getElementById(elId);
     if (!el) return;
-    var text = (el.textContent || el.innerText || '').replace(/[aº¦]/g, '').trim();
+    var text = (el.textContent || el.innerText || '').replace(/[aï¿½ï¿½]/g, '').trim();
 
     var fallback = function() {
         var ta = document.createElement('textarea');

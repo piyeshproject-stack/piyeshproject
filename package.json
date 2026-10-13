@@ -4,6 +4,7 @@
   "description": "Freelancing By Rifat E-commerce Platform",
   "main": "index.html",
   "scripts": {
+    "build": "node build.js",
     "start": "http-server . -p 3000",
     "dev": "http-server . -p 3000"
   },

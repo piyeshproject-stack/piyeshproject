@@ -3,11 +3,18 @@ const path = require('path');
 
 const s = (val) => (val || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
+// ── Template / Site Version from Cloudflare Env Var (v1 বা v2) ──
+const rawVersion = (process.env.TEMPLATE_VERSION || process.env.VERSION || process.env.SITE_VERSION || process.env.THEME_VERSION || 'v1').toString().trim().toLowerCase();
+const templateVersion = (rawVersion === 'v2' || rawVersion === '2') ? 'v2' : 'v1';
+
 const configJs = `// ============================================================
 // Auto-generated during Cloudflare Build
 // ============================================================
 
 var CONFIG = {
+    // ── Template / Site Version (Cloudflare Env Var: v1 বা v2) ──
+    TEMPLATE_VERSION: '${templateVersion}',
+
     // ── DB Provider ──────────────────────────────────────────
     DB_PROVIDER: '${s(process.env.DB_PROVIDER) || 'cf_db'}',
     
@@ -38,14 +45,31 @@ var CONFIG = {
 
 const configPath = path.join(__dirname, 'assets', 'js', 'config.js');
 fs.writeFileSync(configPath, configJs, 'utf8');
-console.log('✅ assets/js/config.js generated successfully during build!');
+console.log('✅ assets/js/config.js generated successfully during build with TEMPLATE_VERSION: ' + templateVersion);
 
-// Clean up old _redirects if it exists (since we no longer use CF Workers Proxy)
-const redirectsPath = path.join(__dirname, '_redirects');
-if (fs.existsSync(redirectsPath)) {
-    fs.unlinkSync(redirectsPath);
-    console.log('✅ Old _redirects file removed successfully!');
-}
+// Sync layout-config.js with active version
+const layoutConfigPath = path.join(__dirname, 'assets', 'js', 'layout-config.js');
+const layoutConfigJs = `// Auto-synced during build from Cloudflare Env Var (TEMPLATE_VERSION)
+window.THEME_LAYOUT = { 
+    hero: (typeof CONFIG !== 'undefined' && CONFIG.TEMPLATE_VERSION) ? CONFIG.TEMPLATE_VERSION : '${templateVersion}' 
+};
+
+window.initTawkTo = function(url) {
+    if (!url || window.Tawk_API) return;
+    window.Tawk_API = window.Tawk_API || {};
+    window.Tawk_LoadStart = new Date();
+    var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
+    s1.async = true;
+    s1.src = url;
+    s1.charset = "UTF-8";
+    s1.setAttribute("crossorigin","*");
+    s0.parentNode.insertBefore(s1,s0);
+};
+`;
+fs.writeFileSync(layoutConfigPath, layoutConfigJs, 'utf8');
+console.log('✅ assets/js/layout-config.js synced successfully during build!');
+
+// Clean up old _redirects if needed (disabled to avoid dirty git status)
 
 // ── Cache Busting for HTML files ──
 const timestamp = Date.now();

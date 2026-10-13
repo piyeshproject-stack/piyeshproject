@@ -13,7 +13,7 @@ export async function onRequestPost(context) {
 
         const body = await request.json();
         const cssPayload = body.css_payload;
-        const layoutPayload = body.layout_payload || "window.THEME_LAYOUT = { hero: 'v2' };";
+        const layoutPayload = body.layout_payload || "window.THEME_LAYOUT = { hero: (typeof CONFIG !== 'undefined' && CONFIG.TEMPLATE_VERSION) ? CONFIG.TEMPLATE_VERSION : 'v1' };";
 
         if (!cssPayload) {
             return new Response(JSON.stringify({ error: "Missing css_payload in request." }), { status: 400, headers: CORS });

@@ -7,23 +7,16 @@
     <meta name="description" content="Best quality products at the best prices. Shop now at Freelancing By Rifat.">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
-    <script>
-        var cacheBuster = Date.now();
-        document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + cacheBuster + '">');
-        document.write('<script src="assets/js/layout-config.js?v=' + cacheBuster + '"><\/script>');
-        document.write('<script src="assets/js/template-v2.js?v=' + cacheBuster + '"><\/script>');
-    </script>
-    <script src="assets/js/config.js?v=1791100000002"></script>
+    <link rel="stylesheet" href="assets/css/theme.css">
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/layout-config.js"></script>
+    <script src="assets/js/template-v2.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
     <script src="assets/js/appwrite-init.js"></script>
     <link rel="stylesheet" href="assets/css/premium-icons.css">
-    <script>
-        if (window.THEME_LAYOUT && window.THEME_LAYOUT.hero === 'v2') {
-            document.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">');
-        }
-    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" type="module"></script>
 </head>
 <body>
@@ -273,7 +266,7 @@ function loadSiteData() {
         p4 = pubDataPromise.then(d => ({ data: d ? d.products.map(p => { p.gallery_images = (typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : p.gallery_images); p.variants = (typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants); return p; }) : [] }));
         p5 = pubDataPromise.then(d => ({ data: d ? d.home_sections : [] }));
         p6 = pubDataPromise.then(d => ({ data: d ? d.product_categories : [] }));
-        p7 = Promise.resolve({ data: null }); // devtools removed — maintenance mode uses CONFIG env var
+        p7 = pubDataPromise.then(d => ({ data: d ? d.template_version : null }));
     } else {
         p1 = Promise.resolve({ data: {} });
         p2 = Promise.resolve({ data: [] });
@@ -281,16 +274,17 @@ function loadSiteData() {
         p4 = Promise.resolve({ data: [] });
         p5 = Promise.resolve({ data: [] });
         p6 = Promise.resolve({ data: [] });
-        p7 = Promise.resolve({ data: {} });
+        p7 = Promise.resolve({ data: null });
     }
 
     Promise.all([p1, p2, p3, p4, p5, p6, p7]).then(function(results) {
-        var settings    = results[0].data || {};
-        var banners     = results[1].data || [];
-        var cats        = results[2].data || [];
-        allProducts     = results[3].data || [];
-        var homeSects   = results[4].data || [];
-        var prodCats    = results[5].data || [];
+        var settings        = results[0].data || {};
+        var banners         = results[1].data || [];
+        var cats            = results[2].data || [];
+        allProducts         = results[3].data || [];
+        var homeSects       = results[4].data || [];
+        var prodCats        = results[5].data || [];
+        var runtimeVersion  = results[6] ? results[6].data : null;
 
         // Attach category_ids to each product
         allProducts.forEach(function(p) {
@@ -308,9 +302,28 @@ function loadSiteData() {
 
         applySettings(settings);
         
-        if (window.THEME_LAYOUT && window.THEME_LAYOUT.hero === 'v2') {
+        // ═ CLOUDFLARE ENV VAR: TEMPLATE VERSION (v1 বা v2) ═
+        var chosenVersion = (runtimeVersion || (typeof CONFIG !== 'undefined' && CONFIG.TEMPLATE_VERSION) || (window.THEME_LAYOUT && window.THEME_LAYOUT.hero) || 'v1').toString().trim().toLowerCase();
+        var isV2 = (chosenVersion === 'v2' || chosenVersion === '2');
+
+        if (isV2) {
             initV2Theme(banners, cats, homeSects);
         } else {
+            // Ensure V1 layout elements are clean and visible
+            var oldV2 = document.getElementById('v2-theme-wrapper');
+            if (oldV2) oldV2.remove();
+            var mainNav = document.getElementById('mainNavbar');
+            if (mainNav) mainNav.style.display = '';
+            var mainEl = document.querySelector('main');
+            if (mainEl) mainEl.style.display = '';
+            var footerEl = document.getElementById('mainFooter');
+            if (footerEl) {
+                footerEl.style.display = '';
+                document.body.appendChild(footerEl);
+            }
+            var mobileNav = document.querySelector('.mobile-bottom-nav');
+            if (mobileNav) mobileNav.style.display = '';
+
             renderHero(banners);
             renderCategories(cats);
             renderFlashDeals();

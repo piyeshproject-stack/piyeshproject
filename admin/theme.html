@@ -6,9 +6,9 @@
     <title>Theme Customizer — Admin Panel</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/admin.css">
-    <script>document.write('<link rel="stylesheet" href="../assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script>document.write('<script src="../assets/js/layout-config.js?v=' + Date.now() + '"><\/script>');</script>
-    <script src="../assets/js/config.js?v=1782024132023"></script>
+    <link rel="stylesheet" href="../assets/css/theme.css">
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/layout-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
@@ -163,20 +163,21 @@
                 </div>
 
                 <div class="form-group" style="margin-top:16px;">
-                    <label class="form-label">Site Template Version</label>
+                    <label class="form-label">Site Template Version (Cloudflare Variable: <code>TEMPLATE_VERSION</code>)</label>
                     <select id="themeLayout" class="form-input" onchange="updateThemePreview()">
                         <option value="v1">Version 1 (Classic Style)</option>
                         <option value="v2">Version 2 (Modern Tailwind Style)</option>
                     </select>
+                    <small style="color:#666; display:block; margin-top:6px; font-size:12px; line-height:1.5;">
+                        ℹ️ <b>ক্লাউডফ্লেয়ার এনভায়রনমেন্ট ভ্যারিয়েবল:</b> লাইভ সাইটের ভার্সন পরিবর্তন করতে Cloudflare Pages ড্যাশবোর্ডে গিয়ে <code>TEMPLATE_VERSION</code> ভ্যারিয়েবলে <code>v1</code> অথবা <code>v2</code> সেট করুন। নিচের ড্রপডাউনটি দিয়ে আপনি দেখতে পারবেন আপনার নির্বাচিত কালারগুলো কোন ভার্সনে কেমন দেখাবে।
+                    </small>
                     <script>
-                        // Try to auto-select current layout if available
+                        // Auto-detect current active layout
                         setTimeout(() => {
-                            if(window.THEME_LAYOUT && window.THEME_LAYOUT.hero) {
-                                document.getElementById('themeLayout').value = window.THEME_LAYOUT.hero;
-                            } else {
-                                document.getElementById('themeLayout').value = 'v2'; // default
-                            }
-                        }, 500);
+                            var detectedVersion = (typeof CONFIG !== 'undefined' && CONFIG.TEMPLATE_VERSION) || (window.THEME_LAYOUT && window.THEME_LAYOUT.hero) || 'v1';
+                            var el = document.getElementById('themeLayout');
+                            if (el) el.value = (detectedVersion.toString().toLowerCase() === 'v2' || detectedVersion.toString() === '2') ? 'v2' : 'v1';
+                        }, 300);
                     </script>
                 </div>
 
@@ -524,9 +525,7 @@
         var apiUrl = (CONFIG.HF_API_BASE ? CONFIG.HF_API_BASE.replace(/\/+$/, '') : '') + '/api/admin/update-theme';
         var token = localStorage.getItem('admin_token') || '';
 
-        var themeLayout = document.getElementById('themeLayout');
-        var layoutMode = themeLayout ? themeLayout.value : 'v2';
-        var layoutPayload = "window.THEME_LAYOUT = { hero: \"" + layoutMode + "\" };\n\nwindow.initTawkTo = function(url) {\n    if (!url || window.Tawk_API) return;\n    window.Tawk_API = window.Tawk_API || {};\n    window.Tawk_LoadStart = new Date();\n    var s1 = document.createElement(\"script\"), s0 = document.getElementsByTagName(\"script\")[0];\n    s1.async = true;\n    s1.src = url;\n    s1.charset = \"UTF-8\";\n    s1.setAttribute(\"crossorigin\",\"*\");\n    s0.parentNode.insertBefore(s1,s0);\n};";
+        var layoutPayload = "// Auto-synced from Cloudflare Env Var (TEMPLATE_VERSION)\nwindow.THEME_LAYOUT = { hero: (typeof CONFIG !== 'undefined' && CONFIG.TEMPLATE_VERSION) ? CONFIG.TEMPLATE_VERSION : 'v1' };\n\nwindow.initTawkTo = function(url) {\n    if (!url || window.Tawk_API) return;\n    window.Tawk_API = window.Tawk_API || {};\n    window.Tawk_LoadStart = new Date();\n    var s1 = document.createElement(\"script\"), s0 = document.getElementsByTagName(\"script\")[0];\n    s1.async = true;\n    s1.src = url;\n    s1.charset = \"UTF-8\";\n    s1.setAttribute(\"crossorigin\",\"*\");\n    s0.parentNode.insertBefore(s1,s0);\n};";
 
         fetch(apiUrl, {
             method: 'POST',

@@ -3,9 +3,13 @@
 // ============================================================
 
 var CONFIG = {
+    // ── Template / Site Version (Cloudflare Env Var: v1 বা v2) ──
+    TEMPLATE_VERSION: 'v1',
+
     // ── DB Provider ──────────────────────────────────────────
     DB_PROVIDER: 'cf_db',
-    HF_API_BASE: '', // Empty string to use relative /api/ endpoints on the same domain
+    
+    HF_API_BASE: '',
 
     // ── Supabase ─────────────────────────────────────────────
     SUPABASE_URL:      '',
@@ -16,7 +20,11 @@ var CONFIG = {
     APPWRITE_PROJECT:     '',
     APPWRITE_DATABASE_ID: '',
 
-    // (Tokens are now securely hidden in the Hugging Face backend!)
+    // (Tokens are securely hidden in the Hugging Face backend)
+
+    // ── Maintenance Mode (Cloudflare Env Var দিয়ে নিয়ন্ত্রণ) ──
+    MAINTENANCE_MODE:    false,
+    MAINTENANCE_MESSAGE: 'আমরা শীঘ্রই ফিরে আসছি। কিছু technical কাজ চলছে।',
 
     // ── Frontend Constants ───────────────────────────────────
     CART_KEY:         'fbr_cart',

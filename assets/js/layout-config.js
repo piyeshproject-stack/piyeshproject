@@ -1,4 +1,7 @@
-window.THEME_LAYOUT = { hero: "v1" };
+// Auto-synced during build from Cloudflare Env Var (TEMPLATE_VERSION)
+window.THEME_LAYOUT = { 
+    hero: (typeof CONFIG !== 'undefined' && CONFIG.TEMPLATE_VERSION) ? CONFIG.TEMPLATE_VERSION : 'v1' 
+};
 
 window.initTawkTo = function(url) {
     if (!url || window.Tawk_API) return;

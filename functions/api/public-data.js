@@ -12,6 +12,10 @@ export async function onRequestGet(context) {
 
         const [settings, banners, categories, products, home_sections, product_categories] = await env.DB.batch([p1, p2, p3, p4, p5, p6]);
 
+        // Cloudflare Env Var থেকে ভার্সন নির্বাচন (TEMPLATE_VERSION বা VERSION)
+        const rawVersion = (env.TEMPLATE_VERSION || env.VERSION || env.SITE_VERSION || env.THEME_VERSION || '').toString().trim().toLowerCase();
+        const templateVersion = (rawVersion === 'v2' || rawVersion === '2') ? 'v2' : (rawVersion === 'v1' || rawVersion === '1' ? 'v1' : null);
+
         const data = {
             settings: (settings.results && settings.results.length) ? settings.results[0] : {},
             banners: banners.results || [],
@@ -20,6 +24,7 @@ export async function onRequestGet(context) {
             home_sections: home_sections.results || [],
             product_categories: product_categories.results || [],
             tawk_widget_url: env.TAWK_WIDGET_URL || null,
+            template_version: templateVersion,
         };
 
         return new Response(JSON.stringify({ success: true, data }), {
