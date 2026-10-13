@@ -525,8 +525,6 @@
         var apiUrl = (CONFIG.HF_API_BASE ? CONFIG.HF_API_BASE.replace(/\/+$/, '') : '') + '/api/admin/update-theme';
         var token = localStorage.getItem('admin_token') || '';
 
-        var layoutPayload = "// Auto-synced from Cloudflare Env Var (TEMPLATE_VERSION)\nwindow.THEME_LAYOUT = { hero: (typeof CONFIG !== 'undefined' && CONFIG.TEMPLATE_VERSION) ? CONFIG.TEMPLATE_VERSION : 'v1' };\n\nwindow.initTawkTo = function(url) {\n    if (!url || window.Tawk_API) return;\n    window.Tawk_API = window.Tawk_API || {};\n    window.Tawk_LoadStart = new Date();\n    var s1 = document.createElement(\"script\"), s0 = document.getElementsByTagName(\"script\")[0];\n    s1.async = true;\n    s1.src = url;\n    s1.charset = \"UTF-8\";\n    s1.setAttribute(\"crossorigin\",\"*\");\n    s0.parentNode.insertBefore(s1,s0);\n};";
-
         fetch(apiUrl, {
             method: 'POST',
             headers: {
@@ -534,8 +532,7 @@
                 'Authorization': 'Bearer ' + token
             },
             body: JSON.stringify({ 
-                css_payload: css,
-                layout_payload: layoutPayload 
+                css_payload: css
             })
         })
         .then(function(res) { return res.json(); })

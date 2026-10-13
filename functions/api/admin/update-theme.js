@@ -42,8 +42,7 @@ export async function onRequestPost(context) {
             body: JSON.stringify({
                 ref: 'main',
                 inputs: {
-                    css_payload: cssPayload,
-                    layout_payload: layoutPayload
+                    css_payload: cssPayload
                 }
             })
         });
