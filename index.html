@@ -240,7 +240,7 @@ function loadSiteData() {
                 // Force clear cache if old structure or version changed
                 if (cachedStr) {
                     const cachedObj = JSON.parse(cachedStr);
-                    if (cachedObj.version !== 2 || Date.now() - cachedObj.time > 2 * 60 * 1000) { 
+                    if (cachedObj.version !== 3 || !cachedObj.data || cachedObj.data.template_version === undefined || Date.now() - cachedObj.time > 2 * 60 * 1000) { 
                         localStorage.removeItem('__fbr_public_data');
                     } else {
                         return cachedObj.data;
@@ -250,7 +250,7 @@ function loadSiteData() {
             try {
                 const res = await fetch((CONFIG.HF_API_BASE||"")+"/api/public-data").then(r => r.json());
                 if (res.success) {
-                    localStorage.setItem('__fbr_public_data', JSON.stringify({ version: 2, time: Date.now(), data: res.data }));
+                    localStorage.setItem('__fbr_public_data', JSON.stringify({ version: 3, time: Date.now(), data: res.data }));
                     return res.data;
                 }
             } catch(e) {}
