@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="assets/css/admin.css">
     <script>document.write('<link rel="stylesheet" href="../assets/css/theme.css?v=' + Date.now() + '">');</script>
     
-    <script src="../assets/js/config.js?v=1791913142855"></script>
+    <script src="../assets/js/config.js?v=1791920020317"></script>
     <script src="assets/js/admin-common.js?v=5"></script>
     <link rel="stylesheet" href="../assets/css/premium-icons.css">
     
@@ -95,6 +95,18 @@
             <table class="env-table">
                 <thead><tr><th>Variable Name</th><th>Example Value</th><th>Help</th></tr></thead>
                 <tbody>
+                    <!-- SITE TEMPLATE & BRAND COLORS -->
+                    <tr>
+                        <td><span class="var-name">TEMPLATE_VERSION</span><span class="badge-new">Layout</span></td>
+                        <td><span class="var-example">v1 বা v2</span></td>
+                        <td><button class="tooltip-btn" onclick="showInfo('TEMPLATE_VERSION', 'Template Version', 'v1 দিলে ক্লাসিক লেআউট এবং v2 দিলে মডার্ন টেইলউইন্ড লেআউট লোড হবে। ডিফল্ট: v1')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td><span class="var-name">BRAND_COLORS</span><span class="badge-new">Colors</span></td>
+                        <td><span class="var-example">{"primary":"#8B1A1A",...}</span></td>
+                        <td><button class="tooltip-btn" onclick="showInfo('BRAND_COLORS', 'Brand Colors Code', 'Theme Customizer (/admin/theme.html) থেকে Generate Brand Color Code ক্লিক করে প্রাপ্ত JSON কোডটি এখানে পেস্ট করুন।')"><i data-lucide="help-circle" class="lucide-icon"></i></button></td>
+                    </tr>
+
                     <!-- CORE EXISTING VARS -->
                     <tr>
                         <td><span class="var-name">ADMIN_USERNAME</span><span class="badge-core">Core</span></td>

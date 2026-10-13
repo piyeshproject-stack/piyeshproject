@@ -39,9 +39,9 @@
                 
             <!-- Theme Settings -->
             <div class="card" style="margin-bottom:20px;">
-                <div class="settings-section-title"><i data-lucide="palette" class="lucide-icon"></i> Theme Customizer (Github Deploy Hook)</div>
-                <div style="font-size:11px; color:#ff9500; margin-bottom:12px; font-weight:600; padding:8px; background:rgba(255,149,0,0.1); border-radius:6px;">
-                    ⚠️ Saving theme will directly edit your Github CSS file and trigger a full Cloudflare Pages Rebuild (Takes ~2-3 mins).
+                <div class="settings-section-title"><i data-lucide="palette" class="lucide-icon"></i> Theme & Brand Colors Customizer</div>
+                <div style="font-size:12px; color:#0369a1; margin-bottom:14px; font-weight:600; padding:10px 14px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; line-height:1.5;">
+                    💡 <b>ক্লাউডফ্লেয়ার ভ্যারিয়েবল সিস্টেম:</b> গিটহাবে কোনো পুশ করা লাগবে না। নিচে আপনার পছন্দমতো ব্র্যান্ড কালার বেছে নিয়ে <b>"📋 Generate Brand Color Code"</b> বাটনে চাপ দিন। পপআপে আসা কোডটি কপি করে ডেভেলপারকে পাঠান অথবা Cloudflare Pages-এর <code>BRAND_COLORS</code> ভ্যারিয়েবলে সেট করে দিন।
                 </div>
                 
                 <div class="form-group">
@@ -216,8 +216,8 @@
                 </div>
 
                 <div style="display:flex; gap:12px; margin-top:20px;">
-                    <button type="button" class="btn btn-outline" style="width:50%; border-color:#FF4D4D; color:#FF4D4D;" onclick="resetThemeToDefault()">Reset to Default</button>
-                    <button type="button" class="btn btn-primary" style="width:50%;" onclick="saveThemeToGithub()">🚀 Push Theme & Rebuild Site</button>
+                    <button type="button" class="btn btn-outline" style="width:40%; border-color:#FF4D4D; color:#FF4D4D;" onclick="resetThemeToDefault()">↺ Reset to Default</button>
+                    <button type="button" class="btn btn-primary" style="width:60%;" onclick="generateThemeVariableCode()">📋 Generate Brand Color Code</button>
                 </div>
             </div>
 
@@ -240,7 +240,33 @@
                     <div id="colorPreviewBox" style="width:36px; height:36px; border-radius:8px; border:1px solid #ddd; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.1);"></div>
                     <span id="colorPreviewHex" style="font-family:monospace; font-weight:700; font-size:16px;">#FFFFFF</span>
                 </div>
-                <button type="button" id="colorPickerConfirmBtn" class="btn btn-primary" style="border-radius:30px; padding:8px 24px;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Brand Color Variable Modal -->
+    <div id="themeExportModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:999999; flex-direction:column; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px);">
+        <div style="background:#fff; border-radius:16px; padding:24px; max-width:540px; width:100%; display:flex; flex-direction:column; box-shadow:0 20px 50px rgba(0,0,0,0.3); border:1px solid rgba(0,0,0,0.08);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                <div>
+                    <h3 style="margin:0; font-size:18px; font-weight:700; color:#1e293b;">📩 Please send this text to the developer</h3>
+                    <p style="margin:6px 0 0 0; font-size:13px; color:#64748b; line-height:1.4;">
+                        নিচের কোডটি কপি করে ডেভেলপারকে পাঠান অথবা Cloudflare Pages-এর <code>BRAND_COLORS</code> ভ্যারিয়েবলে সেট করে দিন। সাইট নিজে থেকেই এই কালারগুলো রিড করে নিবে!
+                    </p>
+                </div>
+                <button type="button" onclick="closeThemeExportModal()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#94a3b8; padding:0 4px; line-height:1;">&times;</button>
+            </div>
+
+            <div style="margin:12px 0 8px 0; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:12px; font-weight:700; color:#2563eb; background:#eff6ff; padding:3px 8px; border-radius:6px;">🏷️ Cloudflare Variable: BRAND_COLORS</span>
+                <span style="font-size:11px; color:#94a3b8;">Click below to select all</span>
+            </div>
+
+            <textarea id="themeExportCode" readonly onclick="this.select()" style="width:100%; height:110px; font-family:monospace; font-size:12px; padding:12px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc; color:#0f172a; resize:none; outline:none; box-sizing:border-box; word-break:break-all; line-height:1.5;"></textarea>
+
+            <div style="display:flex; gap:10px; margin-top:16px;">
+                <button type="button" class="btn btn-outline" onclick="closeThemeExportModal()" style="width:30%; padding:10px;">Close</button>
+                <button type="button" id="themeCopyBtn" class="btn btn-primary" onclick="copyThemeExportCode()" style="width:70%; padding:10px; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px;">📋 Copy Code</button>
             </div>
         </div>
     </div>
@@ -291,42 +317,78 @@
             };
         }
 
-        // 2.5 Load current theme colors from live CSS file
-        fetch('../assets/css/theme.css?v=' + Date.now())
-        .then(function(res) { return res.text(); })
-        .then(function(css) {
-            var map = {
-                '--primary': 'themePrimary',
-                '--primary-light': 'themePrimaryLight',
-                '--primary-dark': 'themePrimaryDark',
-                '--bg': 'themeBg',
-                '--bg-light': 'themeBgLight',
-                '--bg-card': 'themeBgCard',
-                '--bg-subtle': 'themeBgSubtle',
-                '--footer-bg': 'themeFooterBg',
-                '--border': 'themeBorder',
-                '--border-light': 'themeBorderLight',
-                '--text-dark': 'themeTextDark',
-                '--text-body': 'themeTextBody',
-                '--text-muted': 'themeTextMuted'
-            };
-            
-            for(var key in map) {
-                var regex = new RegExp(key + "\\s*:\\s*(#[0-9a-fA-F]{3,8})", "i");
-                var match = css.match(regex);
-                if(match && match[1]) {
-                    var el = document.getElementById(map[key]);
-                    var elHex = document.getElementById(map[key] + 'Hex');
-                    if(el) el.value = match[1].toLowerCase();
-                    if(elHex) elHex.value = match[1].toLowerCase();
+        // 2.5 Load saved custom colors or fetch live CSS
+        var customLoaded = false;
+        try {
+            var rawSaved = localStorage.getItem('fbr_admin_theme_custom') || localStorage.getItem('fbr_brand_colors') || (typeof CONFIG !== 'undefined' ? CONFIG.BRAND_COLORS : null);
+            if (rawSaved) {
+                var parsed = (typeof rawSaved === 'string') ? JSON.parse(rawSaved) : rawSaved;
+                var idMap = {
+                    'primary': 'themePrimary',
+                    'primary_light': 'themePrimaryLight',
+                    'primaryDark': 'themePrimaryDark',
+                    'primary_dark': 'themePrimaryDark',
+                    'bg': 'themeBg',
+                    'bg_light': 'themeBgLight',
+                    'bg_card': 'themeBgCard',
+                    'bg_subtle': 'themeBgSubtle',
+                    'footer_bg': 'themeFooterBg',
+                    'border': 'themeBorder',
+                    'border_light': 'themeBorderLight',
+                    'text_dark': 'themeTextDark',
+                    'text_body': 'themeTextBody',
+                    'text_muted': 'themeTextMuted'
+                };
+                for (var k in idMap) {
+                    if (parsed[k]) {
+                        var el = document.getElementById(idMap[k]);
+                        var elHex = document.getElementById(idMap[k] + 'Hex');
+                        if (el) el.value = parsed[k];
+                        if (elHex) elHex.value = parsed[k].toUpperCase();
+                        customLoaded = true;
+                    }
                 }
+                if (customLoaded) updateThemePreview();
             }
-            updateThemePreview();
-        })
-        .catch(function(e) {
-            console.warn("Could not load existing theme CSS", e);
-            updateThemePreview();
-        });
+        } catch(e) {}
+
+        if (!customLoaded) {
+            fetch('../assets/css/theme.css?v=' + Date.now())
+            .then(function(res) { return res.text(); })
+            .then(function(css) {
+                var map = {
+                    '--primary': 'themePrimary',
+                    '--primary-light': 'themePrimaryLight',
+                    '--primary-dark': 'themePrimaryDark',
+                    '--bg': 'themeBg',
+                    '--bg-light': 'themeBgLight',
+                    '--bg-card': 'themeBgCard',
+                    '--bg-subtle': 'themeBgSubtle',
+                    '--footer-bg': 'themeFooterBg',
+                    '--border': 'themeBorder',
+                    '--border-light': 'themeBorderLight',
+                    '--text-dark': 'themeTextDark',
+                    '--text-body': 'themeTextBody',
+                    '--text-muted': 'themeTextMuted'
+                };
+                
+                for(var key in map) {
+                    var regex = new RegExp(key + "\\s*:\\s*(#[0-9a-fA-F]{3,8})", "i");
+                    var match = css.match(regex);
+                    if(match && match[1]) {
+                        var el = document.getElementById(map[key]);
+                        var elHex = document.getElementById(map[key] + 'Hex');
+                        if(el) el.value = match[1].toLowerCase();
+                        if(elHex) elHex.value = match[1].toLowerCase();
+                    }
+                }
+                updateThemePreview();
+            })
+            .catch(function(e) {
+                console.warn("Could not load existing theme CSS", e);
+                updateThemePreview();
+            });
+        }
     });
 
     // 3. Simple Live Preview Function
@@ -479,79 +541,85 @@
         else alert("✅ Reset to defaults! Click Push Theme to save.");
     }
 
-    // 5. Save to Github
-    function saveThemeToGithub() {
-        var pri = document.getElementById('themePrimary').value;
-        var priL = document.getElementById('themePrimaryLight').value;
-        var priD = document.getElementById('themePrimaryDark').value;
-        
-        var bg = document.getElementById('themeBg').value;
-        var bgL = document.getElementById('themeBgLight').value;
-        var bgC = document.getElementById('themeBgCard').value;
-        var bgS = document.getElementById('themeBgSubtle').value;
-        var footerBg = document.getElementById('themeFooterBg').value;
-        
-        var border = document.getElementById('themeBorder').value;
-        var borderL = document.getElementById('themeBorderLight').value;
-        
-        var textD = document.getElementById('themeTextDark').value;
-        var textB = document.getElementById('themeTextBody').value;
-        var textM = document.getElementById('themeTextMuted').value;
-        
-        var css = ":root { ";
-        css += "--primary: " + pri + "; ";
-        css += "--primary-light: " + priL + "; ";
-        css += "--primary-dark: " + priD + "; ";
-        
-        css += "--bg: " + bg + "; ";
-        css += "--bg-light: " + bgL + "; ";
-        css += "--bg-card: " + bgC + "; ";
-        css += "--bg-subtle: " + bgS + "; ";
-        css += "--footer-bg: " + footerBg + "; ";
-        
-        css += "--border: " + border + "; ";
-        css += "--border-light: " + borderL + "; ";
-        
-        css += "--text-dark: " + textD + "; ";
-        css += "--text-body: " + textB + "; ";
-        css += "--text-muted: " + textM + "; ";
-        css += "}";
-        
-        var btn = document.querySelector('.btn-primary');
-        var originalText = btn.textContent;
-        btn.textContent = "⏳ Triggering Rebuild...";
-        btn.disabled = true;
-        
-        var apiUrl = (CONFIG.HF_API_BASE ? CONFIG.HF_API_BASE.replace(/\/+$/, '') : '') + '/api/admin/update-theme';
-        var token = localStorage.getItem('admin_token') || '';
+    // 5. Generate Variable Code & Show Modal
+    function generateThemeVariableCode() {
+        var themeData = {
+            primary: document.getElementById('themePrimary').value,
+            primary_light: document.getElementById('themePrimaryLight').value,
+            primary_dark: document.getElementById('themePrimaryDark').value,
+            bg: document.getElementById('themeBg').value,
+            bg_light: document.getElementById('themeBgLight').value,
+            bg_card: document.getElementById('themeBgCard').value,
+            bg_subtle: document.getElementById('themeBgSubtle').value,
+            footer_bg: document.getElementById('themeFooterBg').value,
+            border: document.getElementById('themeBorder').value,
+            border_light: document.getElementById('themeBorderLight').value,
+            text_dark: document.getElementById('themeTextDark').value,
+            text_body: document.getElementById('themeTextBody').value,
+            text_muted: document.getElementById('themeTextMuted').value
+        };
 
-        fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
-            },
-            body: JSON.stringify({ 
-                css_payload: css
-            })
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if(data.success) {
-                if(typeof showToast === 'function') showToast("✅ Github Rebuild Triggered! Wait 2-3 mins.", "success");
-                else alert("✅ Rebuild Triggered!");
-            } else {
-                if(typeof showToast === 'function') showToast("❌ Error: " + data.error, "error");
-                else alert("❌ Error: " + data.error);
+        var jsonString = JSON.stringify(themeData);
+        
+        try {
+            localStorage.setItem('fbr_admin_theme_custom', jsonString);
+            if (typeof window.applyBrandColors === 'function') {
+                window.applyBrandColors(jsonString);
             }
-        })
-        .catch(function(err) {
-            alert("Network Error: " + err.message);
-        })
-        .finally(function() {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        });
+        } catch(e) {}
+
+        var codeBox = document.getElementById('themeExportCode');
+        if (codeBox) codeBox.value = jsonString;
+
+        var modal = document.getElementById('themeExportModal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function copyThemeExportCode() {
+        var codeBox = document.getElementById('themeExportCode');
+        var btn = document.getElementById('themeCopyBtn');
+        if (!codeBox) return;
+
+        codeBox.select();
+        codeBox.setSelectionRange(0, 99999);
+
+        var textToCopy = codeBox.value;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textToCopy).then(onCopied).catch(fallbackCopy);
+        } else {
+            fallbackCopy();
+        }
+
+        function fallbackCopy() {
+            try {
+                document.execCommand('copy');
+                onCopied();
+            } catch(e) {
+                alert("Failed to copy. Please manually copy the code.");
+            }
+        }
+
+        function onCopied() {
+            if (btn) {
+                var prevText = btn.innerHTML;
+                btn.innerHTML = "✅ Copied to Clipboard!";
+                btn.style.background = "#10b981";
+                btn.style.borderColor = "#10b981";
+                setTimeout(function() {
+                    btn.innerHTML = prevText;
+                    btn.style.background = "";
+                    btn.style.borderColor = "";
+                }, 2500);
+            }
+            if (typeof showToast === 'function') {
+                showToast("✅ কোড কপি সম্পন্ন! এটি ডেভেলপারকে পাঠিয়ে দিন।", "success");
+            }
+        }
+    }
+
+    function closeThemeExportModal() {
+        var modal = document.getElementById('themeExportModal');
+        if (modal) modal.style.display = 'none';
     }
     </script>
 </body>

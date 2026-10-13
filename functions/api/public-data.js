@@ -16,6 +16,9 @@ export async function onRequestGet(context) {
         const rawVersion = (env.TEMPLATE_VERSION || env.VERSION || env.SITE_VERSION || env.THEME_VERSION || '').toString().trim().toLowerCase();
         const templateVersion = (rawVersion === 'v2' || rawVersion === '2') ? 'v2' : (rawVersion === 'v1' || rawVersion === '1' ? 'v1' : null);
 
+        // Cloudflare Env Var থেকে ব্র্যান্ড কালার নির্বাচন (BRAND_COLORS বা THEME_COLORS)
+        const brandColors = env.BRAND_COLORS || env.THEME_COLORS || env.THEME_CSS || null;
+
         const data = {
             settings: (settings.results && settings.results.length) ? settings.results[0] : {},
             banners: banners.results || [],
@@ -25,6 +28,7 @@ export async function onRequestGet(context) {
             product_categories: product_categories.results || [],
             tawk_widget_url: env.TAWK_WIDGET_URL || null,
             template_version: templateVersion,
+            brand_colors: brandColors,
         };
 
         return new Response(JSON.stringify({ success: true, data }), {

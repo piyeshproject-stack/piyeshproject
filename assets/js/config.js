@@ -6,6 +6,9 @@ var CONFIG = {
     // ── Template / Site Version (Cloudflare Env Var: v1 বা v2) ──
     TEMPLATE_VERSION: 'v1',
 
+    // ── Store Brand Colors (Cloudflare Env Var: BRAND_COLORS) ──
+    BRAND_COLORS: '',
+
     // ── DB Provider ──────────────────────────────────────────
     DB_PROVIDER: 'cf_db',
     

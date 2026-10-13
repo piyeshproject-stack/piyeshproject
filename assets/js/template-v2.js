@@ -209,7 +209,7 @@ function renderFullV2Page(container, paramBanners, cats, homeSects) {
                 catImg = `<div class="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-sm mb-2 group-hover:scale-110 transition-transform" style="background:var(--bg-subtle); color:var(--primary);"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></div>`;
             }
             return `
-            <a href="shop.html?category=${c.id}" class="flex flex-col items-center min-w-[70px] md:min-w-[100px] group flex-shrink-0">
+            <a href="shop.html?cat=${c.id}" class="flex flex-col items-center min-w-[70px] md:min-w-[100px] group flex-shrink-0">
                 ${catImg}
                 <span class="text-[10px] md:text-sm font-bold text-center text-secondary group-hover:text-primary line-clamp-1">${c.name}</span>
             </a>
@@ -231,24 +231,6 @@ function renderFullV2Page(container, paramBanners, cats, homeSects) {
     }
 
     container.innerHTML = `
-        <!-- Top Bar -->
-        <div class="bg-top-bar text-white py-2 text-sm font-josefin hidden md:block">
-            <div class="container mx-auto px-4 lg:px-24 flex justify-between items-center">
-                <div class="flex gap-6">
-                    <a href="mailto:${email}" class="flex items-center gap-2 hover:text-gray-200">
-                        <i class="fa-regular fa-envelope"></i> ${email}
-                    </a>
-                    ${phone ? `<a href="tel:${phone}" class="flex items-center gap-2 hover:text-gray-200"><i class="fa-solid fa-phone-volume"></i> ${phone}</a>` : ''}
-                </div>
-                <div class="flex gap-4 items-center">
-                    <select aria-label="Language" class="bg-transparent border-none outline-none cursor-pointer text-white"><option class="text-black">English</option></select>
-                    <select aria-label="Currency" class="bg-transparent border-none outline-none cursor-pointer text-white"><option class="text-black">BDT</option></select>
-                    <a href="login.html" class="flex items-center gap-1 hover:text-gray-200">Login <i class="fa-regular fa-user"></i></a>
-                    <a href="cart.html" class="hover:text-gray-200 relative"><i class="fa-solid fa-cart-shopping"></i> <span class="absolute -top-2 -right-2 bg-primary text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">${cartCount}</span></a>
-                </div>
-            </div>
-        </div>
-
         <!-- Navbar -->
         <header class="bg-white py-3 md:py-4 sticky top-0 z-50 shadow-sm">
             <div class="container mx-auto px-4 lg:px-24">
@@ -265,8 +247,8 @@ function renderFullV2Page(container, paramBanners, cats, homeSects) {
                     <!-- Desktop Search -->
                     <div class="hidden md:flex flex-grow justify-center px-4">
                         <div class="flex w-full max-w-[400px] border border-gray-300 rounded-md overflow-hidden">
-                            <input type="text" id="v2SearchDesktop" class="px-4 py-1.5 w-full outline-none text-sm" placeholder="Search..." onkeypress="if(event.key==='Enter' && this.value) window.location.href='shop.html?q='+this.value">
-                            <button aria-label="Search" class="text-dynamic px-4 py-1.5 transition hover:opacity-90" style="background: var(--primary);" onclick="if(document.getElementById('v2SearchDesktop').value) window.location.href='shop.html?q='+document.getElementById('v2SearchDesktop').value"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></button>
+                            <input type="text" id="v2SearchDesktop" class="px-4 py-1.5 w-full outline-none text-sm" placeholder="Search products..." onkeypress="if(event.key==='Enter' && this.value.trim()) window.location.href='shop.html?q='+encodeURIComponent(this.value.trim())">
+                            <button aria-label="Search" class="text-dynamic px-4 py-1.5 transition hover:opacity-90" style="background: var(--primary);" onclick="var v=document.getElementById('v2SearchDesktop').value; if(v.trim()) window.location.href='shop.html?q='+encodeURIComponent(v.trim())"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></button>
                         </div>
                     </div>
 
@@ -286,8 +268,8 @@ function renderFullV2Page(container, paramBanners, cats, homeSects) {
 
                     <!-- Mobile Search Bar (Row 2) -->
                     <div class="w-full md:hidden flex border border-gray-300 rounded-md overflow-hidden mt-1">
-                        <input type="text" id="v2SearchMobile" class="px-4 py-2 w-full outline-none text-sm" placeholder="Search products..." onkeypress="if(event.key==='Enter' && this.value) window.location.href='shop.html?q='+this.value">
-                        <button aria-label="Search" class="text-dynamic px-4 py-2 transition hover:opacity-90" style="background: var(--primary);" onclick="if(document.getElementById('v2SearchMobile').value) window.location.href='shop.html?q='+document.getElementById('v2SearchMobile').value"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></button>
+                        <input type="text" id="v2SearchMobile" class="px-4 py-2 w-full outline-none text-sm" placeholder="Search products..." onkeypress="if(event.key==='Enter' && this.value.trim()) window.location.href='shop.html?q='+encodeURIComponent(this.value.trim())">
+                        <button aria-label="Search" class="text-dynamic px-4 py-2 transition hover:opacity-90" style="background: var(--primary);" onclick="var v=document.getElementById('v2SearchMobile').value; if(v.trim()) window.location.href='shop.html?q='+encodeURIComponent(v.trim())"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></button>
                     </div>
 
                 </div>

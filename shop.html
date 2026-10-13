@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
     <script>document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script src="assets/js/config.js?v=1791913142855"></script>
+    <script src="assets/js/config.js?v=1791920020317"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
@@ -244,12 +244,17 @@ document.addEventListener('DOMContentLoaded', function() {
     updateCartBadge();
 
     var urlParams = new URLSearchParams(window.location.search);
-    var urlCat = urlParams.get('cat');
-    if (urlCat) activeCatId = urlCat;
+    var urlCat = urlParams.get('cat') || urlParams.get('category') || urlParams.get('c');
+    if (urlCat) activeCatId = String(urlCat);
     
-    var urlQuery = urlParams.get('q');
+    var urlQuery = urlParams.get('q') || urlParams.get('search');
     if (urlQuery && document.getElementById('searchInput')) {
         document.getElementById('searchInput').value = urlQuery;
+    }
+
+    var urlSale = urlParams.get('sale') || urlParams.get('flash');
+    if ((urlSale === 'true' || urlSale === '1') && document.getElementById('onlyFlash')) {
+        document.getElementById('onlyFlash').checked = true;
     }
 
     var p1, p2, p3, p4, p5;
@@ -313,8 +318,10 @@ document.addEventListener('DOMContentLoaded', function() {
         var pc = results[3].data || [];
 
         allProducts.forEach(function(p) {
-            p.category_ids = pc.filter(function(x) { return x.product_id === p.id; }).map(function(x) { return x.category_id; });
-            if (p.category_id && !p.category_ids.includes(p.category_id)) p.category_ids.push(p.category_id);
+            p.category_ids = pc.filter(function(x) { return String(x.product_id) === String(p.id); }).map(function(x) { return String(x.category_id); });
+            if (p.category_id && !p.category_ids.some(function(cid){ return String(cid) === String(p.category_id); })) {
+                p.category_ids.push(String(p.category_id));
+            }
         });
 
         var name = CONFIG.STORE_NAME;
@@ -389,7 +396,7 @@ function renderCategories() {
     var mobileHtml = '<a href="#" class="cat-pill' + (!activeCatId?' active':'') + '" onclick="selectCat(\'\',this);return false;">🌟 All</a>';
 
     allCategories.forEach(function(c) {
-        var isActive = activeCatId === c.id;
+        var isActive = String(activeCatId) === String(c.id);
         html += '<a href="#" class="' + (isActive?'active':'') + '" data-cat="' + c.id + '" onclick="selectCat(\'' + c.id + '\',this);return false;">' + c.name + '</a>';
         mobileHtml += '<a href="#" class="cat-pill' + (isActive?' active':'') + '" onclick="selectCat(\'' + c.id + '\',this);return false;">' + c.name + '</a>';
     });
@@ -400,7 +407,7 @@ function renderCategories() {
 }
 
 function selectCat(id, el) {
-    activeCatId = id;
+    activeCatId = String(id || '');
     document.querySelectorAll('[data-cat],.cat-pill').forEach(function(a) { a.classList.remove('active'); });
     if (el) el.classList.add('active');
     applyFilters();
@@ -417,17 +424,18 @@ function showMaintenancePage(msg) {
 
 function applyFilters() {
 
-    var q      = (document.getElementById('searchInput').value || '').toLowerCase();
+    var q      = (document.getElementById('searchInput').value || '').toLowerCase().trim();
     var min    = parseInt(document.getElementById('minPrice').value) || 0;
     var max    = parseInt(document.getElementById('maxPrice').value) || Infinity;
     var sort   = document.getElementById('sortBy').value;
-    var onSale = document.getElementById('onlyFlash').checked;
+    var onSale = document.getElementById('onlyFlash') ? document.getElementById('onlyFlash').checked : false;
 
     filteredProducts = allProducts.filter(function(p) {
         var price = p.flash_sale_price > 0 ? p.base_price - p.flash_sale_price : p.base_price;
         var nameMatch = (p.name||'').toLowerCase().includes(q) || (p.sku||'').toLowerCase().includes(q);
+        var catMatch = !activeCatId || (p.category_ids && p.category_ids.some(function(cid){ return String(cid) === String(activeCatId); }));
         return (!q          || nameMatch) &&
-               (!activeCatId || (p.category_ids && p.category_ids.includes(activeCatId))) &&
+               catMatch &&
                (price >= min && price <= max) &&
                (!onSale     || p.flash_sale_price > 0);
     });
