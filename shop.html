@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
     <script>document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script src="assets/js/config.js?v=1791920020317"></script>
+    <script src="assets/js/config.js?v=1791961715395"></script>
+    <script src="assets/js/seo-helper.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
@@ -369,6 +370,13 @@ document.addEventListener('DOMContentLoaded', function() {
         var fcFallback = document.getElementById('footerCopyright');
         if (fcFallback && fcFallback.textContent.indexOf(name) === -1) {
             fcFallback.textContent = '© ' + new Date().getFullYear() + ' ' + name + '. All rights reserved.';
+        }
+
+        window.shopSettings = (r && r.data) ? r.data : {};
+        var activeCat = allCategories.find(function(c) { return String(c.id) === String(activeCatId); });
+        var catName = activeCat ? activeCat.name : null;
+        if (window.SEO) {
+            SEO.applyShopSEO(window.shopSettings, catName, searchQuery);
         }
 
         renderCategories();

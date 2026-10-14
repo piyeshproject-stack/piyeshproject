@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
     <script>document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + Date.now() + '">');</script>
     <link rel="stylesheet" href="assets/css/premium-icons.css">
-    <script src="assets/js/config.js?v=1791920020317"></script>
+    <script src="assets/js/config.js?v=1791961715395"></script>
+    <script src="assets/js/seo-helper.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
     <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" type="module"></script>
@@ -457,19 +458,26 @@ function switchLang(lang) {
 document.addEventListener('DOMContentLoaded', function() {
     var p1;
     if (CONFIG.DB_PROVIDER === 'supabase') {
-        p1 = supabaseClient.from('settings').select('*').eq('id', 1).single();
+        p1 = supabaseClient.from('settings').select('*').eq('id', 1).single().then(function(r) { return r.data || {}; });
     } else {
-        p1 = Promise.resolve({ data: {} });
+        p1 = fetch((CONFIG.HF_API_BASE||"")+"/api/public-data").then(function(r){ return r.json(); }).then(function(r){ return (r.data && r.data.settings) ? r.data.settings : {}; }).catch(function(){ return {}; });
     }
-    p1.then(function(res) {
-        if(res.data) {
-            var name = res.data.store_name || CONFIG.STORE_NAME;
+    p1.then(function(s) {
+        var name = s.store_name || CONFIG.STORE_NAME || 'Store';
+        if (window.SEO) {
+            SEO.applyPageSEO({
+                settings: s,
+                title: 'Policies & Terms of Service — ' + name,
+                description: 'Read our Privacy Policy, Payment Policy, Refund Policy, and Terms & Conditions on ' + name + '.',
+                url: SEO.getSiteUrl(s) + '/policies.html'
+            });
+        } else {
             document.title = 'Policies — ' + name;
-            document.getElementById('navBrand').textContent = name;
-            document.getElementById('footerCopy').textContent = '© ' + new Date().getFullYear() + ' ' + name + '. All rights reserved.';
-            if (res.data.logo_url) {
-                document.getElementById('navLogo').innerHTML = '<img src="' + res.data.logo_url + '" style="height:36px;width:auto;">';
-            }
+        }
+        var nb = document.getElementById('navBrand'); if(nb) nb.textContent = name;
+        var fc = document.getElementById('footerCopy'); if(fc) fc.textContent = '© ' + new Date().getFullYear() + ' ' + name + '. All rights reserved.';
+        if (s.logo_url) {
+            var nl = document.getElementById('navLogo'); if(nl) nl.innerHTML = '<img src="' + s.logo_url + '" style="height:36px;width:auto;">';
         }
     });
 });

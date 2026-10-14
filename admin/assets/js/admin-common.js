@@ -3,6 +3,17 @@
 // Include on every admin page (after config.js + supabase-init.js)
 // ============================================================
 
+// Prevent search engines from indexing any admin pages
+(function() {
+    var meta = document.querySelector('meta[name="robots"]');
+    if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = 'robots';
+        document.head.appendChild(meta);
+    }
+    meta.content = 'noindex, nofollow, noarchive, nosnippet';
+})();
+
 // ── Sidebar HTML Template ────────────────────────────────────
 var SIDEBAR_HTML = `
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>

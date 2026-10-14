@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+Allow: /index.html
+Allow: /shop.html
+Allow: /product.html
+Allow: /policies.html
+Allow: /team.html
+Allow: /track.html
+
+Disallow: /admin/
+Disallow: /cart.html
+Disallow: /checkout.html
+Disallow: /invoice.html
+Disallow: /success.html
+Disallow: /login.html
+Disallow: /register.html
+Disallow: /forgot-password.html
+Disallow: /fraud-chack.html
+Disallow: /api/
+
+Sitemap: /sitemap.xml

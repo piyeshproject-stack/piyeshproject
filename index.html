@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="assets/css/theme.css">
     <script src="assets/js/config.js"></script>
     <script src="assets/js/layout-config.js"></script>
+    <script src="assets/js/seo-helper.js"></script>
     <script src="assets/js/template-v2.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
@@ -363,7 +364,11 @@ function showMaintenancePage(msg) {
 function applySettings(s) {
     
     var name = s.store_name || CONFIG.STORE_NAME;
-    document.title = name + ' — Home';
+    if (window.SEO) {
+        SEO.applyHomeSEO(s);
+    } else {
+        document.title = name + ' — Home';
+    }
     
     document.getElementById('navBrand').textContent    = name;
     document.getElementById('footerBrand').textContent = name;

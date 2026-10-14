@@ -6,7 +6,8 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
     <script>document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script src="assets/js/config.js?v=1791920020317"></script>
+    <script src="assets/js/config.js?v=1791961715395"></script>
+    <script src="assets/js/seo-helper.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
@@ -465,7 +466,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        document.title = product.name + ' — ' + (settings.store_name || CONFIG.STORE_NAME);
+        if (window.SEO) {
+            SEO.applyProductSEO(product, settings, ratings);
+        } else {
+            document.title = product.name + ' — ' + (settings.store_name || CONFIG.STORE_NAME);
+        }
         var name = settings.store_name || CONFIG.STORE_NAME;
         document.getElementById('navBrand').textContent = name;
         var fb = document.getElementById('footerBrand'); if(fb) fb.textContent = name;

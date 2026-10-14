@@ -26,6 +26,20 @@ export async function onRequestPost(context) {
 
     try {
         const p = await request.json();
+
+        // Safe auto-migration for SEO columns in D1
+        const seoCols = [
+            'seo_title TEXT DEFAULT ""',
+            'seo_description TEXT DEFAULT ""',
+            'seo_keywords TEXT DEFAULT ""',
+            'seo_og_image TEXT DEFAULT ""',
+            'google_site_verification TEXT DEFAULT ""',
+            'site_url TEXT DEFAULT ""'
+        ];
+        for (const col of seoCols) {
+            try { await env.DB.prepare(`ALTER TABLE settings ADD COLUMN ${col}`).run(); } catch(e) {}
+        }
+
         const sql = `
             UPDATE settings SET
                 store_name=?, logo_url=?, favicon_url=?, footer_text=?, whatsapp_number=?, facebook_url=?, instagram_url=?, youtube_url=?, 
@@ -34,7 +48,8 @@ export async function onRequestPost(context) {
                 telegram_main_bot=?, telegram_main_chats=?, telegram_draft_bot=?, telegram_draft_chat=?, messaging_apps=?, 
                 allow_pickup=?, store_address=?, store_map_link=?, pickup_bot_token=?, pickup_chat_id=?, binance_pay_uid=?, 
                 binance_proxy_url=?, binance_api_key=?, binance_api_secret=?, usd_to_bdt_rate=?, verify_mode=?, supabase_edge_url=?, 
-                hf_api_url=?, crypto_coins=?, review_imgbb_key=?
+                hf_api_url=?, crypto_coins=?, review_imgbb_key=?,
+                seo_title=?, seo_description=?, seo_keywords=?, seo_og_image=?, google_site_verification=?, site_url=?
             WHERE id=1
         `;
         const params = [
@@ -49,20 +64,26 @@ export async function onRequestPost(context) {
             p.binance_proxy_url, p.binance_api_key, p.binance_api_secret, p.usd_to_bdt_rate, p.verify_mode, p.supabase_edge_url, 
             p.hf_api_url, 
             typeof p.crypto_coins === 'string' ? p.crypto_coins : JSON.stringify(p.crypto_coins || []), 
-            p.review_imgbb_key
+            p.review_imgbb_key,
+            p.seo_title || '',
+            p.seo_description || '',
+            p.seo_keywords || '',
+            p.seo_og_image || '',
+            p.google_site_verification || '',
+            p.site_url || ''
         ];
         
         const stmt = env.DB.prepare(sql);
         const { results } = await stmt.bind(...params.map(v => v === undefined ? null : v)).run();
 
-        
-        
         // Auto-purge selective Cloudflare Cache
         if (env.CLOUDFLARE_ZONE_ID && env.CLOUDFLARE_API_TOKEN) {
             const origin = new URL(request.url).origin;
             const filesToPurge = [
                 origin + "/api/public-data",
-                origin + "/api/checkout-data"
+                origin + "/api/checkout-data",
+                origin + "/sitemap.xml",
+                origin + "/robots.txt"
             ];
             
             context.waitUntil(purgeAndWarmup(env, origin, filesToPurge));

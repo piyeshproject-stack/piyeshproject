@@ -10,6 +10,9 @@ const templateVersion = (rawVersion === 'v2' || rawVersion === '2') ? 'v2' : 'v1
 // ── Brand Colors from Cloudflare Env Var (BRAND_COLORS বা THEME_COLORS) ──
 const rawBrandColors = (process.env.BRAND_COLORS || process.env.THEME_COLORS || process.env.THEME_CSS || '').toString().trim();
 
+// ── Site Canonical URL from Cloudflare Env Var (SITE_URL বা CANONICAL_URL) ──
+const rawSiteUrl = (process.env.SITE_URL || process.env.CANONICAL_URL || '').toString().trim();
+
 const configJs = `// ============================================================
 // Auto-generated during Cloudflare Build
 // ============================================================
@@ -20,6 +23,9 @@ var CONFIG = {
 
     // ── Store Brand Colors (Cloudflare Env Var: BRAND_COLORS) ──
     BRAND_COLORS: '${s(rawBrandColors)}',
+
+    // ── Canonical / Base Site URL (Cloudflare Env Var: SITE_URL) ──
+    SITE_URL: '${s(rawSiteUrl)}',
 
     // ── DB Provider ──────────────────────────────────────────
     DB_PROVIDER: '${s(process.env.DB_PROVIDER) || 'cf_db'}',

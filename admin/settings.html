@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/admin.css">
     <script>document.write('<link rel="stylesheet" href="../assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script src="../assets/js/config.js?v=1791920020317"></script>
+    <script src="../assets/js/config.js?v=1791961715395"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
@@ -110,6 +110,59 @@
                 <div class="form-group">
                     <label class="form-label">YouTube Channel URL</label>
                     <input class="form-input" id="youtubeUrl" placeholder="https://youtube.com/@yourchannel">
+                </div>
+            </div>
+
+            <!-- SEO & Social Media (Meta Tags) -->
+            <div class="card" style="margin-bottom:20px;">
+                <div class="settings-section-title"><i data-lucide="search" class="lucide-icon"></i> SEO & Social Share (Meta Tags)</div>
+                <div class="form-group">
+                    <label class="form-label">SEO Meta Title (Homepage)</label>
+                    <input class="form-input" id="seoTitle" placeholder="e.g. Best Online Shopping in Bangladesh | Your Store">
+                    <div class="form-hint">Google search এ সাইটের যে নাম দেখাবে। খালি রাখলে Store Name ব্যবহার হবে।</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">SEO Meta Description</label>
+                    <textarea class="form-input" id="seoDescription" rows="2" placeholder="e.g. Discover high quality products at unbeatable prices with cash on delivery all over Bangladesh." style="resize:vertical;"></textarea>
+                    <div class="form-hint">গুগল সার্চ ও সোশ্যাল মিডিয়া শেয়ারে যে বিবরণ দেখাবে (অনুরোধ: ১২০-১৬০ অক্ষরের মধ্যে)।</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">SEO Keywords</label>
+                    <input class="form-input" id="seoKeywords" placeholder="e.g. ecommerce, shopping, online store, bangladesh, best prices">
+                    <div class="form-hint">কমা দিয়ে আলাদা করে keywords লিখুন।</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Social Share Banner (OG Image URL)</label>
+                    <div class="imgbb-upload-row">
+                        <input class="form-input" id="seoOgImage" placeholder="https://...banner.jpg" oninput="previewSettingImg('seoOgImage','ogImagePreview')">
+                        <button type="button" class="btn btn-ghost btn-sm imgbb-upload-btn" id="ogImageUploadBtn" title="ছবি আপলোড করো">📤 Upload</button>
+                    </div>
+                    <div id="ogImagePreview" class="imgbb-preview-wrap" style="height:90px;margin-top:8px;display:none;">
+                        <img class="imgbb-img-preview" src="" alt="OG image preview" onerror="this.parentElement.style.display='none'">
+                    </div>
+                    <div class="form-hint">ফেসবুক বা হোয়াটসঅ্যাপে সাইটের লিংক শেয়ার করলে এই ছবিটি বড় প্রিভিউ হিসেবে দেখাবে (১২০০x৬৩০ সাইজ সবচেয়ে ভালো)।</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Google Search Console Verification Code</label>
+                    <input class="form-input" id="googleSiteVerification" placeholder="e.g. aBcD1234EfGh5678...">
+                    <div class="form-hint">Google Search Console এর HTML tag verification code (meta tag content)।</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Custom Canonical / Base Domain (Optional)</label>
+                    <input class="form-input" id="siteUrl" placeholder="e.g. https://mystore.com">
+                    <div class="form-hint">খালি রাখলে ব্রাউজারের বর্তমান ডোমেইন স্বয়ংক্রিয়ভাবে ব্যবহৃত হবে (কোনো ক্লায়েন্টের ডোমেইন কনফликт হবে না)।</div>
+                </div>
+
+                <!-- Live Preview Card -->
+                <div style="margin-top:16px;background:var(--bg-light,#f9f9f9);border:1px dashed var(--border,#e0e0e0);border-radius:10px;padding:14px;">
+                    <div style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
+                        <i data-lucide="eye" class="lucide-icon"></i> Google Search Snippet Preview
+                    </div>
+                    <div style="font-family:Arial,sans-serif;background:#fff;border:1px solid #e1e3e1;border-radius:8px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="font-size:12px;color:#202124;" id="seoPreviewUrl">https://yourstore.com/</div>
+                        <div style="font-size:16px;font-weight:600;color:#1a0dab;cursor:pointer;margin:2px 0 4px;" id="seoPreviewTitle">Store Title</div>
+                        <div style="font-size:13px;color:#4d5156;line-height:1.4;" id="seoPreviewDesc">Store description snippet appears here...</div>
+                    </div>
                 </div>
             </div>
 
@@ -639,7 +692,69 @@
                 input.click();
             });
         }
+
+        // Social Share Banner (OG Image) upload button
+        var ogBtn = document.getElementById('ogImageUploadBtn');
+        if (ogBtn) {
+            ogBtn.addEventListener('click', function() {
+                var input = document.createElement('input');
+                input.type = 'file'; input.accept = 'image/*';
+                input.onchange = function() {
+                    if (!input.files[0]) return;
+                    ogBtn.textContent = '⏳ Uploading...';
+                    ogBtn.disabled = true;
+                    smartUpload(input.files[0], 'auto', getImgbbKey())
+                        .then(function(r) {
+                            document.getElementById('seoOgImage').value = r.url;
+                            previewSettingImg('seoOgImage','ogImagePreview');
+                            var via = r.via === 'r2' ? '☁️ R2' : '🖼️ ImgBB';
+                            ogBtn.textContent = '✅ Done';
+                            setTimeout(function(){ ogBtn.textContent='📤 Upload'; ogBtn.disabled=false; }, 1500);
+                            showToast('Social banner uploaded via ' + via + '! Save করতে ভুলো না।', 'success');
+                            updateSeoPreview();
+                        })
+                        .catch(function(e) { showToast('❌ ' + e.message, 'error'); ogBtn.textContent='📤 Upload'; ogBtn.disabled=false; });
+                };
+                input.click();
+            });
+        }
+
+        // Real-time live Google Search preview listeners
+        ['seoTitle', 'seoDescription', 'storeName', 'siteUrl'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateSeoPreview);
+        });
     });
+
+    function updateSeoPreview() {
+        var titleEl = document.getElementById('seoTitle');
+        var descEl = document.getElementById('seoDescription');
+        var storeNameEl = document.getElementById('storeName');
+        var siteUrlEl = document.getElementById('siteUrl');
+
+        var rawTitle = (titleEl && titleEl.value.trim()) || (storeNameEl && storeNameEl.value.trim()) || 'Online Store';
+        var rawDesc = (descEl && descEl.value.trim()) || 'Discover high quality products at unbeatable prices with cash on delivery all over Bangladesh.';
+        var rawUrl = (siteUrlEl && siteUrlEl.value.trim()) || window.location.origin;
+
+        var previewTitle = document.getElementById('seoPreviewTitle');
+        var previewDesc = document.getElementById('seoPreviewDesc');
+        var previewUrl = document.getElementById('seoPreviewUrl');
+
+        if (previewTitle) previewTitle.textContent = rawTitle;
+        if (previewDesc) previewDesc.textContent = rawDesc.length > 155 ? rawDesc.substring(0, 152) + '...' : rawDesc;
+        if (previewUrl) previewUrl.textContent = rawUrl.replace(/\/+$/, '') + '/';
+    }
+
+    function populateSeoFields(s) {
+        setVal('seoTitle',                s.seo_title || '');
+        setVal('seoDescription',          s.seo_description || '');
+        setVal('seoKeywords',             s.seo_keywords || '');
+        setVal('seoOgImage',              s.seo_og_image || '');
+        setVal('googleSiteVerification', s.google_site_verification || '');
+        setVal('siteUrl',                 s.site_url || '');
+        if (s.seo_og_image) previewSettingImg('seoOgImage', 'ogImagePreview');
+        updateSeoPreview();
+    }
 
     function loadSettings() {
         if (CONFIG.DB_PROVIDER === 'supabase') {
@@ -724,6 +839,7 @@
 
             // Review ImgBB Key (from Supabase)
             setVal('reviewImgbbKey', s.review_imgbb_key || '');
+            populateSeoFields(s);
             });
         } else if (CONFIG.DB_PROVIDER === 'appwrite') {
             appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings')
@@ -798,6 +914,7 @@
                 renderCryptoCoins();
 
                 setVal('reviewImgbbKey', s.review_imgbb_key || '');
+                populateSeoFields(s);
             }).catch(function(err) {
                 // 404 means document not yet created — create initial empty document
                 if (err.code === 404) {
@@ -896,6 +1013,7 @@
                 renderCryptoCoins();
 
                 setVal('reviewImgbbKey', s.review_imgbb_key || '');
+                populateSeoFields(s);
             }).catch(function(err) {
                 document.getElementById('pageLoader').style.display  = 'none';
                 document.getElementById('adminMain').style.display   = 'flex';
@@ -1012,6 +1130,12 @@
             hf_api_url:           document.getElementById('hfApiUrl').value.trim(),
             crypto_coins:         collectCryptoCoins(),
             review_imgbb_key:     document.getElementById('reviewImgbbKey').value.trim(),
+            seo_title:            document.getElementById('seoTitle').value.trim(),
+            seo_description:      document.getElementById('seoDescription').value.trim(),
+            seo_keywords:         document.getElementById('seoKeywords').value.trim(),
+            seo_og_image:         document.getElementById('seoOgImage').value.trim(),
+            google_site_verification: document.getElementById('googleSiteVerification').value.trim(),
+            site_url:             document.getElementById('siteUrl').value.trim(),
             id: 1
         };
 

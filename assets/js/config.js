@@ -9,6 +9,9 @@ var CONFIG = {
     // ── Store Brand Colors (Cloudflare Env Var: BRAND_COLORS) ──
     BRAND_COLORS: '',
 
+    // ── Canonical / Base Site URL (Cloudflare Env Var: SITE_URL) ──
+    SITE_URL: '',
+
     // ── DB Provider ──────────────────────────────────────────
     DB_PROVIDER: 'cf_db',
     
