@@ -247,7 +247,19 @@ app.post('/api/delete-order', authenticateAdmin, async (req, res) => {
 // ── 11. ADMIN UPDATE SETTINGS (/api/update-settings) ──
 app.post('/api/update-settings', authenticateAdmin, async (req, res) => {
     try {
-        const p = req.body;
+        // Auto-migrate SEO columns if missing
+        const seoCols = [
+            'seo_title TEXT DEFAULT ""',
+            'seo_description TEXT DEFAULT ""',
+            'seo_keywords TEXT DEFAULT ""',
+            'seo_og_image TEXT DEFAULT ""',
+            'google_site_verification TEXT DEFAULT ""',
+            'site_url TEXT DEFAULT ""'
+        ];
+        for (const col of seoCols) {
+            try { await queryD1(`ALTER TABLE settings ADD COLUMN ${col}`, [], true); } catch(e) {}
+        }
+
         const sql = `
             UPDATE settings SET
                 store_name=?, logo_url=?, favicon_url=?, footer_text=?, admin_email=?, admin_phone=?,
@@ -259,7 +271,8 @@ app.post('/api/update-settings', authenticateAdmin, async (req, res) => {
                 telegram_group_link=?, whatsapp_number=?, facebook_page_url=?, youtube_channel_url=?,
                 messaging_apps=?,
                 marquee_text=?, marquee_link=?, marquee_is_active=?,
-                crypto_coins=?, custom_admin_js=?, custom_admin_css=?, pwa_icon_url=?, external_link_handler=?
+                crypto_coins=?, custom_admin_js=?, custom_admin_css=?, pwa_icon_url=?, external_link_handler=?,
+                seo_title=?, seo_description=?, seo_keywords=?, seo_og_image=?, google_site_verification=?, site_url=?
             WHERE id=1
         `;
         const params = [
@@ -275,7 +288,8 @@ app.post('/api/update-settings', authenticateAdmin, async (req, res) => {
             typeof p.messaging_apps === 'string' ? p.messaging_apps : JSON.stringify(p.messaging_apps || []),
             p.marquee_text, p.marquee_link, p.marquee_is_active ? 1 : 0,
             typeof p.crypto_coins === 'string' ? p.crypto_coins : JSON.stringify(p.crypto_coins || []),
-            p.custom_admin_js, p.custom_admin_css, p.pwa_icon_url, p.external_link_handler
+            p.custom_admin_js, p.custom_admin_css, p.pwa_icon_url, p.external_link_handler,
+            p.seo_title || '', p.seo_description || '', p.seo_keywords || '', p.seo_og_image || '', p.google_site_verification || '', p.site_url || ''
         ];
         const data = await queryD1(sql, params, true);
         res.json(data);
