@@ -190,20 +190,29 @@ window.SEO = (function() {
         var siteUrl = getSiteUrl(settings);
         var storeName = settings.store_name || (typeof CONFIG !== 'undefined' ? CONFIG.STORE_NAME : '') || 'Store';
 
-        var title = product.name + ' — ' + storeName;
+        var title = (product.seo_title && product.seo_title.trim()) ? product.seo_title.trim() : (product.name + ' — ' + storeName);
         var rawDesc = stripHtml(product.description);
-        var desc = rawDesc ? (rawDesc.length > 160 ? rawDesc.substring(0, 157) + '...' : rawDesc) : ('Buy ' + product.name + ' at best price online from ' + storeName + '. Cash on delivery available.');
+        var customDesc = (product.seo_description && product.seo_description.trim()) ? product.seo_description.trim() : '';
+        var desc = customDesc || (rawDesc ? (rawDesc.length > 160 ? rawDesc.substring(0, 157) + '...' : rawDesc) : ('Buy ' + product.name + ' at best price online from ' + storeName + '. Cash on delivery available.'));
 
-        // Image priority: gallery_images[0] -> variants[0].imageUrl -> settings.seo_og_image -> settings.logo_url
-        var img = '';
+        // Collect all product images for Google Image Indexing
+        var allImgs = [];
         var gallery = Array.isArray(product.gallery_images) ? product.gallery_images : [];
-        if (gallery.length > 0 && gallery[0]) {
-            img = gallery[0];
-        } else if (Array.isArray(product.variants) && product.variants.length > 0 && product.variants[0].imageUrl) {
-            img = product.variants[0].imageUrl;
-        } else {
-            img = settings.seo_og_image || settings.logo_url || '';
+        gallery.forEach(function(u) {
+            if (u && typeof u === 'string') {
+                allImgs.push(u.startsWith('http') ? u : siteUrl + (u.startsWith('/') ? '' : '/') + u);
+            }
+        });
+        if (Array.isArray(product.variants)) {
+            product.variants.forEach(function(v) {
+                if (v && v.imageUrl) {
+                    var vu = v.imageUrl.startsWith('http') ? v.imageUrl : siteUrl + (v.imageUrl.startsWith('/') ? '' : '/') + v.imageUrl;
+                    if (!allImgs.includes(vu)) allImgs.push(vu);
+                }
+            });
         }
+
+        var img = allImgs.length > 0 ? allImgs[0] : (settings.seo_og_image || settings.logo_url || '');
         if (img && !img.startsWith('http')) {
             img = siteUrl + (img.startsWith('/') ? '' : '/') + img;
         }
@@ -211,26 +220,55 @@ window.SEO = (function() {
         var prodUrl = siteUrl + '/product.html?id=' + encodeURIComponent(product.id);
         var finalPrice = (product.flash_sale_price > 0) ? (product.base_price - product.flash_sale_price) : (product.base_price || 0);
 
-        // Product Schema
+        // Product Schema with Multiple Images and Offer
         var prodSchema = {
             "@context": "https://schema.org",
-            "@type": "Product",
-            "name": product.name,
-            "image": img ? [img] : undefined,
-            "description": desc,
-            "sku": product.sku || ('SKU-' + product.id),
-            "offers": {
-                "@type": "Offer",
-                "url": prodUrl,
-                "priceCurrency": "BDT",
-                "price": finalPrice,
-                "itemCondition": "https://schema.org/NewCondition",
-                "availability": product.is_active ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-                "seller": {
-                    "@type": "Organization",
-                    "name": storeName
+            "@graph": [
+                {
+                    "@type": "Product",
+                    "@id": prodUrl + "#product",
+                    "name": product.name,
+                    "image": allImgs.length > 0 ? allImgs : (img ? [img] : undefined),
+                    "description": desc,
+                    "sku": product.sku || ('SKU-' + product.id),
+                    "offers": {
+                        "@type": "Offer",
+                        "url": prodUrl,
+                        "priceCurrency": "BDT",
+                        "price": finalPrice,
+                        "itemCondition": "https://schema.org/NewCondition",
+                        "availability": product.is_active ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+                        "seller": {
+                            "@type": "Organization",
+                            "name": storeName
+                        }
+                    }
+                },
+                {
+                    "@type": "BreadcrumbList",
+                    "@id": prodUrl + "#breadcrumb",
+                    "itemListElement": [
+                        {
+                            "@type": "ListItem",
+                            "position": 1,
+                            "name": "Home",
+                            "item": siteUrl + "/"
+                        },
+                        {
+                            "@type": "ListItem",
+                            "position": 2,
+                            "name": "Shop",
+                            "item": siteUrl + "/shop.html"
+                        },
+                        {
+                            "@type": "ListItem",
+                            "position": 3,
+                            "name": product.name,
+                            "item": prodUrl
+                        }
+                    ]
                 }
-            }
+            ]
         };
 
         // Aggregate Rating if reviews exist
@@ -238,18 +276,25 @@ window.SEO = (function() {
             var sum = 0;
             reviews.forEach(function(r) { sum += (parseInt(r.rating) || 5); });
             var avg = (sum / reviews.length).toFixed(1);
-            prodSchema.aggregateRating = {
+            prodSchema["@graph"][0].aggregateRating = {
                 "@type": "AggregateRating",
                 "ratingValue": avg,
                 "reviewCount": reviews.length
             };
         }
 
+        // Merge site keywords + product custom keywords/tags
+        var kwList = [];
+        if (settings.seo_keywords) kwList.push(settings.seo_keywords);
+        if (product.seo_keywords) kwList.push(product.seo_keywords);
+        if (product.tags) kwList.push(product.tags);
+        kwList.push(product.name);
+
         applyPageSEO({
             settings: settings,
             title: title,
             description: desc,
-            keywords: (settings.seo_keywords ? settings.seo_keywords + ', ' : '') + product.name,
+            keywords: kwList.join(', '),
             image: img,
             url: prodUrl,
             type: 'product',

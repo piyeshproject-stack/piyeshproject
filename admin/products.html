@@ -15,6 +15,8 @@
     <script src="assets/js/admin-common.js?v=5"></script>
     <script src="../assets/js/imgbb-uploader.js?v=1791100000002"></script>
     <script src="../assets/js/r2-uploader.js"></script>
+    <script src="../assets/js/piexif.js"></script>
+    <script src="../assets/js/image-seo-injector.js"></script>
     <style>
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
         .product-card {
@@ -228,6 +230,52 @@
 
             <hr class="section-divider">
 
+            <!-- Product & Photo SEO Section (P-to-P Automation) -->
+            <div style="background: rgba(0, 122, 255, 0.04); border: 1.5px solid rgba(0, 122, 255, 0.2); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                    <div style="font-size: 13.5px; font-weight: 800; color: var(--accent, #007AFF); display: flex; align-items: center; gap: 6px;">
+                        <i data-lucide="sparkles" class="lucide-icon" style="width: 16px; height: 16px;"></i> Product &amp; Photo SEO (P-to-P Metadata)
+                    </div>
+                    <span style="background: rgba(52, 199, 89, 0.15); color: #34C759; border: 1px solid rgba(52, 199, 89, 0.3); font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                        ● Auto EXIF Injector Active
+                    </span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
+                    নিচের ট্যাগ ও সেটিংসের সাইট-ট্যাগ স্বয়ংক্রিয়ভাবে একত্র হয়ে <b>ছবির বাইনারি মেটাডাটা (Title, Keywords, Author, Copyright)</b> হিসেবে ইনজেক্ট হবে।
+                </div>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label class="form-label">🏷️ Product Focus Tags / Keywords</label>
+                    <input class="form-input" id="pTags" placeholder="e.g. leather wallet, cowhide, slim wallet, gents gift (কমা দিয়ে লিখো)" oninput="updateSeoTagPreview()">
+                </div>
+
+                <!-- Live Tag Preview -->
+                <div style="margin-bottom: 12px; padding: 8px 12px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        📸 Active Photo Metadata Tags Preview (ছবির ভেতরে যাবে):
+                    </div>
+                    <div id="photoTagPreviewBadge" style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-height: 24px;">
+                        <span style="color: #8E8E93; font-size: 11px;">প্রোডাক্টের নাম বা ট্যাগ লিখলে এখানে দেখাবে...</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label class="form-label">Custom SEO Title (Optional)</label>
+                        <input class="form-input" id="pSeoTitle" placeholder="খালি রাখলে প্রোডাক্টের নাম ব্যবহার হবে">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 8px;">
+                        <label class="form-label">Custom SEO Slug (Optional)</label>
+                        <input class="form-input" id="pSeoSlug" placeholder="e.g. pure-leather-wallet-bd">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Custom SEO Meta Description (Optional)</label>
+                    <textarea class="form-input" id="pSeoDesc" rows="2" placeholder="খালি রাখলে প্রোডাক্ট ডেসক্রিপশন থেকে প্রথম ১৬০ অক্ষর ব্যবহার হবে" style="resize: vertical; font-size: 12.5px;"></textarea>
+                </div>
+            </div>
+
             <!-- Gallery Images -->
             <div class="form-group">
                 <label class="form-label"><i data-lucide="image" class="lucide-icon icon-hover-pulse"></i> Gallery Images</label>
@@ -294,6 +342,9 @@
 
     function loadCategories() {
         if (CONFIG.DB_PROVIDER === 'supabase') {
+            supabaseClient.from('settings').select('store_name, seo_keywords, site_url').eq('id', 1).single().then(function(sr) {
+                if (sr.data) localStorage.setItem('site_settings_cache', JSON.stringify(sr.data));
+            });
             supabaseClient.from('categories').select('*').eq('is_active', true).order('sort_order').then(function(r) {
                 allCategories = r.data || [];
                 var catFilter  = document.getElementById('catFilter');
@@ -305,12 +356,15 @@
                     if (catFilterM) catFilterM.innerHTML += opt;
                     pCatList.innerHTML +=
                         '<label class="category-checkbox-item">' +
-                            '<input type="checkbox" name="pCat" value="' + c.id + '">' +
+                            '<input type="checkbox" name="pCat" value="' + c.id + '" onchange="updateSeoTagPreview()">' +
                             '<span>' + c.name + '</span>' +
                         '</label>';
                 });
             });
         } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings').then(function(s) {
+                if (s) localStorage.setItem('site_settings_cache', JSON.stringify(s));
+            }).catch(function(){});
             appwriteDatabases.listDocuments(APP_DB, 'categories', [
                 AppwriteQuery.equal('is_active', true),
                 AppwriteQuery.orderAsc('sort_order')
@@ -325,7 +379,7 @@
                     if (catFilterM) catFilterM.innerHTML += opt;
                     pCatList.innerHTML +=
                         '<label class="category-checkbox-item">' +
-                            '<input type="checkbox" name="pCat" value="' + c.id + '">' +
+                            '<input type="checkbox" name="pCat" value="' + c.id + '" onchange="updateSeoTagPreview()">' +
                             '<span>' + c.name + '</span>' +
                         '</label>';
                 });
@@ -333,9 +387,16 @@
                 showToast('Category load error: ' + err.message, 'error');
             });
         } else if (CONFIG.DB_PROVIDER === 'cf_db') {
-            cfDbBatchQuery([{ sql: "SELECT * FROM categories WHERE is_active = 1 ORDER BY sort_order ASC" }], false)
-            .then(function(d) {
-                allCategories = (d.success && d.result && d.result[0].results) ? d.result[0].results : [];
+            cfDbBatchQuery([
+                { sql: "SELECT * FROM categories WHERE is_active = 1 ORDER BY sort_order ASC" },
+                { sql: "SELECT store_name, seo_keywords, site_url FROM settings WHERE id = 1" }
+            ], true)
+            .then(function(res) {
+                allCategories = (res[0].success && res[0].result && res[0].result[0].results) ? res[0].result[0].results : [];
+                var s = (res[1].success && res[1].result && res[1].result[0].results && res[1].result[0].results[0]) ? res[1].result[0].results[0] : null;
+                if (s) {
+                    localStorage.setItem('site_settings_cache', JSON.stringify(s));
+                }
                 var catFilter  = document.getElementById('catFilter');
                 var catFilterM = document.getElementById('catFilterM');
                 var pCatList   = document.getElementById('pCategoryList');
@@ -345,7 +406,7 @@
                     if (catFilterM) catFilterM.innerHTML += opt;
                     pCatList.innerHTML +=
                         '<label class="category-checkbox-item">' +
-                            '<input type="checkbox" name="pCat" value="' + c.id + '">' +
+                            '<input type="checkbox" name="pCat" value="' + c.id + '" onchange="updateSeoTagPreview()">' +
                             '<span>' + c.name + '</span>' +
                         '</label>';
                 });
@@ -534,6 +595,40 @@
         });
     }
 
+    // ── Helper: Get checked category names for SEO tagging ──
+    function getSelectedCategoryNames() {
+        var names = [];
+        document.querySelectorAll('input[name="pCat"]:checked').forEach(function(cb) {
+            var cid = cb.value;
+            var found = allCategories.find(function(c){ return String(c.id) === String(cid); });
+            if (found && found.name) names.push(found.name);
+        });
+        return names;
+    }
+
+    // ── Helper: Live Tag Preview ──
+    function updateSeoTagPreview() {
+        if (typeof ImageSeoInjector === 'undefined') return;
+        var pName = document.getElementById('pName') ? document.getElementById('pName').value.trim() : '';
+        var pTags = document.getElementById('pTags') ? document.getElementById('pTags').value.trim() : '';
+        var cats = getSelectedCategoryNames();
+        var merged = ImageSeoInjector.buildMergedTags({
+            productName: pName,
+            categoryNames: cats,
+            productTags: pTags
+        });
+        var badgeWrap = document.getElementById('photoTagPreviewBadge');
+        if (badgeWrap) {
+            if (merged.length) {
+                badgeWrap.innerHTML = merged.slice(0, 12).map(function(t) {
+                    return '<span class="tag-chip" style="display:inline-block;background:rgba(0,122,255,0.12);color:var(--accent,#007AFF);border:1px solid rgba(0,122,255,0.25);border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;margin:2px 3px 2px 0;">🏷️ ' + t + '</span>';
+                }).join('') + (merged.length > 12 ? '<span style="font-size:11px;color:#8E8E93;">+' + (merged.length - 12) + ' more</span>' : '');
+            } else {
+                badgeWrap.innerHTML = '<span style="color:#8E8E93;font-size:11px;">প্রোডাক্টের নাম বা ট্যাগ লিখলে এখানে দেখাবে...</span>';
+            }
+        }
+    }
+
     // ── Product Modal ────────────────────────────────────────
     function openProductModal(product) {
         editingProductId = null;
@@ -548,10 +643,15 @@
         document.getElementById('pFlashEnd').value  = '';
         document.getElementById('pVideoUrl').value  = '';
         document.getElementById('pVideoType').value = 'auto';
+        if (document.getElementById('pTags')) document.getElementById('pTags').value = '';
+        if (document.getElementById('pSeoTitle')) document.getElementById('pSeoTitle').value = '';
+        if (document.getElementById('pSeoSlug')) document.getElementById('pSeoSlug').value = '';
+        if (document.getElementById('pSeoDesc')) document.getElementById('pSeoDesc').value = '';
         document.querySelectorAll('input[name="pCat"]').forEach(function(cb) { cb.checked = false; });
         setToggle('pActive', true);
         setToggle('pFeatured', false);
         setToggle('pAddOnce', false);
+        updateSeoTagPreview();
         renderGallery();
         renderVariants();
         document.getElementById('productModal').classList.add('show');
@@ -575,6 +675,10 @@
         document.getElementById('pFlashEnd').value   = p.flash_sale_end ? p.flash_sale_end.substring(0,16) : '';
         document.getElementById('pVideoUrl').value   = p.video_url || '';
         document.getElementById('pVideoType').value  = p.video_type || 'auto';
+        if (document.getElementById('pTags')) document.getElementById('pTags').value = p.tags || p.seo_keywords || '';
+        if (document.getElementById('pSeoTitle')) document.getElementById('pSeoTitle').value = p.seo_title || '';
+        if (document.getElementById('pSeoSlug')) document.getElementById('pSeoSlug').value = p.slug || '';
+        if (document.getElementById('pSeoDesc')) document.getElementById('pSeoDesc').value = p.seo_description || '';
         
         // Fetch categories for this product
         if (CONFIG.DB_PROVIDER === 'supabase') {
@@ -585,6 +689,7 @@
                 document.querySelectorAll('input[name="pCat"]').forEach(function(cb) {
                     cb.checked = selectedIds.includes(cb.value);
                 });
+                updateSeoTagPreview();
             });
         } else if (CONFIG.DB_PROVIDER === 'appwrite') {
             appwriteDatabases.listDocuments(APP_DB, 'product_categories', [
@@ -594,9 +699,12 @@
                 document.querySelectorAll('input[name="pCat"]').forEach(function(cb) {
                     cb.checked = selectedIds.includes(cb.value);
                 });
+                updateSeoTagPreview();
             }).catch(function(err) {
                 console.error('Category fetch error:', err.message);
             });
+        } else {
+            updateSeoTagPreview();
         }
 
         setToggle('pActive',   p.is_active);
@@ -643,7 +751,7 @@
             wrap.appendChild(row);
         });
 
-        // Upload buttons bind (R2 first → ImgBB fallback)
+        // Upload buttons bind (R2 first → ImgBB fallback) with Client-Side SEO Tag Injection!
         wrap.querySelectorAll('[data-gupload]').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var idx = parseInt(btn.dataset.gupload);
@@ -652,18 +760,42 @@
                 fileInput.onchange = function() {
                     if (!fileInput.files[0]) return;
                     var origText = btn.innerHTML;
-                    btn.innerHTML = '&#9203; Uploading...'; btn.disabled = true;
-                    // R2 তে আপলোড করো, fail হলে ImgBB তে
-                    var imgbbKey = getImgbbKey();
-                    smartUpload(fileInput.files[0], 'auto', imgbbKey)
-                        .then(function(r) {
-                            galleryUrls = collectGallery();
-                            galleryUrls[idx] = r.url;
-                            renderGallery();
-                            var via = r.via === 'r2' ? '☁️ R2' : '🖼️ ImgBB';
-                            showToast('✅ Uploaded via ' + via + '!', 'success');
+                    btn.innerHTML = '⏳ Tagging Photo...'; btn.disabled = true;
+
+                    var rawFile = fileInput.files[0];
+                    var prodName = document.getElementById('pName').value.trim() || 'Product';
+                    var prodTags = document.getElementById('pTags') ? document.getElementById('pTags').value.trim() : '';
+                    var selectedCats = getSelectedCategoryNames();
+
+                    // 100% Client-Side Image SEO & EXIF metadata injection
+                    var processPromise = (typeof ImageSeoInjector !== 'undefined')
+                        ? ImageSeoInjector.processImage(rawFile, {
+                            productName: prodName,
+                            categoryNames: selectedCats,
+                            productTags: prodTags,
+                            index: idx + 1
                         })
-                        .catch(function(e) { showToast('❌ ' + e.message, 'error'); btn.innerHTML=origText; btn.disabled=false; });
+                        : Promise.resolve({ file: rawFile });
+
+                    processPromise.then(function(seoRes) {
+                        btn.innerHTML = '⏳ Uploading...';
+                        var fileToUpload = (seoRes && seoRes.file) ? seoRes.file : rawFile;
+                        var imgbbKey = getImgbbKey();
+                        return smartUpload(fileToUpload, 'auto', imgbbKey).then(function(r) {
+                            return { r: r, seoRes: seoRes };
+                        });
+                    }).then(function(res) {
+                        var r = res.r;
+                        galleryUrls = collectGallery();
+                        galleryUrls[idx] = r.url;
+                        renderGallery();
+                        var via = r.via === 'r2' ? '☁️ R2' : '🖼️ ImgBB';
+                        showToast('✅ Uploaded to ' + via + ' with embedded SEO tags!', 'success');
+                    }).catch(function(e) {
+                        showToast('❌ ' + e.message, 'error');
+                        btn.innerHTML = origText;
+                        btn.disabled = false;
+                    });
                 };
                 fileInput.click();
             });
@@ -791,7 +923,7 @@
             wrap.appendChild(div);
         });
 
-        // Variant upload buttons bind (R2 first → ImgBB fallback)
+        // Variant upload buttons bind with Client-Side SEO Tag Injection (R2 first → ImgBB fallback)
         wrap.querySelectorAll('[data-vupload]').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var vi = parseInt(btn.dataset.vupload);
@@ -800,17 +932,44 @@
                 fileInput.onchange = function() {
                     if (!fileInput.files[0]) return;
                     var origText = btn.innerHTML;
-                    btn.innerHTML = '⏳ Uploading...'; btn.disabled = true;
-                    var imgbbKey = getImgbbKey();
-                    smartUpload(fileInput.files[0], 'auto', imgbbKey)
-                        .then(function(r) {
-                            collectVariants();
-                            variants[vi].imageUrl = r.url;
-                            renderVariants();
-                            var via = r.via === 'r2' ? '☁️ R2' : '🖼️ ImgBB';
-                            showToast('✅ Variant uploaded via ' + via + '!', 'success');
+                    btn.innerHTML = '⏳ Tagging Photo...'; btn.disabled = true;
+
+                    var rawFile = fileInput.files[0];
+                    var prodName = document.getElementById('pName').value.trim() || 'Product';
+                    var prodTags = document.getElementById('pTags') ? document.getElementById('pTags').value.trim() : '';
+                    var selectedCats = getSelectedCategoryNames();
+                    collectVariants();
+                    var colorName = (variants[vi] && variants[vi].colorName) ? variants[vi].colorName : ('Color ' + (vi + 1));
+
+                    var processPromise = (typeof ImageSeoInjector !== 'undefined')
+                        ? ImageSeoInjector.processImage(rawFile, {
+                            productName: prodName,
+                            categoryNames: selectedCats,
+                            productTags: prodTags,
+                            variantName: colorName,
+                            index: vi + 1
                         })
-                        .catch(function(e) { showToast('❌ ' + e.message, 'error'); btn.innerHTML=origText; btn.disabled=false; });
+                        : Promise.resolve({ file: rawFile });
+
+                    processPromise.then(function(seoRes) {
+                        btn.innerHTML = '⏳ Uploading...';
+                        var fileToUpload = (seoRes && seoRes.file) ? seoRes.file : rawFile;
+                        var imgbbKey = getImgbbKey();
+                        return smartUpload(fileToUpload, 'auto', imgbbKey).then(function(r) {
+                            return { r: r, seoRes: seoRes };
+                        });
+                    }).then(function(res) {
+                        var r = res.r;
+                        collectVariants();
+                        variants[vi].imageUrl = r.url;
+                        renderVariants();
+                        var via = r.via === 'r2' ? '☁️ R2' : '🖼️ ImgBB';
+                        showToast('✅ Variant photo uploaded with embedded SEO tags!', 'success');
+                    }).catch(function(e) {
+                        showToast('❌ ' + e.message, 'error');
+                        btn.innerHTML = origText;
+                        btn.disabled = false;
+                    });
                 };
                 fileInput.click();
             });
@@ -889,6 +1048,15 @@
             selectedCats.push(cb.value);
         });
 
+        var tagsVal = document.getElementById('pTags') ? document.getElementById('pTags').value.trim() : '';
+        var seoTitleVal = document.getElementById('pSeoTitle') ? document.getElementById('pSeoTitle').value.trim() : '';
+        var seoSlugVal = document.getElementById('pSeoSlug') ? document.getElementById('pSeoSlug').value.trim() : '';
+        var seoDescVal = document.getElementById('pSeoDesc') ? document.getElementById('pSeoDesc').value.trim() : '';
+
+        if (!seoSlugVal && typeof ImageSeoInjector !== 'undefined') {
+            seoSlugVal = ImageSeoInjector.slugify(name);
+        }
+
         var payload = {
             name:             name,
             sku:              document.getElementById('pSku').value.trim() || null,
@@ -901,6 +1069,11 @@
             is_active:        document.getElementById('pActive').classList.contains('on'),
             is_featured:      document.getElementById('pFeatured').classList.contains('on'),
             is_add_once:      document.getElementById('pAddOnce').classList.contains('on'),
+            tags:             tagsVal || null,
+            seo_keywords:     tagsVal || null,
+            seo_title:        seoTitleVal || null,
+            seo_description:  seoDescVal || null,
+            slug:             seoSlugVal || null,
             // gallery_images ও variants JSON হিসেবে সেভ হবে
             gallery_images:   collectGallery()
                                 .map(function(s) { return parseImageInput(s).saveUrl || s.trim(); })

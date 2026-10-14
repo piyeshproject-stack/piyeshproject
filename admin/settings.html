@@ -143,9 +143,9 @@
                     <div class="form-hint">ফেসবুক বা হোয়াটসঅ্যাপে সাইটের লিংক শেয়ার করলে এই ছবিটি বড় প্রিভিউ হিসেবে দেখাবে (১২০০x৬৩০ সাইজ সবচেয়ে ভালো)।</div>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Google Search Console Verification Code</label>
+                    <label class="form-label">Google Search Console Verification Code <span style="font-weight:400;color:var(--text-secondary);font-size:12px;">(ঐচ্ছিক / Optional)</span></label>
                     <input class="form-input" id="googleSiteVerification" placeholder="e.g. aBcD1234EfGh5678...">
-                    <div class="form-hint">Google Search Console এর HTML tag verification code (meta tag content)।</div>
+                    <div class="form-hint">আপনি যদি DNS এ TXT রেকর্ড দিয়ে ডোমেইন ভেরিফাই করে থাকেন তবে এটি <b>সম্পূর্ণ খালি রাখুন</b>, কোনো প্রয়োজন নেই। শুধুমাত্র যারা মেটা ট্যাগ দিয়ে ভেরিফাই করতে চান তাদের জন্য।</div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Custom Canonical / Base Domain (Optional)</label>
@@ -162,6 +162,21 @@
                         <div style="font-size:12px;color:#202124;" id="seoPreviewUrl">https://yourstore.com/</div>
                         <div style="font-size:16px;font-weight:600;color:#1a0dab;cursor:pointer;margin:2px 0 4px;" id="seoPreviewTitle">Store Title</div>
                         <div style="font-size:13px;color:#4d5156;line-height:1.4;" id="seoPreviewDesc">Store description snippet appears here...</div>
+                    </div>
+                </div>
+
+                <!-- Static Sitemap Generator (Worker-Free) -->
+                <div style="margin-top:16px;padding:14px;background:rgba(52,199,89,0.06);border:1px solid rgba(52,199,89,0.25);border-radius:10px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:8px;">
+                        <div style="font-size:13px;font-weight:700;color:#34C759;display:flex;align-items:center;gap:6px;">
+                            <i data-lucide="map" class="lucide-icon" style="width:16px;height:16px;"></i> XML Sitemap &amp; Google Image Sitemap
+                        </div>
+                        <button type="button" class="btn btn-sm btn-ghost" onclick="generateAndDownloadSitemap()" style="border:1px solid #34C759;color:#34C759;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+                            <i data-lucide="download" class="lucide-icon" style="width:14px;height:14px;"></i> Export sitemap.xml
+                        </button>
+                    </div>
+                    <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">
+                        কোনো Worker বা Server ছাড়াই সরাসরি ১-ক্লিকে সাইটের সব প্রোডাক্ট ও ফটোর গুগল ইমেজ সাইটম্যাপ XML ফাইল ডাউনলোড করুন।
                     </div>
                 </div>
             </div>
@@ -754,6 +769,98 @@
         setVal('siteUrl',                 s.site_url || '');
         if (s.seo_og_image) previewSettingImg('seoOgImage', 'ogImagePreview');
         updateSeoPreview();
+    }
+
+    // ── Worker-Free 100% Client-Side Sitemap Generator ──
+    function generateAndDownloadSitemap() {
+        var siteUrl = (document.getElementById('siteUrl') ? document.getElementById('siteUrl').value.trim() : '') || window.location.origin;
+        siteUrl = siteUrl.replace(/\/+$/, '');
+        var today = new Date().toISOString().split('T')[0];
+
+        showToast('⏳ Generating sitemap from database...', 'info');
+
+        var fetchPromise;
+        if (CONFIG.DB_PROVIDER === 'supabase') {
+            fetchPromise = Promise.all([
+                supabaseClient.from('categories').select('id').eq('is_active', true),
+                supabaseClient.from('products').select('id, name, gallery_images, variants, created_at').eq('is_active', true)
+            ]).then(function(r) {
+                return { categories: r[0].data || [], products: r[1].data || [] };
+            });
+        } else if (CONFIG.DB_PROVIDER === 'appwrite') {
+            fetchPromise = Promise.all([
+                appwriteDatabases.listDocuments(APP_DB, 'categories', [AppwriteQuery.equal('is_active', true)]),
+                appwriteDatabases.listDocuments(APP_DB, 'products', [AppwriteQuery.equal('is_active', true), AppwriteQuery.limit(1000)])
+            ]).then(function(r) {
+                return { categories: r[0].documents || [], products: r[1].documents || [] };
+            });
+        } else {
+            fetchPromise = cfDbBatchQuery([
+                { sql: "SELECT id FROM categories WHERE is_active = 1" },
+                { sql: "SELECT id, name, gallery_images, variants, created_at FROM products WHERE is_active = 1" }
+            ], true).then(function(res) {
+                var c = (res[0].success && res[0].result && res[0].result[0].results) ? res[0].result[0].results : [];
+                var p = (res[1].success && res[1].result && res[1].result[0].results) ? res[1].result[0].results : [];
+                return { categories: c, products: p };
+            });
+        }
+
+        fetchPromise.then(function(data) {
+            function escXml(str) {
+                return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+            }
+
+            var xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n' +
+                '  <!-- Core Site Pages -->\n' +
+                '  <url><loc>' + siteUrl + '/</loc><lastmod>' + today + '</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>\n' +
+                '  <url><loc>' + siteUrl + '/shop.html</loc><lastmod>' + today + '</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>\n' +
+                '  <url><loc>' + siteUrl + '/policies.html</loc><lastmod>' + today + '</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>\n' +
+                '  <url><loc>' + siteUrl + '/team.html</loc><lastmod>' + today + '</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>\n' +
+                '  <url><loc>' + siteUrl + '/track.html</loc><lastmod>' + today + '</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>\n';
+
+            (data.categories || []).forEach(function(c) {
+                xml += '  <url><loc>' + siteUrl + '/shop.html?cat=' + encodeURIComponent(c.id || c.$id) + '</loc><lastmod>' + today + '</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>\n';
+            });
+
+            (data.products || []).forEach(function(p) {
+                var pid = p.id || p.$id;
+                var prodDate = p.created_at ? p.created_at.split(' ')[0].split('T')[0] : today;
+                var images = [];
+                try {
+                    var g = typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : (p.gallery_images || []);
+                    if (Array.isArray(g)) {
+                        g.forEach(function(u){ if (u) images.push(u.startsWith('http') ? u : siteUrl + (u.startsWith('/') ? '' : '/') + u); });
+                    }
+                } catch(e){}
+                try {
+                    var v = typeof p.variants === 'string' ? JSON.parse(p.variants) : (p.variants || []);
+                    if (Array.isArray(v)) {
+                        v.forEach(function(item){ if (item && item.imageUrl) { var vu = item.imageUrl.startsWith('http') ? item.imageUrl : siteUrl + (item.imageUrl.startsWith('/') ? '' : '/') + item.imageUrl; if (!images.includes(vu)) images.push(vu); } });
+                    }
+                } catch(e){}
+
+                var imgXml = '';
+                images.forEach(function(iu) {
+                    imgXml += '\n    <image:image><image:loc>' + escXml(iu) + '</image:loc><image:title>' + escXml(p.name) + '</image:title></image:image>';
+                });
+
+                xml += '  <url><loc>' + siteUrl + '/product.html?id=' + encodeURIComponent(pid) + '</loc><lastmod>' + prodDate + '</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>' + imgXml + '\n  </url>\n';
+            });
+
+            xml += '</urlset>';
+
+            var blob = new Blob([xml], { type: 'application/xml;charset=utf-8' });
+            var a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'sitemap.xml';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showToast('✅ sitemap.xml generated & downloaded successfully!', 'success');
+        }).catch(function(err) {
+            showToast('❌ Failed to export sitemap: ' + err.message, 'error');
+        });
     }
 
     function loadSettings() {

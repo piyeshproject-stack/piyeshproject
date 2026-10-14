@@ -57,9 +57,12 @@ export async function onRequestPost(context) {
             });
         }
 
-        // Unique key তৈরি করো (e.g., timestamp_random.jpg)
+        // Unique SEO key তৈরি করো (e.g., product-slug-color-timestamp.jpg)
         const ext = (file.name || 'image').split('.').pop().toLowerCase() || 'jpg';
-        const key = `products/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const rawBase = (file.name || 'product-image').replace(/\.[^.]+$/, '');
+        const cleanSlug = rawBase.toLowerCase().replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-').slice(0, 70);
+        const uniqueSuffix = Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
+        const key = `products/${cleanSlug}-${uniqueSuffix}.${ext}`;
 
         const arrayBuffer = await file.arrayBuffer();
 
