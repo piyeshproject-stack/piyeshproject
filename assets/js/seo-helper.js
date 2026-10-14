@@ -40,6 +40,29 @@ window.SEO = (function() {
         link.setAttribute('href', url);
     }
 
+    // Set or update Favicon & Touch Icons
+    function setFavicon(url) {
+        if (!url) return;
+        var icons = document.querySelectorAll('link[rel~="icon"]');
+        if (icons && icons.length > 0) {
+            icons.forEach(function(el) { el.href = url; });
+        } else {
+            var el = document.createElement('link');
+            el.rel = 'icon';
+            el.href = url;
+            document.head.appendChild(el);
+        }
+        var apple = document.querySelector('link[rel="apple-touch-icon"]');
+        if (apple) {
+            apple.href = url;
+        } else {
+            var a = document.createElement('link');
+            a.rel = 'apple-touch-icon';
+            a.href = url;
+            document.head.appendChild(a);
+        }
+    }
+
     // Set or create a JSON-LD structured data script
     function setJsonLd(id, data) {
         if (!data) return;
@@ -117,7 +140,13 @@ window.SEO = (function() {
         setMeta('twitter:title', title);
         setMeta('twitter:description', desc);
 
-        // 6. JSON-LD Structured Data
+        // 6. Favicon & Touch Icon
+        var favUrl = (settings.favicon_url && settings.favicon_url.trim()) || (settings.logo_url && settings.logo_url.trim());
+        if (favUrl) {
+            setFavicon(favUrl);
+        }
+
+        // 7. JSON-LD Structured Data
         if (opts.jsonLd) {
             setJsonLd(opts.jsonLdId || 'page', opts.jsonLd);
         }
@@ -132,6 +161,10 @@ window.SEO = (function() {
         var title = settings.seo_title || (storeName + ' — Online Shopping in Bangladesh');
         var desc = settings.seo_description || settings.footer_text || ('Welcome to ' + storeName + '. Best quality products, fastest delivery, and cash on delivery all over Bangladesh.');
         var img = settings.seo_og_image || settings.logo_url || '';
+        var logoImg = (settings.logo_url && settings.logo_url.trim()) || (settings.favicon_url && settings.favicon_url.trim()) || '';
+        if (logoImg && !logoImg.startsWith('http')) {
+            logoImg = siteUrl + (logoImg.startsWith('/') ? '' : '/') + logoImg;
+        }
 
         var jsonLd = {
             "@context": "https://schema.org",
@@ -141,6 +174,7 @@ window.SEO = (function() {
                     "@id": siteUrl + "/#website",
                     "url": siteUrl,
                     "name": storeName,
+                    "alternateName": [storeName, siteUrl.replace(/^https?:\/\//, '')],
                     "description": desc,
                     "potentialAction": [
                         {
@@ -158,7 +192,11 @@ window.SEO = (function() {
                     "@id": siteUrl + "/#organization",
                     "name": storeName,
                     "url": siteUrl,
-                    "logo": img ? (img.startsWith('http') ? img : siteUrl + '/' + img) : undefined,
+                    "logo": logoImg ? {
+                        "@type": "ImageObject",
+                        "url": logoImg
+                    } : undefined,
+                    "image": logoImg || undefined,
                     "description": desc,
                     "telephone": settings.whatsapp_number ? ('+88' + settings.whatsapp_number.replace(/^88/, '')) : undefined,
                     "sameAs": [
