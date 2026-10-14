@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloudflare Worker Auth Generator — Zero-Setup Admin Login</title>
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/premium-icons.css">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0B0F19;
+            --bg-card: #111827;
+            --bg-card-sub: #1F2937;
+            --border: #374151;
+            --border-focus: #F59E0B;
+            --primary: #F59E0B;
+            --primary-hover: #D97706;
+            --accent: #10B981;
+            --text-main: #F9FAFB;
+            --text-muted: #9CA3AF;
+            --mono-font: 'JetBrains Mono', monospace;
+            --sans-font: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: var(--sans-font);
+            min-height: 100vh;
+            line-height: 1.6;
+            padding: 30px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* ── Header ── */
+        .header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--primary);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.5px;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: var(--text-muted);
+            font-size: 15px;
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        /* ── Grid Layout ── */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+        @media (max-width: 960px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ── Card ── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ── Form Inputs ── */
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .form-input {
+            width: 100%;
+            background: var(--bg-card-sub);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #fff;
+            font-family: var(--sans-font);
+            font-size: 14px;
+            padding: 10px 14px;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .form-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+        }
+        .form-input.mono {
+            font-family: var(--mono-font);
+            font-size: 13px;
+        }
+        .btn-inline {
+            position: absolute;
+            right: 6px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 6px 10px;
+            font-size: 13px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+        .btn-inline:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.08);
+        }
+        .form-hint {
+            font-size: 11.5px;
+            color: #6B7280;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+
+        /* ── Code Box ── */
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #182030;
+            padding: 12px 18px;
+            border-radius: 12px 12px 0 0;
+            border: 1px solid var(--border);
+            border-bottom: none;
+        }
+        .code-title {
+            font-family: var(--mono-font);
+            font-size: 13px;
+            color: #93C5FD;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-copy {
+            background: var(--primary);
+            color: #111827;
+            font-weight: 700;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+        .btn-copy:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+        .code-area {
+            width: 100%;
+            height: 480px;
+            background: #090D16;
+            color: #E5E7EB;
+            font-family: var(--mono-font);
+            font-size: 13px;
+            line-height: 1.5;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 0 0 12px 12px;
+            overflow: auto;
+            resize: vertical;
+            white-space: pre;
+            tab-size: 4;
+        }
+
+        /* ── Guide Steps ── */
+        .steps-container {
+            margin-top: 30px;
+        }
+        .step-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            display: flex;
+            gap: 16px;
+        }
+        .step-num {
+            width: 32px;
+            height: 32px;
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--primary);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .step-content h3 {
+            font-size: 15px;
+            color: #fff;
+            margin-bottom: 6px;
+        }
+        .step-content p {
+            font-size: 13.5px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+        .step-code {
+            background: #1F2937;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: var(--mono-font);
+            font-size: 12.5px;
+            color: #60A5FA;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #10B981;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            display: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            z-index: 1000;
+            animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-badge">⚡ In-Device Worker Code Generator</div>
+        <h1>Cloudflare Worker Auth Generator</h1>
+        <p>ভিন্ন ভিন্ন ক্লায়েন্টের জন্য কোনো ENV ভেরিয়েবল বা ডাটাবেজ সেটআপ ছাড়াই সরাসরি সুরক্ষিত ৩০-দিনের টোকেন ভিত্তিক Cloudflare Worker জেনারেট করুন।</p>
+    </header>
+
+    <div class="main-grid">
+        <!-- Input Form -->
+        <div class="card">
+            <div class="card-title">
+                <i data-lucide="sliders" style="width:18px;height:18px;color:var(--primary);"></i>
+                ক্লায়েন্ট ক্রেডেনশিয়াল ও কনফিগ
+            </div>
+
+            <!-- Client Admin Email -->
+            <div class="form-group">
+                <label class="form-label">Admin Email / Username</label>
+                <div class="input-wrap">
+                    <input type="text" class="form-input" id="cfgEmail" value="admin@store.com" placeholder="e.g. admin or client@store.com" oninput="generateWorkerCode()">
+                </div>
+                <div class="form-hint">এই ইউজারনেম বা ইমেইল দিয়ে ক্লায়েন্ট তার অ্যাডমিন প্যানেলে লগইন করবে।</div>
+            </div>
+
+            <!-- Client Admin Password -->
+            <div class="form-group">
+                <label class="form-label">Admin Password</label>
+                <div class="input-wrap">
+                    <input type="password" class="form-input mono" id="cfgPassword" value="ClientPass@2026" oninput="generateWorkerCode()">
+                    <button type="button" class="btn-inline" style="right:85px;" onclick="togglePassVisibility()">👁️</button>
+                    <button type="button" class="btn-inline" style="right:6px;" onclick="generateRandomPassword()" title="শক্তিশালী পাসওয়ার্ড তৈরি করো">🎲 Random</button>
+                </div>
+                <div class="form-hint">ক্লায়েন্টের অ্যাডমিন পাসওয়ার্ড। এটি Worker এর ভেতরে সম্পূর্ণ গোপন থাকবে।</div>
+            </div>
+
+            <!-- Session Expiration (Days) -->
+            <div class="form-group">
+                <label class="form-label">Token Session Validity (মেয়াদ)</label>
+                <div class="input-wrap">
+                    <select class="form-input" id="cfgExpiry" onchange="generateWorkerCode()">
+                        <option value="7">৭ দিন (১ সপ্তাহ)</option>
+                        <option value="15">১৫ দিন</option>
+                        <option value="30" selected>৩০ দিন (১ মাস — Recommended)</option>
+                        <option value="60">৬০ দিন (২ মাস)</option>
+                        <option value="90">৯০ দিন (৩ মাস)</option>
+                    </select>
+                </div>
+                <div class="form-hint">লগইন করার পর পুরো এই সময় পর্যন্ত কোনো নতুন লগইন বা Worker কল করতে হবে না।</div>
+            </div>
+
+            <!-- HMAC Secret Key -->
+            <div class="form-group">
+                <label class="form-label">Cryptographic Secret Salt (HMAC Key)</label>
+                <div class="input-wrap">
+                    <input type="text" class="form-input mono" id="cfgSecret" value="" oninput="generateWorkerCode()">
+                    <button type="button" class="btn-inline" onclick="generateNewSecret()" title="নতুন সিক্রেট কি তৈরি করো">⚡ New Key</button>
+                </div>
+                <div class="form-hint">টোকেন সাইন করার গোপন চাবি। কেউ ভুয়া টোকেন বানালে এই কি ছাড়া সিগনেচার মিলবে না।</div>
+            </div>
+
+            <!-- Allowed Origin -->
+            <div class="form-group">
+                <label class="form-label">Allowed Client Domain (CORS)</label>
+                <div class="input-wrap">
+                    <input type="text" class="form-input mono" id="cfgOrigin" value="*" placeholder="e.g. https://ranonex.shop or *" oninput="generateWorkerCode()">
+                </div>
+                <div class="form-hint">নির্দিষ্ট ক্লায়েন্টের ডোমেইন দিতে পারেন, অথবা সকল ডোমেইনে সহজে চালানোর জন্য <span class="step-code">*</span> রাখুন।</div>
+            </div>
+
+            <div style="margin-top:20px;padding:12px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:8px;font-size:12.5px;color:#34D399;display:flex;align-items:center;gap:8px;">
+                <span>🔒</span>
+                <span>এই পেজে যা টাইপ করবেন সব আপনার ব্রাউজারের ভেতর প্রসেস হচ্ছে, কোনো সার্ভারে ডাটা পাঠানো হয় না।</span>
+            </div>
+        </div>
+
+        <!-- Generated Code Box -->
+        <div>
+            <div class="code-header">
+                <div class="code-title">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10B981;"></span>
+                    <span>worker.js (Ready to Deploy)</span>
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button type="button" class="btn-copy" onclick="copyWorkerCode()">
+                        <span>📋</span>
+                        <span>Copy Code</span>
+                    </button>
+                    <button type="button" class="btn-copy" style="background:#374151;color:#fff;" onclick="downloadWorkerCode()">
+                        <span>💾</span>
+                        <span>Download</span>
+                    </button>
+                </div>
+            </div>
+            <textarea class="code-area" id="workerCodeOutput" readonly spellcheck="false"></textarea>
+        </div>
+    </div>
+
+    <!-- Step by Step Setup Guide -->
+    <div class="steps-container">
+        <div class="card-title" style="margin-bottom:16px;">
+            <span>📖</span>
+            <span>Cloudflare-এ কীভাবে সেটআপ করবেন? (১ মিনিটের গাইড)</span>
+        </div>
+
+        <div class="step-item">
+            <div class="step-num">১</div>
+            <div class="step-content">
+                <h3>Cloudflare ড্যাশবোর্ডে Worker তৈরি করুন</h3>
+                <p>Cloudflare ড্যাশবোর্ডে লগইন করে বামপাশের মেনু থেকে <span class="step-code">Workers &amp; Pages</span> ➔ <span class="step-code">Create Application</span> ➔ <span class="step-code">Create Worker</span> এ ক্লিক করে যেকোনো নাম দিয়ে Save করুন।</p>
+            </div>
+        </div>
+
+        <div class="step-item">
+            <div class="step-num">২</div>
+            <div class="step-content">
+                <h3>কোড পেস্ট করে Deploy দিন</h3>
+                <p>Worker-এর ভেতরের <span class="step-code">Quick Edit</span> বা কোড এডিটরে যান। ওপরের কোড বক্স থেকে <span class="step-code">Copy Code</span> বাটনে ক্লিক করে পুরো কোডটি Worker-এ পেস্ট করে দিন এবং <span class="step-code">Deploy</span> বাটনে ক্লিক করুন।</p>
+            </div>
+        </div>
+
+        <div class="step-item">
+            <div class="step-num">৩</div>
+            <div class="step-content">
+                <h3>কাস্টম রুট বা ডোমেইন কানেক্ট করুন</h3>
+                <p>Worker টির Settings ➔ <span class="step-code">Triggers</span> ➔ <span class="step-code">Custom Domains</span> বা <span class="step-code">Routes</span> এ গিয়ে ক্লায়েন্টের ডোমেইন দিন (যেমন: <span class="step-code">clientdomain.com/api/admin-login</span>) অথবা Worker এর ফ্রি URL (<span class="step-code">https://name.subdomain.workers.dev</span>) ব্যবহার করুন।</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast">✅ Worker কোড ক্লিপবোর্ডে কপি হয়েছে!</div>
+
+<script>
+    function generateRandomSecret() {
+        var arr = new Uint8Array(32);
+        window.crypto.getRandomValues(arr);
+        return Array.from(arr, function(b){ return b.toString(16).padStart(2, '0'); }).join('');
+    }
+
+    function generateNewSecret() {
+        document.getElementById('cfgSecret').value = generateRandomSecret();
+        generateWorkerCode();
+    }
+
+    function generateRandomPassword() {
+        var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+        var pwd = '';
+        var arr = new Uint8Array(14);
+        window.crypto.getRandomValues(arr);
+        for (var i = 0; i < 14; i++) {
+            pwd += chars.charAt(arr[i] % chars.length);
+        }
+        document.getElementById('cfgPassword').value = pwd;
+        generateWorkerCode();
+        showToast('🎲 নতুন শক্তিশালী পাসওয়ার্ড তৈরি হয়েছে!');
+    }
+
+    function togglePassVisibility() {
+        var inp = document.getElementById('cfgPassword');
+        inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    function showToast(msg) {
+        var t = document.getElementById('toast');
+        t.textContent = msg || '✅ Copied!';
+        t.style.display = 'block';
+        setTimeout(function(){ t.style.display = 'none'; }, 2500);
+    }
+
+    function copyWorkerCode() {
+        var ta = document.getElementById('workerCodeOutput');
+        ta.select();
+        navigator.clipboard.writeText(ta.value).then(function() {
+            showToast('✅ Worker কোড ক্লিপবোর্ডে কপি হয়েছে!');
+        });
+    }
+
+    function downloadWorkerCode() {
+        var text = document.getElementById('workerCodeOutput').value;
+        var blob = new Blob([text], { type: 'application/javascript' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'worker.js';
+        a.click();
+    }
+
+    function generateWorkerCode() {
+        var email = (document.getElementById('cfgEmail').value.trim() || 'admin@store.com');
+        var pass = (document.getElementById('cfgPassword').value || 'ClientPass@2026');
+        var expiryDays = parseInt(document.getElementById('cfgExpiry').value) || 30;
+        var secret = (document.getElementById('cfgSecret').value.trim() || 'default_super_secret_signing_key_2026');
+        var origin = (document.getElementById('cfgOrigin').value.trim() || '*');
+
+        var code = `// ============================================================
+// 🛡️ Cloudflare Worker — Standalone Zero-Setup Admin Auth
+// Generated in-device for client deployment
+// ============================================================
+
+// ── 1. CLIENT CREDENTIALS & CONFIG ──────────────────────────
+const ADMIN_EMAIL       = ${JSON.stringify(email)};
+const ADMIN_PASSWORD    = ${JSON.stringify(pass)};
+const TOKEN_EXPIRY_DAYS = ${expiryDays}; // Token validity: ${expiryDays} days
+const JWT_SECRET        = ${JSON.stringify(secret)};
+const ALLOWED_ORIGIN    = ${JSON.stringify(origin)};
+
+// ── 2. CORS HEADERS ──────────────────────────────────────────
+const CORS_HEADERS = {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+// ── 3. HMAC-SHA256 TOKEN SIGNER ──────────────────────────────
+async function signToken(payload, secret) {
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+    const body = btoa(JSON.stringify(payload));
+    const data = header + "." + body;
+
+    const key = await crypto.subtle.importKey(
+        'raw',
+        new TextEncoder().encode(secret),
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign']
+    );
+    const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
+    const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig)))
+        .replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
+
+    return data + "." + sigB64;
+}
+
+// ── 4. HMAC-SHA256 TOKEN VERIFIER ────────────────────────────
+async function verifyToken(token, secret) {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        const [headerB64, bodyB64, sigB64] = parts;
+        const data = headerB64 + "." + bodyB64;
+
+        const key = await crypto.subtle.importKey(
+            'raw',
+            new TextEncoder().encode(secret),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['verify']
+        );
+
+        // Convert base64url back to standard base64 for decoding
+        let base64 = sigB64.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4) base64 += '=';
+        const sig = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+
+        const valid = await crypto.subtle.verify('HMAC', key, sig, new TextEncoder().encode(data));
+        if (!valid) return null;
+
+        const payload = JSON.parse(atob(bodyB64));
+        if (payload.exp && Date.now() > payload.exp) return null; // Expired
+        return payload;
+    } catch {
+        return null;
+    }
+}
+
+// ── 5. MAIN WORKER HANDLER ───────────────────────────────────
+export default {
+    async fetch(request, env, ctx) {
+        const url = new URL(request.url);
+
+        // 1. Handle CORS Preflight
+        if (request.method === 'OPTIONS') {
+            return new Response(null, { status: 204, headers: CORS_HEADERS });
+        }
+
+        // 2. Health check route
+        if (url.pathname === '/' || url.pathname === '/health') {
+            return new Response(JSON.stringify({
+                status: 'online',
+                service: 'Standalone Admin Auth Worker',
+                validity_days: TOKEN_EXPIRY_DAYS
+            }), {
+                status: 200,
+                headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+            });
+        }
+
+        // 3. Verify Token Endpoint (Optional: /api/verify-token)
+        if (url.pathname.endsWith('/verify-token') && request.method === 'POST') {
+            const authHeader = request.headers.get('Authorization') || '';
+            const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+            const verified = await verifyToken(token, JWT_SECRET);
+
+            if (verified) {
+                return new Response(JSON.stringify({ success: true, valid: true, user: verified }), {
+                    status: 200,
+                    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+                });
+            } else {
+                return new Response(JSON.stringify({ success: false, valid: false, error: 'Token invalid or expired' }), {
+                    status: 401,
+                    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+                });
+            }
+        }
+
+        // 4. Admin Login Endpoint (POST /api/admin-login or any login route)
+        if (request.method === 'POST') {
+            try {
+                const body = await request.json();
+                const inputUser = (body.username || body.email || '').trim().toLowerCase();
+                const inputPass = (body.password || '');
+
+                const targetUser = ADMIN_EMAIL.trim().toLowerCase();
+
+                // ── Exact Password & User Matching ──
+                if (inputUser === targetUser && inputPass === ADMIN_PASSWORD) {
+                    const now = Date.now();
+                    const expiresAt = now + (TOKEN_EXPIRY_DAYS * 24 * 60 * 60 * 1000);
+
+                    // Create Cryptographic Payload
+                    const payload = {
+                        sub: ADMIN_EMAIL,
+                        role: 'admin',
+                        iat: now,
+                        exp: expiresAt
+                    };
+
+                    const token = await signToken(payload, JWT_SECRET);
+
+                    return new Response(JSON.stringify({
+                        success: true,
+                        token: token,
+                        expires_at: expiresAt,
+                        validity_days: TOKEN_EXPIRY_DAYS,
+                        user: {
+                            email: ADMIN_EMAIL,
+                            role: 'admin'
+                        }
+                    }), {
+                        status: 200,
+                        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+                    });
+                } else {
+                    return new Response(JSON.stringify({
+                        success: false,
+                        error: 'ভুল ইমেইল বা পাসওয়ার্ড প্রদান করা হয়েছে!'
+                    }), {
+                        status: 401,
+                        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+                    });
+                }
+            } catch (err) {
+                return new Response(JSON.stringify({ success: false, error: 'Invalid Request: ' + err.message }), {
+                    status: 400,
+                    headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+                });
+            }
+        }
+
+        return new Response(JSON.stringify({ error: 'Endpoint not found' }), {
+            status: 404,
+            headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' }
+        });
+    }
+};
+`;
+
+        document.getElementById('workerCodeOutput').value = code;
+    }
+
+    // Initialize with random secret
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('cfgSecret').value = generateRandomSecret();
+        generateWorkerCode();
+    });
+</script>
+
+</body>
+</html>

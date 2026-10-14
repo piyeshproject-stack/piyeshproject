@@ -83,6 +83,10 @@ var SIDEBAR_HTML = `
             <span class="nav-icon">🔐</span>
             <span>ENV Setup</span>
         </a>
+        <a href="../worker.html" class="nav-item" data-page="worker" target="_blank">
+            <span class="nav-icon">⚡</span>
+            <span>Worker Auth</span>
+        </a>
         <a href="settings.html" class="nav-item" data-page="settings">
             <span class="nav-icon">⚙️</span>
             <span>Settings</span>
@@ -173,7 +177,37 @@ function adminInit(activePage, onReady) {
         .then(function(s) { return s; })
         .catch(function() { return null; });
     } else if (CONFIG.DB_PROVIDER === 'cf_db') {
-        sessionPromise = Promise.resolve(localStorage.getItem('admin_token') ? { user: 'admin' } : null);
+        var token = localStorage.getItem('admin_token');
+        var exp = parseInt(localStorage.getItem('admin_token_exp') || '0');
+        var isValid = false;
+
+        if (token) {
+            if (exp > 0) {
+                if (Date.now() < exp) {
+                    isValid = true;
+                } else {
+                    localStorage.removeItem('admin_token');
+                    localStorage.removeItem('admin_token_exp');
+                }
+            } else {
+                try {
+                    var parts = token.split('.');
+                    if (parts.length >= 2) {
+                        var payload = JSON.parse(atob(parts[1] || parts[0]));
+                        if (!payload.exp || Date.now() < payload.exp) {
+                            isValid = true;
+                        } else {
+                            localStorage.removeItem('admin_token');
+                        }
+                    } else {
+                        isValid = true;
+                    }
+                } catch(e) {
+                    isValid = true;
+                }
+            }
+        }
+        sessionPromise = Promise.resolve(isValid ? { user: 'admin' } : null);
     } else {
         sessionPromise = Promise.resolve(null);
     }
