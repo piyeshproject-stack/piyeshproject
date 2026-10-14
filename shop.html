@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
     <script>document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script src="assets/js/config.js?v=1792007438612"></script>
+    <script src="assets/js/config.js?v=1792008385553"></script>
     <script src="assets/js/seo-helper.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
@@ -247,6 +247,7 @@ var allProducts = [], allCategories = [], activeCatId = '';
 
 document.addEventListener('DOMContentLoaded', function() {
     updateCartBadge();
+    setTimeout(function() { var pl = document.getElementById('pageLoader'); if (pl) pl.style.display = 'none'; }, 4000);
 
     var urlParams = new URLSearchParams(window.location.search);
     var urlCat = urlParams.get('cat') || urlParams.get('category') || urlParams.get('c');
@@ -278,25 +279,39 @@ document.addEventListener('DOMContentLoaded', function() {
         p4 = appwriteDatabases.listDocuments(APP_DB, 'product_categories', [AppwriteQuery.limit(5000)]).then(function(res) { return { data: res.documents.map(function(d){ d.id=d.$id; return d; }) }; }).catch(function() { return { data: [] }; });
     } else if (CONFIG.DB_PROVIDER === 'cf_db') {
         const fetchPublicData = async () => {
+            // 1. Safe localStorage cache
             try {
-                const cachedStr = localStorage.getItem('__fbr_public_data');
-                // Force clear cache if old structure or version changed
-                if (cachedStr) {
-                    const cachedObj = JSON.parse(cachedStr);
-                    if (cachedObj.version !== 2 || Date.now() - cachedObj.time > 2 * 60 * 1000) { 
-                        localStorage.removeItem('__fbr_public_data');
-                    } else {
-                        return cachedObj.data;
+                if (typeof window.localStorage !== 'undefined') {
+                    const cachedStr = localStorage.getItem('__fbr_public_data');
+                    if (cachedStr) {
+                        const cachedObj = JSON.parse(cachedStr);
+                        if (cachedObj.data && cachedObj.data.products && (Date.now() - cachedObj.time < 2 * 60 * 1000)) { 
+                            return cachedObj.data;
+                        }
                     }
                 }
             } catch(e) {}
+
+            // 2. Fetch from API
             try {
                 const res = await fetch((CONFIG.HF_API_BASE||"")+"/api/public-data").then(r => r.json());
-                if (res.success) {
-                    localStorage.setItem('__fbr_public_data', JSON.stringify({ version: 2, time: Date.now(), data: res.data }));
+                if (res && res.success && res.data) {
+                    try {
+                        if (typeof window.localStorage !== 'undefined') {
+                            localStorage.setItem('__fbr_public_data', JSON.stringify({ version: 3, time: Date.now(), data: res.data }));
+                        }
+                    } catch(e) {}
                     return res.data;
                 }
             } catch(e) {}
+
+            // 3. Fallback to public_data.json
+            try {
+                const fRes = await fetch("/public_data.json").then(r => r.json());
+                const fData = fRes.data || fRes;
+                if (fData && fData.products) return fData;
+            } catch(e) {}
+
             return null;
         };
         const pubDataPromise = fetchPublicData();
@@ -305,9 +320,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         p1 = pubDataPromise.then(d => ({ data: d ? d.settings : null }));
         p2 = pubDataPromise.then(d => ({ data: d ? d.categories : [] }));
-        p3 = pubDataPromise.then(d => ({ data: d ? d.products.map(p => { p.gallery_images = (typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : p.gallery_images); p.variants = (typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants); return p; }) : [] }));
+        p3 = pubDataPromise.then(d => ({ data: d ? (d.products || []).map(p => { 
+            try { p.gallery_images = (typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : p.gallery_images); } catch(e) { p.gallery_images = []; }
+            try { p.variants = (typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants); } catch(e) { p.variants = []; }
+            return p; 
+        }) : [] }));
         p4 = pubDataPromise.then(d => ({ data: d ? d.product_categories : [] }));
-        p5 = Promise.resolve({ data: null }); // devtools removed — maintenance mode uses CONFIG env var
+        p5 = Promise.resolve({ data: null });
     } else {
         p1 = Promise.resolve({ data: {} });
         p2 = Promise.resolve({ data: [] });
@@ -330,10 +349,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         var name = CONFIG.STORE_NAME;
-        if (r.data) {
+        if (r && r.data) {
             var s = r.data;
 
-            // ═ MAINTENANCE MODE CHECK — Cloudflare Env Var থেকে (build-time) ═
+            // ═ MAINTENANCE MODE CHECK ═
             if (CONFIG.MAINTENANCE_MODE === true) {
                 showMaintenancePage(CONFIG.MAINTENANCE_MESSAGE || 'আমরা শীঘ্রই ফিরে আসছি।');
                 return;
@@ -379,13 +398,22 @@ document.addEventListener('DOMContentLoaded', function() {
         window.shopSettings = (r && r.data) ? r.data : {};
         var activeCat = allCategories.find(function(c) { return String(c.id) === String(activeCatId); });
         var catName = activeCat ? activeCat.name : null;
-        if (window.SEO) {
-            SEO.applyShopSEO(window.shopSettings, catName, searchQuery);
+        try {
+            if (window.SEO) {
+                SEO.applyShopSEO(window.shopSettings, catName, urlQuery || '');
+            }
+        } catch(e) {
+            console.warn('SEO apply error:', e);
         }
 
         renderCategories();
         applyFilters();
-        document.getElementById('pageLoader').style.display = 'none';
+        var pl = document.getElementById('pageLoader');
+        if (pl) pl.style.display = 'none';
+    }).catch(function(err) {
+        console.error('Shop load error:', err);
+        var pl = document.getElementById('pageLoader');
+        if (pl) pl.style.display = 'none';
     });
 
     // Mobile responsive show/hide
