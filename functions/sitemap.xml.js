@@ -23,6 +23,10 @@ export async function onRequestGet(context) {
         } catch(e) {}
     }
 
+    if (siteUrl && !siteUrl.startsWith('http://') && !siteUrl.startsWith('https://')) {
+        siteUrl = 'https://' + siteUrl;
+    }
+
     const today = new Date().toISOString().split('T')[0];
 
     function escXml(str) {
