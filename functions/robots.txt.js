@@ -23,6 +23,10 @@ Allow: /policies.html
 Allow: /team.html
 Allow: /track.html
 
+Allow: /api/public-data
+Allow: /api/public-reviews
+Allow: /api/get-products-list
+
 Disallow: /admin/
 Disallow: /cart.html
 Disallow: /checkout.html
