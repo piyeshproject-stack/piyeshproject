@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
     <script>document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script src="assets/js/config.js?v=1792008385553"></script>
+    <script src="assets/js/config.js?v=1792009882800"></script>
     <script src="assets/js/seo-helper.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
@@ -385,12 +385,14 @@ document.addEventListener('DOMContentLoaded', function() {
         p6 = appwriteDatabases.listDocuments(APP_DB, 'reviews', [AppwriteQuery.equal('product_id', id), AppwriteQuery.equal('is_approved', true), AppwriteQuery.orderDesc('$createdAt'), AppwriteQuery.limit(REVIEWS_PAGE_SIZE)]).then(function(res) { return { data: res.documents }; }).catch(function() { return { data: [] }; });
     } else if (CONFIG.DB_PROVIDER === 'cf_db') {
         const fetchPublicData = async () => {
+            const cacheKey = '__fbr_pub_data_v4_' + (window.location.hostname || 'main');
             try {
                 if (typeof window.localStorage !== 'undefined') {
-                    const cachedStr = localStorage.getItem('__fbr_public_data');
+                    localStorage.removeItem('__fbr_public_data');
+                    const cachedStr = localStorage.getItem(cacheKey);
                     if (cachedStr) {
                         const cachedObj = JSON.parse(cachedStr);
-                        if (Date.now() - cachedObj.time < 60 * 60 * 1000) {
+                        if (cachedObj.version === 4 && cachedObj.data && (Date.now() - cachedObj.time < 60 * 1000)) {
                             return cachedObj.data;
                         }
                     }
@@ -401,7 +403,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (res && res.success && res.data) {
                     try {
                         if (typeof window.localStorage !== 'undefined') {
-                            localStorage.setItem('__fbr_public_data', JSON.stringify({ time: Date.now(), data: res.data }));
+                            localStorage.setItem(cacheKey, JSON.stringify({ version: 4, time: Date.now(), data: res.data }));
                         }
                     } catch(e) {}
                     return res.data;

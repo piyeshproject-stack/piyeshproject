@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
     <script>document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script src="assets/js/config.js?v=1792008385553"></script>
+    <script src="assets/js/config.js?v=1792009882800"></script>
     <script src="assets/js/seo-helper.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
@@ -61,6 +61,49 @@
             .shop-layout { grid-template-columns: minmax(0, 1fr); }
             .sidebar { display: none; }
             .shop-filter-btn { display: flex; }
+
+            /* Mobile Navbar Layout: 2 rows with right-pinned buttons & full-width search */
+            .navbar {
+                flex-wrap: wrap !important;
+                padding: 10px 14px 10px 14px !important;
+                row-gap: 10px !important;
+                column-gap: 8px !important;
+            }
+            .navbar > .nav-icon-btn:first-child {
+                order: 1;
+            }
+            .navbar > .navbar-brand {
+                order: 2;
+                margin-right: auto;
+            }
+            .navbar > .navbar-actions {
+                order: 3;
+                margin-left: auto !important;
+            }
+            .navbar > .navbar-search {
+                display: block !important;
+                order: 4;
+                flex: 0 0 100% !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+            }
+            .navbar-search input {
+                width: 100% !important;
+                height: 42px;
+                padding: 8px 38px 8px 40px !important;
+                font-size: 14px !important;
+                border-radius: 22px !important;
+                background: var(--bg-subtle, #f5f5f5);
+                border: 1.5px solid var(--border);
+            }
+            .navbar-search .search-icon {
+                left: 14px !important;
+                top: 50% !important;
+                transform: translateY(-50%) !important;
+                font-size: 15px !important;
+                color: var(--text-muted);
+            }
         }
     </style>
     <link rel="stylesheet" href="assets/css/premium-icons.css">
@@ -77,7 +120,8 @@
     <a href="index.html" class="navbar-brand"><span id="navBrand">Shop</span></a>
     <div class="navbar-search">
         <span class="search-icon"><i data-lucide="search" class="lucide-icon"></i></span>
-        <input type="text" placeholder="Search products..." id="searchInput" oninput="applyFilters()">
+        <input type="text" placeholder="Search products..." id="searchInput" oninput="applyFilters(); toggleSearchClear();">
+        <button type="button" id="searchClearBtn" onclick="clearSearch()" aria-label="Clear search" style="display:none; position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); font-size:16px; cursor:pointer; padding:4px; line-height:1;">✕</button>
     </div>
     <div class="navbar-actions">
         <a href="track.html" class="nav-icon-btn" title="Track"><i data-lucide="package" class="lucide-icon icon-bounce"></i></a>
@@ -256,6 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var urlQuery = urlParams.get('q') || urlParams.get('search');
     if (urlQuery && document.getElementById('searchInput')) {
         document.getElementById('searchInput').value = urlQuery;
+        toggleSearchClear();
     }
 
     var urlSale = urlParams.get('sale') || urlParams.get('flash');
@@ -279,13 +324,15 @@ document.addEventListener('DOMContentLoaded', function() {
         p4 = appwriteDatabases.listDocuments(APP_DB, 'product_categories', [AppwriteQuery.limit(5000)]).then(function(res) { return { data: res.documents.map(function(d){ d.id=d.$id; return d; }) }; }).catch(function() { return { data: [] }; });
     } else if (CONFIG.DB_PROVIDER === 'cf_db') {
         const fetchPublicData = async () => {
+            const cacheKey = '__fbr_pub_data_v4_' + (window.location.hostname || 'main');
             // 1. Safe localStorage cache
             try {
                 if (typeof window.localStorage !== 'undefined') {
-                    const cachedStr = localStorage.getItem('__fbr_public_data');
+                    localStorage.removeItem('__fbr_public_data');
+                    const cachedStr = localStorage.getItem(cacheKey);
                     if (cachedStr) {
                         const cachedObj = JSON.parse(cachedStr);
-                        if (cachedObj.data && cachedObj.data.products && (Date.now() - cachedObj.time < 2 * 60 * 1000)) { 
+                        if (cachedObj.version === 4 && cachedObj.data && cachedObj.data.products && (Date.now() - cachedObj.time < 60 * 1000)) { 
                             return cachedObj.data;
                         }
                     }
@@ -298,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (res && res.success && res.data) {
                     try {
                         if (typeof window.localStorage !== 'undefined') {
-                            localStorage.setItem('__fbr_public_data', JSON.stringify({ version: 3, time: Date.now(), data: res.data }));
+                            localStorage.setItem(cacheKey, JSON.stringify({ version: 4, time: Date.now(), data: res.data }));
                         }
                     } catch(e) {}
                     return res.data;
@@ -615,8 +662,25 @@ function syncPriceToMain() {
     document.getElementById('minPrice').value = document.getElementById('mobileMinPrice').value;
     document.getElementById('maxPrice').value = document.getElementById('mobileMaxPrice').value;
 }
+function toggleSearchClear() {
+    var val = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
+    var btn = document.getElementById('searchClearBtn');
+    if (btn) btn.style.display = val ? 'block' : 'none';
+}
+function clearSearch() {
+    var input = document.getElementById('searchInput');
+    if (input) {
+        input.value = '';
+        toggleSearchClear();
+        applyFilters();
+        input.focus();
+    }
+}
 function resetFilters() {
     activeCatId = '';
+    var sInput = document.getElementById('searchInput');
+    if (sInput) sInput.value = '';
+    toggleSearchClear();
     document.getElementById('minPrice').value = '';
     document.getElementById('maxPrice').value = '';
     document.getElementById('sortBy').value = 'newest';
