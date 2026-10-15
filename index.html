@@ -251,7 +251,7 @@ function loadSiteData() {
                     const cachedStr = localStorage.getItem(cacheKey);
                     if (cachedStr) {
                         const cachedObj = JSON.parse(cachedStr);
-                        if (cachedObj && cachedObj.version === 4 && cachedObj.data && (Date.now() - cachedObj.time < 60 * 1000)) { 
+                        if (cachedObj && cachedObj.version === 4 && cachedObj.data && (Date.now() - cachedObj.time < 60 * 60 * 1000)) { 
                             return cachedObj.data;
                         }
                     }

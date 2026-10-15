@@ -108,7 +108,7 @@ export async function onRequestGet(context) {
 
         const transformed = rewriter.transform(response);
         const headers = new Headers(transformed.headers);
-        headers.set('Cache-Control', 'public, max-age=60, s-maxage=300');
+        headers.set('Cache-Control', 'public, max-age=60, s-maxage=3600');
         headers.set('Content-Type', 'text/html; charset=utf-8');
         return new Response(transformed.body, {
             status: transformed.status,
