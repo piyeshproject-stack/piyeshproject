@@ -1,10 +1,19 @@
+User-agent: Googlebot
+Allow: /
+Allow: /api/
+
 User-agent: *
 Allow: /
 Allow: /index.html
+Allow: /shop
 Allow: /shop.html
+Allow: /product
 Allow: /product.html
+Allow: /policies
 Allow: /policies.html
+Allow: /team
 Allow: /team.html
+Allow: /track
 Allow: /track.html
 
 Allow: /api/public-data
