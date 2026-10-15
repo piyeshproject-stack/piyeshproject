@@ -67,7 +67,7 @@ export async function onRequestGet(context) {
             ]
         };
 
-        return new HTMLRewriter()
+        const transformed = new HTMLRewriter()
             .on('title', { element(e) { e.setInnerContent(title); } })
             .on('meta[name="description"]', { element(e) { e.setAttribute('content', description); } })
             .on('#navBrand', { element(e) { e.setInnerContent(storeName); } })
@@ -91,6 +91,15 @@ export async function onRequestGet(context) {
                 }
             })
             .transform(response);
+
+        const headers = new Headers(transformed.headers);
+        headers.set('Cache-Control', 'public, max-age=60, s-maxage=300');
+        headers.set('Content-Type', 'text/html; charset=utf-8');
+        return new Response(transformed.body, {
+            status: transformed.status,
+            statusText: transformed.statusText,
+            headers: headers
+        });
     } catch(err) {
         return response;
     }

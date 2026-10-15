@@ -121,7 +121,15 @@ export async function onRequestGet(context) {
             });
         }
 
-        return rewriter.transform(response);
+        const transformed = rewriter.transform(response);
+        const headers = new Headers(transformed.headers);
+        headers.set('Cache-Control', 'public, max-age=60, s-maxage=300');
+        headers.set('Content-Type', 'text/html; charset=utf-8');
+        return new Response(transformed.body, {
+            status: transformed.status,
+            statusText: transformed.statusText,
+            headers: headers
+        });
     } catch(err) {
         return response;
     }
