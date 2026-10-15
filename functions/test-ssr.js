@@ -9,7 +9,7 @@ export async function onRequestGet(context) {
         }
 
         const pSettings = env.DB.prepare("SELECT store_name, logo_url, favicon_url, seo_title, seo_description, seo_keywords, seo_og_image, site_url, footer_text FROM settings WHERE id = 1").first();
-        const pProducts = env.DB.prepare("SELECT id, name, base_price, flash_sale_price, gallery_images, variants, sku FROM products WHERE is_active = 1 ORDER BY is_featured DESC, sort_order ASC, created_at DESC LIMIT 16").all();
+        const pProducts = env.DB.prepare("SELECT id, name, base_price, flash_sale_price, gallery_images, variants, sku FROM products WHERE is_active = 1 ORDER BY is_featured DESC, created_at DESC LIMIT 16").all();
 
         const [settings, prodsRes] = await Promise.all([pSettings, pProducts]);
 
