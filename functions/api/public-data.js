@@ -34,8 +34,8 @@ export async function onRequestGet(context) {
         return new Response(JSON.stringify({ success: true, data }), {
             headers: {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
-                // Cache-Control intentionally removed — TTL is set via Cloudflare Cache Rules
+                "Access-Control-Allow-Origin": "*",
+                "Cache-Control": "public, max-age=60, s-maxage=300"
             }
         });
     } catch(e) {
