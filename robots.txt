@@ -20,6 +20,5 @@ Disallow: /login.html
 Disallow: /register.html
 Disallow: /forgot-password.html
 Disallow: /fraud-chack.html
-Disallow: /api/
 
 Sitemap: /sitemap.xml

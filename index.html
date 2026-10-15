@@ -189,6 +189,10 @@ var allProducts = [], siteSettings = {}, activeCatId = '';
 document.addEventListener('DOMContentLoaded', function() {
     updateCartBadge();
     loadSiteData();
+    setTimeout(function() {
+        var pl = document.getElementById('pageLoader');
+        if (pl) pl.style.display = 'none';
+    }, 3500);
 });
 
 function loadSiteData() {

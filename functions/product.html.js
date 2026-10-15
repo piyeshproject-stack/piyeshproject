@@ -4,7 +4,8 @@ export async function onRequestGet(context) {
     const pid = url.searchParams.get('id');
 
     // 1. Fetch static HTML asset
-    const response = await env.ASSETS.fetch(request);
+    const prodRequest = new Request(new URL('/product.html', request.url), request);
+    const response = await env.ASSETS.fetch(prodRequest);
 
     // If no product ID or no DB binding, return asset directly
     if (!pid || !env.DB) {

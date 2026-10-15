@@ -39,7 +39,6 @@ Disallow: /login.html
 Disallow: /register.html
 Disallow: /forgot-password.html
 Disallow: /fraud-chack.html
-Disallow: /api/
 
 Sitemap: ${siteUrl}/sitemap.xml
 `;
@@ -47,7 +46,7 @@ Sitemap: ${siteUrl}/sitemap.xml
     return new Response(txt, {
         headers: {
             'Content-Type': 'text/plain; charset=utf-8',
-            'Cache-Control': 'public, max-age=86400, s-maxage=86400'
+            'Cache-Control': 'public, max-age=300, s-maxage=300'
         }
     });
 }
