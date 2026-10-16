@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
     <script>document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script src="assets/js/config.js?v=1792138926798"></script>
+    <script src="assets/js/config.js?v=1792139410579"></script>
     <script src="assets/js/seo-helper.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
@@ -385,27 +385,17 @@ document.addEventListener('DOMContentLoaded', function() {
         p6 = appwriteDatabases.listDocuments(APP_DB, 'reviews', [AppwriteQuery.equal('product_id', id), AppwriteQuery.equal('is_approved', true), AppwriteQuery.orderDesc('$createdAt'), AppwriteQuery.limit(REVIEWS_PAGE_SIZE)]).then(function(res) { return { data: res.documents }; }).catch(function() { return { data: [] }; });
     } else if (CONFIG.DB_PROVIDER === 'cf_db') {
         const fetchPublicData = async () => {
+            // Local caching disabled as requested: always fetch fresh from API (caching is managed via Cloudflare Domain Cache Rules)
             const cacheKey = '__fbr_pub_data_v4_' + (window.location.hostname || 'main');
             try {
                 if (typeof window.localStorage !== 'undefined') {
+                    localStorage.removeItem(cacheKey);
                     localStorage.removeItem('__fbr_public_data');
-                    const cachedStr = localStorage.getItem(cacheKey);
-                    if (cachedStr) {
-                        const cachedObj = JSON.parse(cachedStr);
-                        if (cachedObj.version === 4 && cachedObj.data && (Date.now() - cachedObj.time < 5 * 60 * 1000)) {
-                            return cachedObj.data;
-                        }
-                    }
                 }
             } catch(e) {}
             try {
                 const res = await fetch((CONFIG.HF_API_BASE||"")+"/api/public-data").then(r => r.json());
                 if (res && res.success && res.data) {
-                    try {
-                        if (typeof window.localStorage !== 'undefined') {
-                            localStorage.setItem(cacheKey, JSON.stringify({ version: 4, time: Date.now(), data: res.data }));
-                        }
-                    } catch(e) {}
                     return res.data;
                 }
             } catch(e) {}
@@ -430,11 +420,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const reviewsPromise = fetchReviews(id);
 
         p1 = pubDataPromise.then(d => ({ data: d ? d.settings : null }));
-        p4 = pubDataPromise.then(d => ({ data: d ? (d.products || []).map(p => { 
-            try { p.gallery_images = (typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : p.gallery_images); } catch(e) { p.gallery_images = []; }
-            try { p.variants = (typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants); } catch(e) { p.variants = []; }
-            return p; 
-        }) : [] }));
+        p4 = pubDataPromise.then(d => {
+            if (!d) return { data: [] };
+            let prods = d.products;
+            if ((!prods || !prods.length) && d.product_chunks && d.product_chunks.length) {
+                prods = d.product_chunks.flatMap(c => c.products);
+            }
+            return {
+                data: (prods || []).map(p => { 
+                    try { p.gallery_images = (typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : p.gallery_images); } catch(e) { p.gallery_images = []; }
+                    try { p.variants = (typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants); } catch(e) { p.variants = []; }
+                    return p; 
+                })
+            };
+        });
         p2 = p4.then(res => ({ data: res.data.find(x => String(x.id) === String(id)) || null }));
         p5 = pubDataPromise.then(d => ({ data: d ? d.product_categories : [] }));
         p3 = reviewsPromise.then(d => ({ data: d || [] }));

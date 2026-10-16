@@ -6,7 +6,7 @@ export async function onRequestGet(context) {
         const p1 = env.DB.prepare("SELECT * FROM settings WHERE id = 1");
         const p2 = env.DB.prepare("SELECT * FROM banners WHERE is_active = 1 ORDER BY sort_order");
         const p3 = env.DB.prepare("SELECT * FROM categories WHERE is_active = 1 ORDER BY sort_order");
-        const p4 = env.DB.prepare("SELECT * FROM products WHERE is_active = 1");
+        const p4 = env.DB.prepare("SELECT * FROM products WHERE is_active = 1 ORDER BY is_featured DESC, created_at DESC");
         const p5 = env.DB.prepare("SELECT * FROM home_sections WHERE is_active = 1 ORDER BY sort_order");
         const p6 = env.DB.prepare("SELECT * FROM product_categories");
 
@@ -19,11 +19,55 @@ export async function onRequestGet(context) {
         // Cloudflare Env Var থেকে ব্র্যান্ড কালার নির্বাচন (BRAND_COLORS বা THEME_COLORS)
         const brandColors = env.BRAND_COLORS || env.THEME_COLORS || env.THEME_CSS || null;
 
+        const allProducts = products.results || [];
+
+        // 100 products per chunk (sub-files/chunks)
+        const CHUNK_SIZE = 100;
+        const product_chunks = [];
+        for (let i = 0; i < allProducts.length; i += CHUNK_SIZE) {
+            const chunkSlice = allProducts.slice(i, i + CHUNK_SIZE);
+            product_chunks.push({
+                chunk_id: Math.floor(i / CHUNK_SIZE) + 1,
+                start_index: i,
+                end_index: i + chunkSlice.length,
+                count: chunkSlice.length,
+                products: chunkSlice
+            });
+        }
+
+        // Check if caller specifically requested a sub-chunk (e.g. ?chunk=1)
+        const url = new URL(context.request.url);
+        const chunkParam = url.searchParams.get("chunk");
+        if (chunkParam) {
+            const targetId = parseInt(chunkParam, 10);
+            const foundChunk = product_chunks.find(c => c.chunk_id === targetId) || product_chunks[targetId - 1] || null;
+            return new Response(JSON.stringify({
+                success: true,
+                chunk_id: targetId,
+                total_chunks: product_chunks.length,
+                total_products: allProducts.length,
+                chunk: foundChunk
+            }), {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                    // Caching is 100% controlled by Cloudflare Dashboard Cache Rules per domain (no hardcoded Cache-Control)
+                }
+            });
+        }
+
+        // Master file: contains settings, banners, categories, home sections, sub-file product chunks (100 products each), and full products list
         const data = {
             settings: (settings.results && settings.results.length) ? settings.results[0] : {},
             banners: banners.results || [],
             categories: categories.results || [],
-            products: products.results || [],
+            products: allProducts,
+            product_chunks: product_chunks,
+            master_meta: {
+                total_products: allProducts.length,
+                chunk_size: CHUNK_SIZE,
+                total_chunks: product_chunks.length
+            },
             home_sections: home_sections.results || [],
             product_categories: product_categories.results || [],
             tawk_widget_url: env.TAWK_WIDGET_URL || null,
@@ -34,8 +78,8 @@ export async function onRequestGet(context) {
         return new Response(JSON.stringify({ success: true, data }), {
             headers: {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-                "Cache-Control": "public, max-age=60, s-maxage=300"
+                "Access-Control-Allow-Origin": "*"
+                // Caching is 100% controlled by Cloudflare Dashboard Cache Rules per domain (no hardcoded Cache-Control)
             }
         });
     } catch(e) {

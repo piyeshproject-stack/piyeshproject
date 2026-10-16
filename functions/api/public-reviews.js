@@ -15,8 +15,8 @@ export async function onRequestGet(context) {
         return new Response(JSON.stringify({ success: true, data: results.results || [] }), {
             headers: {
                 "Content-Type": "application/json",
-                "Cache-Control": "public, max-age=86400, s-maxage=86400",
                 "Access-Control-Allow-Origin": "*"
+                // Caching is 100% controlled by Cloudflare Dashboard Cache Rules per domain (no hardcoded Cache-Control)
             }
         });
     } catch(e) {

@@ -244,29 +244,24 @@ function loadSiteData() {
             }).catch(function() { return { data: [] }; });
     } else if (CONFIG.DB_PROVIDER === 'cf_db') {
         const fetchPublicData = async () => {
+            // Local caching disabled as requested: always fetch fresh from API (caching is controlled by Cloudflare Domain Cache Rules)
             const cacheKey = '__fbr_pub_data_v4_' + (window.location.hostname || 'main');
             try {
                 if (typeof window.localStorage !== 'undefined') {
+                    localStorage.removeItem(cacheKey);
                     localStorage.removeItem('__fbr_public_data');
-                    const cachedStr = localStorage.getItem(cacheKey);
-                    if (cachedStr) {
-                        const cachedObj = JSON.parse(cachedStr);
-                        if (cachedObj && cachedObj.version === 4 && cachedObj.data && (Date.now() - cachedObj.time < 5 * 60 * 1000)) { 
-                            return cachedObj.data;
-                        }
-                    }
                 }
             } catch(e) {}
             try {
                 const res = await fetch((CONFIG.HF_API_BASE||"")+"/api/public-data").then(r => r.json());
                 if (res && res.success && res.data) {
-                    try {
-                        if (typeof window.localStorage !== 'undefined') {
-                            localStorage.setItem(cacheKey, JSON.stringify({ version: 4, time: Date.now(), data: res.data }));
-                        }
-                    } catch(e) {}
                     return res.data;
                 }
+            } catch(e) {}
+            try {
+                const fRes = await fetch("/public_data.json").then(r => r.json());
+                const fData = fRes.data || fRes;
+                if (fData && fData.products) return fData;
             } catch(e) {}
             return null;
         };
@@ -277,7 +272,20 @@ function loadSiteData() {
         p1 = pubDataPromise.then(d => ({ data: d ? d.settings : null }));
         p2 = pubDataPromise.then(d => ({ data: d ? d.banners : [] }));
         p3 = pubDataPromise.then(d => ({ data: d ? d.categories : [] }));
-        p4 = pubDataPromise.then(d => ({ data: d ? d.products.map(p => { p.gallery_images = (typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : p.gallery_images); p.variants = (typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants); return p; }) : [] }));
+        p4 = pubDataPromise.then(d => {
+            if (!d) return { data: [] };
+            let prods = d.products;
+            if ((!prods || !prods.length) && d.product_chunks && d.product_chunks.length) {
+                prods = d.product_chunks.flatMap(c => c.products);
+            }
+            return {
+                data: (prods || []).map(p => {
+                    p.gallery_images = (typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : p.gallery_images);
+                    p.variants = (typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants);
+                    return p;
+                })
+            };
+        });
         p5 = pubDataPromise.then(d => ({ data: d ? d.home_sections : [] }));
         p6 = pubDataPromise.then(d => ({ data: d ? d.product_categories : [] }));
         p7 = pubDataPromise.then(d => ({ data: d ? d.template_version : null }));

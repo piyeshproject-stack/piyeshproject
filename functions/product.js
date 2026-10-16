@@ -93,7 +93,7 @@ export async function onRequestGet(context) {
             .transform(response);
 
         const headers = new Headers(transformed.headers);
-        headers.set('Cache-Control', 'public, max-age=60, s-maxage=300');
+        // Caching is 100% controlled by Cloudflare Dashboard Cache Rules per domain (no hardcoded Cache-Control)
         headers.set('Content-Type', 'text/html; charset=utf-8');
         return new Response(transformed.body, {
             status: transformed.status,
