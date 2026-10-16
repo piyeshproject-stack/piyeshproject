@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
     <script>document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script src="assets/js/config.js?v=1792072874660"></script>
+    <script src="assets/js/config.js?v=1792138926798"></script>
     <script src="assets/js/seo-helper.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const cachedStr = localStorage.getItem(cacheKey);
                     if (cachedStr) {
                         const cachedObj = JSON.parse(cachedStr);
-                        if (cachedObj.version === 4 && cachedObj.data && (Date.now() - cachedObj.time < 60 * 60 * 1000)) {
+                        if (cachedObj.version === 4 && cachedObj.data && (Date.now() - cachedObj.time < 5 * 60 * 1000)) {
                             return cachedObj.data;
                         }
                     }
