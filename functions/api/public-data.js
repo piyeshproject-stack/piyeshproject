@@ -20,54 +20,72 @@ export async function onRequestGet(context) {
         const brandColors = env.BRAND_COLORS || env.THEME_COLORS || env.THEME_CSS || null;
 
         const allProducts = products.results || [];
-
-        // 100 products per chunk (sub-files/chunks)
+        const INITIAL_LIMIT = 20;
         const CHUNK_SIZE = 100;
-        const product_chunks = [];
-        for (let i = 0; i < allProducts.length; i += CHUNK_SIZE) {
-            const chunkSlice = allProducts.slice(i, i + CHUNK_SIZE);
-            product_chunks.push({
-                chunk_id: Math.floor(i / CHUNK_SIZE) + 1,
-                start_index: i,
-                end_index: i + chunkSlice.length,
-                count: chunkSlice.length,
-                products: chunkSlice
-            });
-        }
 
-        // Check if caller specifically requested a sub-chunk (e.g. ?chunk=1)
         const url = new URL(context.request.url);
         const chunkParam = url.searchParams.get("chunk");
-        if (chunkParam) {
-            const targetId = parseInt(chunkParam, 10);
-            const foundChunk = product_chunks.find(c => c.chunk_id === targetId) || product_chunks[targetId - 1] || null;
+        const singlePid = url.searchParams.get("product_id");
+        const loadAll = url.searchParams.get("all") === "1";
+
+        // 1. Single product lookup (for product page direct access)
+        if (singlePid) {
+            const found = allProducts.find(p => String(p.id) === String(singlePid));
             return new Response(JSON.stringify({
                 success: true,
-                chunk_id: targetId,
-                total_chunks: product_chunks.length,
-                total_products: allProducts.length,
-                chunk: foundChunk
+                product: found || null,
+                settings: (settings.results && settings.results.length) ? settings.results[0] : {},
+                categories: categories.results || [],
+                product_categories: product_categories.results || []
             }), {
                 headers: {
                     "Content-Type": "application/json",
                     "Access-Control-Allow-Origin": "*"
-                    // Caching is 100% controlled by Cloudflare Dashboard Cache Rules per domain (no hardcoded Cache-Control)
                 }
             });
         }
 
-        // Master file: contains settings, banners, categories, home sections, sub-file product chunks (100 products each), and full products list
+        // 2. Subsequent 100-product chunks (?chunk=1, ?chunk=2, etc.)
+        if (chunkParam) {
+            const chunkNum = Math.max(1, parseInt(chunkParam, 10) || 1);
+            // Chunk 1 starts after initial 20 products: offset = 20 + (chunkNum - 1) * 100
+            const offset = INITIAL_LIMIT + (chunkNum - 1) * CHUNK_SIZE;
+            const chunkProducts = allProducts.slice(offset, offset + CHUNK_SIZE);
+            const hasMore = (offset + CHUNK_SIZE) < allProducts.length;
+
+            return new Response(JSON.stringify({
+                success: true,
+                chunk: chunkNum,
+                count: chunkProducts.length,
+                total_products: allProducts.length,
+                has_more: hasMore,
+                next_chunk: hasMore ? (chunkNum + 1) : null,
+                products: chunkProducts
+            }), {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            });
+        }
+
+        // 3. Initial load: Banners + Settings + Categories + First 20 products (Instant render)
+        const initialProducts = loadAll ? allProducts : allProducts.slice(0, INITIAL_LIMIT);
+        const remainingCount = Math.max(0, allProducts.length - INITIAL_LIMIT);
+        const totalChunks = Math.ceil(remainingCount / CHUNK_SIZE);
+        const hasMore = allProducts.length > INITIAL_LIMIT && !loadAll;
+
         const data = {
             settings: (settings.results && settings.results.length) ? settings.results[0] : {},
             banners: banners.results || [],
             categories: categories.results || [],
-            products: allProducts,
-            product_chunks: product_chunks,
-            master_meta: {
-                total_products: allProducts.length,
-                chunk_size: CHUNK_SIZE,
-                total_chunks: product_chunks.length
-            },
+            products: initialProducts,
+            has_more: hasMore,
+            next_chunk: hasMore ? 1 : null,
+            total_products: allProducts.length,
+            initial_count: initialProducts.length,
+            chunk_size: CHUNK_SIZE,
+            total_chunks: totalChunks,
             home_sections: home_sections.results || [],
             product_categories: product_categories.results || [],
             tawk_widget_url: env.TAWK_WIDGET_URL || null,
@@ -79,7 +97,6 @@ export async function onRequestGet(context) {
             headers: {
                 "Content-Type": "application/json",
                 "Access-Control-Allow-Origin": "*"
-                // Caching is 100% controlled by Cloudflare Dashboard Cache Rules per domain (no hardcoded Cache-Control)
             }
         });
     } catch(e) {

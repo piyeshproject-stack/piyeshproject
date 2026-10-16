@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
     <script>document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script src="assets/js/config.js?v=1792139410579"></script>
+    <script src="assets/js/config.js?v=1792145528736"></script>
     <script src="assets/js/seo-helper.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
@@ -350,6 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         const pubDataPromise = fetchPublicData();
         pubDataPromise.then(function(d) {
+            window.__pubDataMeta = d || null;
             if (d && d.tawk_widget_url && window.initTawkTo) window.initTawkTo(d.tawk_widget_url);
         });
         p1 = pubDataPromise.then(d => ({ data: d ? d.settings : null }));
@@ -453,6 +454,56 @@ document.addEventListener('DOMContentLoaded', function() {
         applyFilters();
         var pl = document.getElementById('pageLoader');
         if (pl) pl.style.display = 'none';
+
+        // ── Progressive 100-Product Chunk Loader (Background & Infinite Scroll) ──
+        if (window.__pubDataMeta && window.__pubDataMeta.has_more) {
+            var currentChunk = 1;
+            var hasMoreChunks = true;
+            var isLoadingChunk = false;
+
+            async function loadNextChunk() {
+                if (!hasMoreChunks || isLoadingChunk) return;
+                isLoadingChunk = true;
+                try {
+                    var res = await fetch((CONFIG.HF_API_BASE||"") + "/api/public-data?chunk=" + currentChunk).then(r => r.json());
+                    if (res && res.success && res.products && res.products.length) {
+                        var newProds = res.products.map(function(p) {
+                            try { p.gallery_images = (typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : p.gallery_images); } catch(e) { p.gallery_images = []; }
+                            try { p.variants = (typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants); } catch(e) { p.variants = []; }
+                            p.category_ids = pc.filter(function(x) { return String(x.product_id) === String(p.id); }).map(function(x) { return String(x.category_id); });
+                            if (p.category_id && !p.category_ids.some(function(cid){ return String(cid) === String(p.category_id); })) {
+                                p.category_ids.push(String(p.category_id));
+                            }
+                            return p;
+                        });
+                        allProducts = allProducts.concat(newProds);
+                        applyFilters();
+                        hasMoreChunks = !!res.has_more;
+                        currentChunk++;
+                    } else {
+                        hasMoreChunks = false;
+                    }
+                } catch(e) {
+                    console.warn('Chunk load error:', e);
+                } finally {
+                    isLoadingChunk = false;
+                }
+            }
+
+            // Scroll trigger
+            window.addEventListener('scroll', function() {
+                if (hasMoreChunks && !isLoadingChunk) {
+                    if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 600) {
+                        loadNextChunk();
+                    }
+                }
+            }, { passive: true });
+
+            // Idle prefetch: load next 100 after 1.5 seconds so user doesn't wait
+            setTimeout(function() {
+                if (hasMoreChunks) loadNextChunk();
+            }, 1500);
+        }
     }).catch(function(err) {
         console.error('Shop load error:', err);
         var pl = document.getElementById('pageLoader');

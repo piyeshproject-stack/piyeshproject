@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/tailwind.css?v=1791100000005">
     <script>document.write('<link rel="stylesheet" href="assets/css/theme.css?v=' + Date.now() + '">');</script>
-    <script src="assets/js/config.js?v=1792139410579"></script>
+    <script src="assets/js/config.js?v=1792145528736"></script>
     <script src="assets/js/seo-helper.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="assets/js/supabase-init.js"></script>
@@ -434,7 +434,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             };
         });
-        p2 = p4.then(res => ({ data: res.data.find(x => String(x.id) === String(id)) || null }));
+        p2 = p4.then(async res => {
+            let found = res.data.find(x => String(x.id) === String(id));
+            if (!found) {
+                try {
+                    const spRes = await fetch((CONFIG.HF_API_BASE||"")+"/api/public-data?product_id="+encodeURIComponent(id)).then(r => r.json());
+                    if (spRes && spRes.success && spRes.product) {
+                        let p = spRes.product;
+                        try { p.gallery_images = (typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : p.gallery_images); } catch(e) { p.gallery_images = []; }
+                        try { p.variants = (typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants); } catch(e) { p.variants = []; }
+                        return { data: p };
+                    }
+                } catch(e) {}
+            }
+            return { data: found || null };
+        });
         p5 = pubDataPromise.then(d => ({ data: d ? d.product_categories : [] }));
         p3 = reviewsPromise.then(d => ({ data: d || [] }));
         p6 = reviewsPromise.then(d => ({ data: (d || []).slice(0, REVIEWS_PAGE_SIZE) }));

@@ -267,6 +267,7 @@ function loadSiteData() {
         };
         const pubDataPromise = fetchPublicData();
         pubDataPromise.then(function(d) {
+            window.__pubDataMeta = d || null;
             if (d && d.tawk_widget_url && window.initTawkTo) window.initTawkTo(d.tawk_widget_url);
         });
         p1 = pubDataPromise.then(d => ({ data: d ? d.settings : null }));
@@ -353,6 +354,25 @@ function loadSiteData() {
         }
 
         document.getElementById('pageLoader').style.display = 'none';
+
+        // ── Background Idle Prefetch for Remaining Product Chunks ──
+        if (window.__pubDataMeta && window.__pubDataMeta.has_more) {
+            setTimeout(async function() {
+                try {
+                    var cRes = await fetch((CONFIG.HF_API_BASE||"") + "/api/public-data?chunk=1").then(r => r.json());
+                    if (cRes && cRes.success && cRes.products && cRes.products.length) {
+                        var newProds = cRes.products.map(function(p) {
+                            try { p.gallery_images = (typeof p.gallery_images === 'string' ? JSON.parse(p.gallery_images) : p.gallery_images); } catch(e) { p.gallery_images = []; }
+                            try { p.variants = (typeof p.variants === 'string' ? JSON.parse(p.variants) : p.variants); } catch(e) { p.variants = []; }
+                            p.category_ids = prodCats.filter(function(x){ return x.product_id === p.id; }).map(function(x){ return x.category_id; });
+                            if (p.category_id && !p.category_ids.includes(p.category_id)) p.category_ids.push(p.category_id);
+                            return p;
+                        });
+                        allProducts = allProducts.concat(newProds);
+                    }
+                } catch(e) {}
+            }, 1800);
+        }
     }).catch(function(err) {
         console.error(err);
         document.getElementById('pageLoader').style.display = 'none';
