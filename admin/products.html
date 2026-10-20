@@ -18,48 +18,53 @@
     <script src="../assets/js/piexif.js"></script>
     <script src="../assets/js/image-seo-injector.js"></script>
     <style>
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
         .product-card {
-            background: var(--bg-secondary); border: 1px solid var(--border);
+            background: #FFFFFF; border: 1px solid var(--border);
             border-radius: var(--radius-md); overflow: hidden; transition: var(--transition);
+            box-shadow: var(--shadow-sm);
         }
-        .product-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
-        .product-img { width: 100%; height: 180px; object-fit: cover; background: var(--bg-card); display: block; }
-        .product-card-body { padding: 14px; }
-        .product-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-card:hover {
+            border-color: rgba(139, 26, 26, 0.3);
+            box-shadow: var(--shadow-card-hover);
+            transform: translateY(-2px);
+        }
+        .product-img { width: 100%; height: 180px; object-fit: cover; background: var(--bg-card-subtle); display: block; }
+        .product-card-body { padding: 14px 16px; }
+        .product-name { font-weight: 700; font-size: 14px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary); }
         .product-price { font-size: 16px; font-weight: 800; color: var(--accent); }
-        .product-old-price { font-size: 12px; color: var(--text-secondary); text-decoration: line-through; margin-left: 6px; }
-        .product-card-footer { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border); }
+        .product-old-price { font-size: 12px; color: var(--text-muted); text-decoration: line-through; margin-left: 6px; }
+        .product-card-footer { display: flex; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--bg-card-subtle); }
 
         /* Variant Builder */
-        .variant-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 12px; }
+        .variant-item { background: var(--bg-card-subtle); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 12px; }
         .variant-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .color-preview { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); }
+        .color-preview { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(139, 26, 26, 0.2); }
         .size-item { display: grid; grid-template-columns: 80px 1fr 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
         .gallery-url-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 
         /* -- Rich Text Editor ---------------------------------- */
-        .rte-wrap { border: 1.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-card); transition: border-color 0.2s; }
-        .rte-wrap:focus-within { border-color: var(--accent,#007AFF); box-shadow: 0 0 0 3px rgba(0,122,255,0.12); }
-        .rte-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 8px 10px; background: rgba(255,255,255,0.04); border-bottom: 1px solid var(--border); }
-        .rte-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary,#888); font-size: 13px; font-weight: 700; cursor: pointer; padding: 0 8px; transition: background 0.15s, color 0.15s; font-family: inherit; }
-        .rte-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary,#fff); }
+        .rte-wrap { border: 1.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: #FFFFFF; transition: var(--transition); }
+        .rte-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--border-focus-ring); }
+        .rte-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 8px 10px; background: var(--bg-card-subtle); border-bottom: 1px solid var(--border); }
+        .rte-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 700; cursor: pointer; padding: 0 8px; transition: var(--transition); font-family: inherit; }
+        .rte-btn:hover { background: var(--bg-card-hover); color: var(--accent); }
         .rte-sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
-        .rte-select { height: 32px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card,#1c1c1e); color: var(--text-secondary,#888); font-size: 12px; padding: 0 6px; cursor: pointer; font-family: inherit; }
-        .rte-select option { background: var(--bg-card,#1c1c1e); }
-        .rte-editor { min-height: 130px; max-height: 300px; overflow-y: auto; padding: 12px 14px; font-size: 14px; line-height: 1.8; color: var(--text-primary,#fff); outline: none; }
-        .rte-editor:empty:before { content: attr(data-placeholder); color: var(--text-secondary,#888); pointer-events: none; }
+        .rte-select { height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #FFFFFF; color: var(--text-primary); font-size: 12px; padding: 0 6px; cursor: pointer; font-family: inherit; }
+        .rte-select option { background: #FFFFFF; color: var(--text-primary); }
+        .rte-editor { min-height: 130px; max-height: 300px; overflow-y: auto; padding: 12px 14px; font-size: 14px; line-height: 1.8; color: var(--text-primary); outline: none; }
+        .rte-editor:empty:before { content: attr(data-placeholder); color: var(--text-muted); pointer-events: none; }
         .rte-editor b, .rte-editor strong { font-weight: 700; }
         .rte-editor i, .rte-editor em { font-style: italic; }
         .rte-editor u { text-decoration: underline; }
         .rte-editor s { text-decoration: line-through; }
         .rte-editor ul { list-style: disc; padding-left: 22px; margin: 4px 0; }
         .rte-editor ol { list-style: decimal; padding-left: 22px; margin: 4px 0; }
-        .rte-editor h1 { font-size: 1.5em; font-weight: 800; margin: 6px 0 2px; }
-        .rte-editor h2 { font-size: 1.25em; font-weight: 700; margin: 6px 0 2px; }
-        .rte-editor h3 { font-size: 1.1em; font-weight: 700; margin: 4px 0 2px; }
-        .rte-editor blockquote { border-left: 3px solid var(--accent,#007AFF); padding-left: 12px; color: var(--text-secondary,#888); margin: 4px 0; font-style: italic; }
-        .rte-char-count { font-size: 11px; color: var(--text-secondary,#888); text-align: right; padding: 4px 12px 6px; }
+        .rte-editor h1 { font-size: 1.5em; font-weight: 800; margin: 6px 0 2px; color: var(--text-primary); }
+        .rte-editor h2 { font-size: 1.25em; font-weight: 700; margin: 6px 0 2px; color: var(--text-primary); }
+        .rte-editor h3 { font-size: 1.1em; font-weight: 700; margin: 4px 0 2px; color: var(--text-primary); }
+        .rte-editor blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--text-secondary); margin: 4px 0; font-style: italic; }
+        .rte-char-count { font-size: 11px; color: var(--text-muted); text-align: right; padding: 4px 12px 6px; }
     </style>
     <link rel="stylesheet" href="../assets/css/premium-icons.css">
 </head>

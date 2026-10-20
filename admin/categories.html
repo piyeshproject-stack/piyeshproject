@@ -124,7 +124,7 @@ function renderCats() {
 
         html += '<tr>' +
             '<td>' + iconHtml + '</td>' +
-            '<td style="font-weight:600;">' + c.name + '</td>' +
+            '<td style="font-weight:600;color:var(--text-dark);">' + c.name + '</td>' +
             '<td>' + (c.sort_order || 0) + '</td>' +
             '<td><span class="badge ' + (c.is_active ? 'badge-delivered' : 'badge-cancelled') + '">' + (c.is_active ? 'Active' : 'Inactive') + '</span></td>' +
             '<td style="display:flex;gap:6px;">' +
@@ -133,6 +133,7 @@ function renderCats() {
             '</td></tr>';
     });
     document.getElementById('catBody').innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function openModal() {

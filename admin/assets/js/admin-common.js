@@ -77,6 +77,10 @@ var SIDEBAR_HTML = `
             <span>Reviews</span>
             <span class="nav-badge green" id="reviewBadge" style="display:none;">0</span>
         </a>
+        <a href="../fraud-chack.html" class="nav-item" data-page="fraud-check">
+            <span class="nav-icon">🛡️</span>
+            <span>Fraud Checker</span>
+        </a>
 
         <div class="nav-section-label">Config</div>
         <a href="env-setup.html" class="nav-item" data-page="env-setup">

@@ -27,17 +27,17 @@
         </div>
     </header>
     <div class="admin-content">
-        <div class="card" style="margin-bottom:16px;background:rgba(0,122,255,0.06);border-color:rgba(0,122,255,0.2);">
-            <div style="font-size:13px;color:#8E8E93;">
-                <b style="color:#007AFF;">Add-ons</b> হলো checkout এ extra items যা user চাইলে add করতে পারবে।
-                উদাহরণ: Gift Wrap <i data-lucide="gift" class="lucide-icon icon-bounce"></i> (+৳50), Extra Box <i data-lucide="package" class="lucide-icon icon-bounce"></i> (+৳30)
+        <div class="card" style="margin-bottom:16px;background:var(--accent-subtle);border-color:var(--border);">
+            <div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">
+                <b style="color:var(--accent);"><i data-lucide="info" class="lucide-icon" style="width:14px;height:14px;display:inline-block;vertical-align:middle;"></i> Add-ons:</b> হলো checkout এ extra items যা কাস্টমার চাইলে add করতে পারবে।
+                উদাহরণ: Gift Wrap 🎁 (+৳50), Extra Box 📦 (+৳30)
             </div>
         </div>
         <div class="card" style="padding:0;">
             <div class="table-wrap">
                 <table>
                     <thead><tr><th>Icon</th><th>Name</th><th>Price (৳)</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody id="addonsBody"><tr><td colspan="5" style="text-align:center;padding:40px;color:#8E8E93;">Loading...</td></tr></tbody>
+                    <tbody id="addonsBody"><tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -53,7 +53,7 @@
         <div class="form-row">
             <div class="form-group">
                 <label class="form-label">Icon (Emoji) *</label>
-                <input class="form-input" id="aIcon" placeholder="<i data-lucide="gift" class="lucide-icon icon-bounce"></i>" style="font-size:22px;text-align:center;" maxlength="4">
+                <input class="form-input" id="aIcon" placeholder="🎁" style="font-size:22px;text-align:center;" maxlength="4">
             </div>
             <div class="form-group">
                 <label class="form-label">Price (৳) *</label>

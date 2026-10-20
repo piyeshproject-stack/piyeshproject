@@ -58,22 +58,22 @@
                     <div class="form-group">
                         <label class="form-label">Primary (Navbar/Btn)</label>
                         <div style="display:flex; gap:8px;">
-                            <input type="color" id="themePrimary" value="#FF4D4D" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
-                            <input type="text" id="themePrimaryHex" class="form-input" value="#FF4D4D" oninput="document.getElementById('themePrimary').value=this.value">
+                            <input type="color" id="themePrimary" value="#8B1A1A" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themePrimaryHex" class="form-input" value="#8B1A1A" oninput="document.getElementById('themePrimary').value=this.value">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Primary Light (Hover)</label>
                         <div style="display:flex; gap:8px;">
-                            <input type="color" id="themePrimaryLight" value="#FF7070" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
-                            <input type="text" id="themePrimaryLightHex" class="form-input" value="#FF7070" oninput="document.getElementById('themePrimaryLight').value=this.value">
+                            <input type="color" id="themePrimaryLight" value="#B03535" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themePrimaryLightHex" class="form-input" value="#B03535" oninput="document.getElementById('themePrimaryLight').value=this.value">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Primary Dark</label>
                         <div style="display:flex; gap:8px;">
-                            <input type="color" id="themePrimaryDark" value="#D13B3B" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
-                            <input type="text" id="themePrimaryDarkHex" class="form-input" value="#D13B3B" oninput="document.getElementById('themePrimaryDark').value=this.value">
+                            <input type="color" id="themePrimaryDark" value="#680000" style="width:40px; height:38px; padding:0; border:none; border-radius:6px; cursor:pointer;">
+                            <input type="text" id="themePrimaryDarkHex" class="form-input" value="#680000" oninput="document.getElementById('themePrimaryDark').value=this.value">
                         </div>
                     </div>
                 </div>
@@ -186,7 +186,7 @@
                     <div id="themePreviewBox" style="padding:0; border-radius:12px; background:#F4F7FE; border:1px solid rgba(0,0,0,0.1); overflow:hidden; display:flex; flex-direction:column; height:300px;">
                         
                         <!-- Mock Navbar -->
-                        <div id="tpNavbar" style="background:#FF4D4D; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+                        <div id="tpNavbar" style="background:#8B1A1A; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
                             <div style="color:white; font-weight:800; font-size:16px;">My Store</div>
                             <div style="color:white; font-size:12px;">☰</div>
                         </div>
@@ -200,14 +200,14 @@
                                 <div class="tpCard" style="background:#FFFFFF; border-radius:10px; padding:10px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
                                     <div style="background:#e0e0e0; height:80px; border-radius:6px; margin-bottom:10px;"></div>
                                     <div class="tpText" style="font-size:12px; font-weight:700; color:#1A1A2E; margin-bottom:6px;">Smart Watch</div>
-                                    <button class="tpBtn" style="background:#FF4D4D; color:white; border:none; padding:6px; border-radius:6px; font-weight:700; width:100%; cursor:pointer; font-size:11px;">Buy Now</button>
+                                    <button class="tpBtn" style="background:#8B1A1A; color:white; border:none; padding:6px; border-radius:6px; font-weight:700; width:100%; cursor:pointer; font-size:11px;">Buy Now</button>
                                 </div>
                                 
                                 <!-- Mock Card 2 -->
                                 <div class="tpCard" style="background:#FFFFFF; border-radius:10px; padding:10px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
                                     <div style="background:#e0e0e0; height:80px; border-radius:6px; margin-bottom:10px;"></div>
                                     <div class="tpText" style="font-size:12px; font-weight:700; color:#1A1A2E; margin-bottom:6px;">Headphones</div>
-                                    <button class="tpBtn" style="background:#FF4D4D; color:white; border:none; padding:6px; border-radius:6px; font-weight:700; width:100%; cursor:pointer; font-size:11px;">Buy Now</button>
+                                    <button class="tpBtn" style="background:#8B1A1A; color:white; border:none; padding:6px; border-radius:6px; font-weight:700; width:100%; cursor:pointer; font-size:11px;">Buy Now</button>
                                 </div>
                             </div>
                         </div>
@@ -216,7 +216,7 @@
                 </div>
 
                 <div style="display:flex; gap:12px; margin-top:20px;">
-                    <button type="button" class="btn btn-outline" style="width:40%; border-color:#FF4D4D; color:#FF4D4D;" onclick="resetThemeToDefault()">↺ Reset to Default</button>
+                    <button type="button" class="btn btn-outline" style="width:40%; border-color:var(--primary); color:var(--primary);" onclick="resetThemeToDefault()">↺ Reset to Default</button>
                     <button type="button" class="btn btn-primary" style="width:60%;" onclick="generateThemeVariableCode()">📋 Generate Brand Color Code</button>
                 </div>
             </div>
@@ -240,6 +240,7 @@
                     <div id="colorPreviewBox" style="width:36px; height:36px; border-radius:8px; border:1px solid #ddd; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.1);"></div>
                     <span id="colorPreviewHex" style="font-family:monospace; font-weight:700; font-size:16px;">#FFFFFF</span>
                 </div>
+                <button type="button" id="colorPickerConfirmBtn" class="btn btn-primary btn-sm" style="padding:8px 16px;">✅ Select Color</button>
             </div>
         </div>
     </div>

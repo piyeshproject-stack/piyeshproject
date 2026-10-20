@@ -1,113 +1,635 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fraud Check - BD Courier</title>
+    <title>Courier Fraud Check & Risk Intelligence | BD Courier</title>
+    <meta name="description" content="Check customer delivery success rate and fraud reports across all Bangladesh couriers.">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind CSS (CDN) with Tailwind configuration -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                        },
+                        danger: {
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                        },
+                        warning: {
+                            500: '#f59e0b',
+                            600: '#d97706',
+                        },
+                        dark: {
+                            bg: '#0B0F19',
+                            card: '#111827',
+                            border: '#1F2937',
+                            subtle: '#1E293B',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        body { background-color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .glass-card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* Smooth transitions & styling */
+        * { transition: background-color 0.2s ease, border-color 0.2s ease; }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4B5563; }
+
+        /* Shimmer effect for skeleton loader */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.6s infinite;
+        }
+        .light .skeleton {
+            background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.6s infinite;
+        }
+
+        /* Pulse glow for risk badges */
+        @keyframes pulse-glow-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        .glow-red { animation: pulse-glow-red 2s infinite; }
+
+        @keyframes pulse-glow-green {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+        }
+        .glow-green { animation: pulse-glow-green 2s infinite; }
+
+        /* Print styles */
+        @media print {
+            body { background: #fff !important; color: #000 !important; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .dark { color: #000 !important; }
+            .card-box { border: 1px solid #ccc !important; box-shadow: none !important; }
+        }
     </style>
 </head>
-<body class="text-gray-800">
+<body class="bg-[#0b101b] text-gray-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white transition-colors duration-300">
 
-    <div class="max-w-4xl mx-auto p-4 md:p-6 mt-10">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2"><i class="fa-solid fa-shield-halved text-blue-600"></i> Customer Fraud Check</h1>
-            <p class="text-gray-500">Check customer parcel history across multiple couriers (BD Courier API)</p>
-        </div>
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-gray-800/80 bg-gray-900/60 backdrop-blur-xl sticky top-0 z-40 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-bold text-lg">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
+                            FraudShield <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 font-mono font-medium border border-blue-500/30">PRO</span>
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Live BD Courier
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-400 hidden sm:block">মাল্টি-কুরিয়ার পার্সেল ইতিহাস ও ফ্রড ডিটেকশন সিস্টেম</p>
+                </div>
+            </div>
 
-        <!-- Search Box -->
-        <div class="glass-card p-6 mb-8">
-            <form id="checkForm" class="flex flex-col md:flex-row gap-4">
-                <input type="text" id="phoneInput" placeholder="Enter Phone Number (e.g. 017xxxxxxxx)" required pattern="[0-9]{11}" 
-                       class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
-                <button type="submit" id="checkBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition duration-200">
-                    <span id="btnText"><i class="fa-solid fa-magnifying-glass mr-2"></i> Check Record</span>
-                    <span id="btnLoader" class="hidden"><div class="loader mr-2"></div> Checking...</span>
+            <!-- Header Right Actions -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <a href="admin/orders.html" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700 transition">
+                    <i class="fa-solid fa-box-archive text-gray-400"></i> Admin Orders
+                </a>
+                <a href="index.html" class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700 transition">
+                    <i class="fa-solid fa-store text-gray-400"></i> Store Home
+                </a>
+                
+                <!-- API Settings modal trigger -->
+                <button onclick="openApiModal()" title="API Settings" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white border border-gray-700/80 transition text-sm">
+                    <i class="fa-solid fa-key"></i>
                 </button>
+
+                <!-- Theme Toggle -->
+                <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-amber-400 hover:text-amber-300 border border-gray-700/80 transition text-sm" title="Toggle Theme">
+                    <i class="fa-solid fa-sun" id="themeIcon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+
+        <!-- Search Card -->
+        <section class="relative rounded-2xl bg-gradient-to-b from-gray-800/80 to-gray-900/90 border border-gray-700/80 p-5 sm:p-7 shadow-2xl backdrop-blur-xl no-print">
+            <div class="max-w-3xl mx-auto text-center mb-6">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-fingerprint text-blue-500"></i> কাস্টমার কুরিয়ার ফ্রড চেক
+                </h1>
+                <p class="text-xs sm:text-sm text-gray-400 mt-1.5">
+                    SteadFast, Pathao, RedX, PaperFly সহ সকল কুরিয়ারের রিয়েল-টাইম ডেলিভারি রেকর্ড ও ফ্রড রিপোর্ট যাচাই করুন
+                </p>
+            </div>
+
+            <!-- Search Form -->
+            <form id="checkForm" class="max-w-2xl mx-auto" onsubmit="handleFormSubmit(event)">
+                <div class="relative flex flex-col sm:flex-row items-stretch gap-2.5 bg-gray-950/70 p-2 rounded-xl border border-gray-700/80 focus-within:border-blue-500/80 focus-within:ring-2 focus-within:ring-blue-500/20 shadow-inner">
+                    <div class="relative flex-1 flex items-center">
+                        <span class="pl-3.5 pr-2 text-gray-400 text-base font-medium flex items-center gap-1.5 select-none">
+                            <span class="text-lg">🇧🇩</span> +88
+                        </span>
+                        <input 
+                            type="tel" 
+                            id="phoneInput" 
+                            placeholder="017xxxxxxxx বা 01XXXXXXXXX"
+                            autocomplete="tel"
+                            maxlength="14"
+                            class="w-full bg-transparent py-2.5 px-2 text-base sm:text-lg font-mono font-medium text-white placeholder-gray-500 focus:outline-none"
+                            required
+                        >
+                        <!-- Paste button -->
+                        <button type="button" onclick="pasteFromClipboard()" class="p-1.5 px-2 mr-1 text-xs text-gray-400 hover:text-white rounded hover:bg-gray-800 transition" title="Paste number">
+                            <i class="fa-regular fa-clipboard"></i>
+                        </button>
+                        <!-- Clear input button -->
+                        <button type="button" id="clearBtn" onclick="clearInput()" class="hidden p-1.5 mr-2 text-gray-400 hover:text-white rounded-full hover:bg-gray-800 transition" title="Clear">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        id="checkBtn" 
+                        class="px-6 py-3 rounded-lg font-bold text-sm bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white shadow-lg shadow-blue-600/30 active:scale-[0.98] transition flex items-center justify-center gap-2"
+                    >
+                        <span id="btnIcon"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <span id="btnText">যাচাই করুন</span>
+                        <span id="btnLoader" class="hidden">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> ডাটা লোড হচ্ছে...
+                        </span>
+                    </button>
+                </div>
             </form>
-            <div id="errorMsg" class="hidden mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm font-semibold"></div>
+
+            <!-- Quick Samples & Recent History -->
+            <div class="max-w-2xl mx-auto mt-4 pt-4 border-t border-gray-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-gray-400 font-medium"><i class="fa-regular fa-lightbulb text-amber-400"></i> টেস্ট নম্বর:</span>
+                    <button type="button" onclick="quickFill('01711111111')" class="px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 text-blue-400 font-mono hover:text-blue-300 border border-gray-700/60 transition">
+                        01711111111
+                    </button>
+                    <button type="button" onclick="quickFill('01900000000')" class="px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 text-blue-400 font-mono hover:text-blue-300 border border-gray-700/60 transition">
+                        01900000000
+                    </button>
+                </div>
+
+                <!-- Recent Searches Dropdown / Clear -->
+                <div id="recentContainer" class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-gray-400"><i class="fa-solid fa-clock-rotate-left"></i> রিসেন্ট:</span>
+                    <div id="recentList" class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-gray-500 italic">কোন সার্চ নেই</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="errorAlert" class="hidden max-w-2xl mx-auto mt-4 p-4 rounded-xl bg-red-950/40 border border-red-500/40 text-red-300 text-sm flex items-start gap-3">
+                <i class="fa-solid fa-triangle-exclamation text-red-400 text-lg mt-0.5"></i>
+                <div class="flex-1">
+                    <div class="font-bold text-red-200" id="errorTitle">সার্ভার ত্রুটি</div>
+                    <div class="text-xs text-red-300/90 mt-0.5" id="errorMsgText">ডাটা আনতে সমস্যা হয়েছে। দয়া করে আবার চেষ্টা করুন।</div>
+                </div>
+                <button onclick="document.getElementById('errorAlert').classList.add('hidden')" class="text-red-400 hover:text-red-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading Skeleton -->
+        <div id="loadingSkeleton" class="hidden space-y-6">
+            <!-- Summary skeleton -->
+            <div class="p-6 rounded-2xl bg-gray-900/60 border border-gray-800 space-y-4">
+                <div class="h-6 w-48 rounded skeleton"></div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="h-24 rounded-xl skeleton"></div>
+                    <div class="h-24 rounded-xl skeleton"></div>
+                    <div class="h-24 rounded-xl skeleton"></div>
+                    <div class="h-24 rounded-xl skeleton"></div>
+                </div>
+            </div>
+            <!-- Courier grid skeleton -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="h-44 rounded-xl skeleton"></div>
+                <div class="h-44 rounded-xl skeleton"></div>
+                <div class="h-44 rounded-xl skeleton"></div>
+            </div>
         </div>
 
-        <!-- Results Section (Hidden initially) -->
-        <div id="resultsSection" class="hidden space-y-6">
-            
-            <!-- Summary Card -->
-            <div class="glass-card p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-600">
-                <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fa-solid fa-chart-pie text-blue-600 mr-2"></i> Overall Summary</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                        <div class="text-sm text-gray-500 mb-1">Total Parcels</div>
-                        <div class="text-2xl font-bold text-gray-800" id="sumTotal">0</div>
+        <!-- RESULTS SECTION -->
+        <div id="resultsWrapper" class="hidden space-y-6">
+
+            <!-- Executive Risk Assessment & Recommendation Card -->
+            <section id="riskCard" class="card-box relative overflow-hidden rounded-2xl border p-5 sm:p-7 shadow-xl">
+                <!-- Background Accent Glow -->
+                <div id="riskGlow" class="absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
+
+                <div class="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-gray-700/50">
+                    <!-- Left: Risk Profile Badge & Status -->
+                    <div class="flex items-start sm:items-center gap-4">
+                        <div id="riskIconBox" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-extrabold shadow-lg shrink-0">
+                            <!-- Injected dynamically -->
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2.5 flex-wrap">
+                                <span id="riskBadge" class="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border">
+                                    VERIFIED
+                                </span>
+                                <span id="customerPhoneBadge" class="font-mono text-sm sm:text-base font-semibold text-gray-300">
+                                    017XXXXXXXX
+                                </span>
+                            </div>
+                            <h2 id="riskTitle" class="text-xl sm:text-2xl font-extrabold text-white mt-1">
+                                নিরাপদ গ্রাহক (COD অনুমোদিত)
+                            </h2>
+                            <p id="riskDesc" class="text-xs sm:text-sm text-gray-400 mt-0.5">
+                                এই গ্রাহকের ডেলিভারি সফলতার রেকর্ড ইতিবাচক।
+                            </p>
+                        </div>
                     </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                        <div class="text-sm text-gray-500 mb-1">Success</div>
-                        <div class="text-2xl font-bold text-green-600" id="sumSuccess">0</div>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                        <div class="text-sm text-gray-500 mb-1">Cancelled</div>
-                        <div class="text-2xl font-bold text-red-600" id="sumCancelled">0</div>
-                    </div>
-                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                        <div class="text-sm text-gray-500 mb-1">Success Ratio</div>
-                        <div class="text-2xl font-bold text-blue-600" id="sumRatio">0%</div>
+
+                    <!-- Right: Quick Merchant Actions -->
+                    <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                        <button onclick="copySummaryText()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700 hover:border-gray-600 transition shadow-sm active:scale-95" title="Copy report for WhatsApp or CRM">
+                            <i class="fa-regular fa-copy text-blue-400"></i> রিপোর্ট কপি
+                        </button>
+                        <a id="btnWhatsApp" href="#" target="_blank" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 transition shadow-sm active:scale-95">
+                            <i class="fa-brands fa-whatsapp text-emerald-400"></i> WhatsApp
+                        </a>
+                        <a id="btnCall" href="#" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 transition shadow-sm active:scale-95">
+                            <i class="fa-solid fa-phone text-blue-400"></i> কল করুন
+                        </a>
+                        <button onclick="window.print()" class="p-2 px-3 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 transition" title="Print this report">
+                            <i class="fa-solid fa-print"></i>
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Courier Details Grid -->
-            <div>
-                <h2 class="text-xl font-bold text-gray-800 mb-4"><i class="fa-solid fa-truck-fast text-gray-600 mr-2"></i> Courier Breakdown</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="courierGrid">
-                    <!-- Courier cards injected here -->
+                <!-- Merchant Smart Suggestion Box -->
+                <div id="suggestionBox" class="mt-5 p-4 rounded-xl border flex items-start gap-3">
+                    <i id="suggestionIcon" class="fa-solid fa-shield-check text-emerald-400 text-lg mt-0.5"></i>
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-gray-400">মার্চেন্ট পরামর্শ (Recommendation)</div>
+                        <div id="suggestionText" class="text-sm font-semibold text-gray-200 mt-0.5">
+                            ক্যাশ অন ডেলিভারিতে পার্সেল পাঠানো নিরাপদ।
+                        </div>
+                    </div>
                 </div>
+            </section>
+
+            <!-- Overall KPI Summary Grid -->
+            <section class="grid grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                
+                <!-- Total Orders -->
+                <div class="card-box p-4 sm:p-5 rounded-2xl bg-gray-900/70 border border-gray-800 flex flex-col justify-between shadow-sm">
+                    <div class="flex items-center justify-between text-gray-400 mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider">মোট পার্সেল</span>
+                        <div class="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-extrabold font-mono text-white" id="statTotal">0</div>
+                        <div class="text-[11px] text-gray-500 mt-1">সর্বমোট বুকিং সংখ্যা</div>
+                    </div>
+                </div>
+
+                <!-- Delivered -->
+                <div class="card-box p-4 sm:p-5 rounded-2xl bg-gray-900/70 border border-gray-800 flex flex-col justify-between shadow-sm">
+                    <div class="flex items-center justify-between text-gray-400 mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider">ডেলিভার্ড</span>
+                        <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-extrabold font-mono text-emerald-400" id="statDelivered">0</div>
+                        <div class="text-[11px] text-emerald-500/90 mt-1" id="statDeliveredPct">0% সফল ডেলিভারি</div>
+                    </div>
+                </div>
+
+                <!-- Returned / Cancelled -->
+                <div class="card-box p-4 sm:p-5 rounded-2xl bg-gray-900/70 border border-gray-800 flex flex-col justify-between shadow-sm">
+                    <div class="flex items-center justify-between text-gray-400 mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider">রিটার্ন / বাতিল</span>
+                        <div class="w-7 h-7 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-extrabold font-mono text-red-400" id="statReturned">0</div>
+                        <div class="text-[11px] text-red-400/90 mt-1" id="statReturnedPct">0% রিটার্ন রেট</div>
+                    </div>
+                </div>
+
+                <!-- Success Ratio -->
+                <div class="card-box p-4 sm:p-5 rounded-2xl bg-gray-900/70 border border-gray-800 flex flex-col justify-between shadow-sm">
+                    <div class="flex items-center justify-between text-gray-400 mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider">সাকসেস রেশিও</span>
+                        <div class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-extrabold font-mono text-blue-400" id="statRatio">0%</div>
+                        <div class="w-full bg-gray-800 rounded-full h-1.5 mt-2 overflow-hidden">
+                            <div id="statRatioBar" class="bg-blue-500 h-1.5 rounded-full transition-all duration-700" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fraud Reports Count -->
+                <div class="col-span-2 lg:col-span-1 card-box p-4 sm:p-5 rounded-2xl bg-gray-900/70 border border-gray-800 flex flex-col justify-between shadow-sm">
+                    <div class="flex items-center justify-between text-gray-400 mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider">ফ্রড অভিযোগ</span>
+                        <div id="reportsBadgeIcon" class="w-7 h-7 rounded-lg bg-gray-800 text-gray-400 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-2xl sm:text-3xl font-extrabold font-mono text-white flex items-center gap-2" id="statReports">0</div>
+                        <div class="text-[11px] text-gray-400 mt-1" id="statReportsText">কোন অভিযোগ নেই</div>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Calculation Note / API Notice (if available) -->
+            <div id="calcNoteBox" class="hidden p-3.5 rounded-xl bg-blue-950/20 border border-blue-900/30 text-xs text-blue-300 flex items-start gap-2.5">
+                <i class="fa-solid fa-circle-info text-blue-400 mt-0.5 shrink-0"></i>
+                <span id="calcNoteText">নোটিশ</span>
             </div>
 
-            <!-- Fraud Reports -->
-            <div id="reportsContainer" class="hidden">
-                <h2 class="text-xl font-bold text-red-700 mb-4"><i class="fa-solid fa-triangle-exclamation mr-2"></i> Fraud Reports</h2>
+            <!-- Merchant Fraud Reports Alert Section -->
+            <section id="fraudReportsSection" class="hidden space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-base sm:text-lg font-bold text-red-400 flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation animate-bounce"></i> অন্যান্য মার্চেন্টদের ফ্রড অভিযোগ (Reports)
+                    </h3>
+                    <span id="reportsCountBadge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/30">
+                        0 টি অভিযোগ
+                    </span>
+                </div>
                 <div class="space-y-3" id="reportsList">
-                    <!-- Reports injected here -->
+                    <!-- Injected dynamically -->
                 </div>
+            </section>
+
+            <!-- Detailed Courier Breakdown -->
+            <section class="space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-gray-800">
+                    <div>
+                        <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-truck-fast text-blue-400"></i> কুরিয়ার ভিত্তিক বিস্তারিত বিবরণ
+                        </h3>
+                        <p class="text-xs text-gray-400">প্রতিটি কুরিয়ারে কাস্টমারের পার্সেল হিস্ট্রি</p>
+                    </div>
+
+                    <!-- View Switcher & Filters -->
+                    <div class="flex items-center gap-2 self-start sm:self-auto">
+                        <!-- Active Couriers Filter -->
+                        <select id="courierFilter" onchange="filterCourierCards()" class="bg-gray-800 border border-gray-700 text-gray-300 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <option value="all">সকল কুরিয়ার</option>
+                            <option value="active" selected>পার্সেল ডাটা আছে শুধু সেগুলি</option>
+                            <option value="high-cancel">উচ্চ রিটার্ন রেট (>30%)</option>
+                        </select>
+
+                        <!-- Layout Toggle -->
+                        <div class="inline-flex rounded-lg border border-gray-700 bg-gray-800 p-0.5">
+                            <button onclick="setCourierView('grid')" id="viewGridBtn" class="px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white shadow-sm" title="Grid View">
+                                <i class="fa-solid fa-table-cells-large"></i>
+                            </button>
+                            <button onclick="setCourierView('table')" id="viewTableBtn" class="px-2.5 py-1 rounded-md text-xs font-semibold text-gray-400 hover:text-white" title="Table View">
+                                <i class="fa-solid fa-table-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid View -->
+                <div id="couriersGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Injected dynamically -->
+                </div>
+
+                <!-- Table View (Hidden by default) -->
+                <div id="couriersTableWrapper" class="hidden overflow-x-auto rounded-xl border border-gray-800 bg-gray-900/60 shadow">
+                    <table class="w-full text-left text-sm text-gray-300">
+                        <thead class="bg-gray-800/80 text-xs uppercase text-gray-400 font-mono tracking-wider border-b border-gray-700">
+                            <tr>
+                                <th class="p-3.5">কুরিয়ার</th>
+                                <th class="p-3.5 text-center">মোট পার্সেল</th>
+                                <th class="p-3.5 text-center">ডেলিভার্ড</th>
+                                <th class="p-3.5 text-center">বাতিল</th>
+                                <th class="p-3.5 text-center">ডেলিভারি রেশিও</th>
+                                <th class="p-3.5">স্ট্যাটাস / নোট</th>
+                            </tr>
+                        </thead>
+                        <tbody id="couriersTableBody" class="divide-y divide-gray-800">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty state for filtered couriers -->
+                <div id="courierEmptyState" class="hidden p-8 text-center rounded-xl bg-gray-900/40 border border-gray-800 text-gray-400 text-sm">
+                    <i class="fa-solid fa-filter-circle-xmark text-2xl text-gray-600 mb-2 block"></i>
+                    কোন কুরিয়ার ডাটা পাওয়া যায়নি।
+                </div>
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- API Key Settings Modal -->
+    <div id="apiModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+        <div class="bg-gray-900 border border-gray-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-key text-blue-400 text-lg"></i>
+                    <h3 class="text-lg font-bold text-white">BD Courier API কনফিগারেশন</h3>
+                </div>
+                <button onclick="closeApiModal()" class="text-gray-400 hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
             </div>
 
+            <div class="space-y-3 text-sm">
+                <p class="text-xs text-gray-400">
+                    আপনার নিজের BD Courier API Key থাকলে এখানে সেট করতে পারেন। এটি আপনার ব্রাউজারে সংরক্ষিত থাকবে।
+                </p>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">API Key</label>
+                    <input type="password" id="apiKeyInput" class="w-full px-3 py-2 bg-gray-950 border border-gray-700 rounded-lg text-white font-mono text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="eRxFVeMmB8...">
+                </div>
+                <div class="flex items-center justify-between pt-2">
+                    <button type="button" onclick="resetDefaultApiKey()" class="text-xs text-gray-400 hover:text-gray-200 underline">
+                        ডিফল্ট কি ব্যবহার করুন
+                    </button>
+                    <button type="button" onclick="saveApiKey()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-lg transition">
+                        সংরক্ষণ করুন
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <script>
-        const API_KEY = 'eRxFVeMmB8fY8zu670PAjf9rgEfY6SuQQVdEIh5XHLnYXcGgDJ6hdc2y7tLS';
-        const API_URL = 'https://api.bdcourier.com/courier-check';
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="flex items-center gap-2 px-4 py-3 rounded-xl bg-gray-900 border border-gray-700 text-white text-xs font-medium shadow-2xl">
+            <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+            <span id="toastMsg">কপি করা হয়েছে!</span>
+        </div>
+    </div>
 
-        document.getElementById('checkForm').addEventListener('submit', async function(e) {
+    <!-- Application Logic -->
+    <script>
+        // ── Config ──
+        const DEFAULT_API_KEY = 'eRxFVeMmB8fY8zu670PAjf9rgEfY6SuQQVdEIh5XHLnYXcGgDJ6hdc2y7tLS';
+        const API_URL = 'https://api.bdcourier.com/courier-check';
+        const RECENT_KEY = 'bdc_recent_searches';
+        const API_STORAGE_KEY = 'bdc_custom_api_key';
+
+        let currentResultData = null;
+        let currentPhone = '';
+
+        // ── Init on load ──
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            loadRecentSearches();
+            
+            // Check query param e.g. fraud-chack.html?phone=017XXXXXXXX
+            const urlParams = new URLSearchParams(window.location.search);
+            const phoneParam = urlParams.get('phone');
+            if (phoneParam) {
+                const cleaned = sanitizePhone(phoneParam);
+                if (cleaned) {
+                    document.getElementById('phoneInput').value = cleaned;
+                    executeCheck(cleaned);
+                }
+            }
+
+            // Phone input auto-formatter & cleaner
+            const input = document.getElementById('phoneInput');
+            const clearBtn = document.getElementById('clearBtn');
+            input.addEventListener('input', (e) => {
+                let val = e.target.value.replace(/[^0-9]/g, '');
+                if (val.length > 11) val = val.substring(0, 11);
+                e.target.value = val;
+                clearBtn.classList.toggle('hidden', val.length === 0);
+            });
+        });
+
+        function getActiveApiKey() {
+            return localStorage.getItem(API_STORAGE_KEY) || DEFAULT_API_KEY;
+        }
+
+        // ── Input helpers ──
+        function sanitizePhone(raw) {
+            if (!raw) return '';
+            let cleaned = raw.replace(/[^0-9]/g, '');
+            // remove leading 88 if provided as 88017...
+            if (cleaned.startsWith('88') && cleaned.length > 11) {
+                cleaned = cleaned.substring(2);
+            }
+            return cleaned;
+        }
+
+        function clearInput() {
+            const input = document.getElementById('phoneInput');
+            input.value = '';
+            document.getElementById('clearBtn').classList.add('hidden');
+            input.focus();
+        }
+
+        async function pasteFromClipboard() {
+            try {
+                const text = await navigator.clipboard.readText();
+                const sanitized = sanitizePhone(text);
+                if (sanitized) {
+                    document.getElementById('phoneInput').value = sanitized;
+                    document.getElementById('clearBtn').classList.remove('hidden');
+                    showToast('নম্বর পেস্ট করা হয়েছে', 'info');
+                } else {
+                    showToast('ক্লিপবোর্ডে বৈধ ফোন নম্বর নেই', 'error');
+                }
+            } catch (err) {
+                showToast('ক্লিপবোর্ড এক্সেস পাওয়া যায়নি', 'error');
+            }
+        }
+
+        function quickFill(phone) {
+            document.getElementById('phoneInput').value = phone;
+            document.getElementById('clearBtn').classList.remove('hidden');
+            executeCheck(phone);
+        }
+
+        // ── Form Submission ──
+        function handleFormSubmit(e) {
             e.preventDefault();
-            const phone = document.getElementById('phoneInput').value.trim();
-            if(!phone) return;
+            const phone = sanitizePhone(document.getElementById('phoneInput').value.trim());
+            if (!phone || phone.length < 11) {
+                showError('সঠিক ১১ ডিজিটের ফোন নম্বর দিন (যেমন: 017XXXXXXXX)');
+                return;
+            }
+            executeCheck(phone);
+        }
+
+        // ── Execute API Request ──
+        async function executeCheck(phone) {
+            currentPhone = phone;
+            saveRecentSearch(phone);
 
             // UI states
-            const btnText = document.getElementById('btnText');
-            const btnLoader = document.getElementById('btnLoader');
-            const btn = document.getElementById('checkBtn');
-            const errorMsg = document.getElementById('errorMsg');
-            const resultsSection = document.getElementById('resultsSection');
-
-            btnText.classList.add('hidden');
-            btnLoader.classList.remove('hidden');
-            btn.disabled = true;
-            errorMsg.classList.add('hidden');
-            resultsSection.classList.add('hidden');
+            setLoadingState(true);
+            hideError();
 
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
+                        'Authorization': `Bearer ${getActiveApiKey()}`
                     },
                     body: JSON.stringify({ phone: phone })
                 });
@@ -115,105 +637,627 @@
                 const resData = await response.json();
 
                 if (resData.status === 'success' && resData.data) {
-                    renderData(resData.data);
-                    resultsSection.classList.remove('hidden');
+                    currentResultData = resData.data;
+                    renderResults(resData.data, phone);
                 } else {
-                    throw new Error(resData.message || 'Failed to fetch data or no record found.');
+                    throw new Error(resData.message || 'এই নম্বরের কোনো তথ্য পাওয়া যায়নি।');
                 }
-
             } catch (err) {
-                errorMsg.textContent = err.message || 'An error occurred while connecting to the API.';
-                errorMsg.classList.remove('hidden');
+                console.error('Fraud Check Error:', err);
+                showError(err.message || 'কুরিয়ার সার্ভারে সংযোগ করা সম্ভব হয়নি।');
             } finally {
-                btnText.classList.remove('hidden');
-                btnLoader.classList.add('hidden');
-                btn.disabled = false;
+                setLoadingState(false);
             }
-        });
+        }
 
-        function renderData(data) {
-            // 1. Render Summary
-            if (data.summary) {
-                document.getElementById('sumTotal').textContent = data.summary.total_parcel || 0;
-                document.getElementById('sumSuccess').textContent = data.summary.success_parcel || 0;
-                document.getElementById('sumCancelled').textContent = data.summary.cancelled_parcel || 0;
-                document.getElementById('sumRatio').textContent = (data.summary.success_ratio || 0) + '%';
+        function setLoadingState(isLoading) {
+            const btn = document.getElementById('checkBtn');
+            const btnText = document.getElementById('btnText');
+            const btnIcon = document.getElementById('btnIcon');
+            const btnLoader = document.getElementById('btnLoader');
+            const skeleton = document.getElementById('loadingSkeleton');
+            const results = document.getElementById('resultsWrapper');
+
+            btn.disabled = isLoading;
+            btnText.classList.toggle('hidden', isLoading);
+            btnIcon.classList.toggle('hidden', isLoading);
+            btnLoader.classList.toggle('hidden', !isLoading);
+
+            if (isLoading) {
+                skeleton.classList.remove('hidden');
+                results.classList.add('hidden');
+            } else {
+                skeleton.classList.add('hidden');
+            }
+        }
+
+        function showError(msg) {
+            const alertBox = document.getElementById('errorAlert');
+            document.getElementById('errorMsgText').textContent = msg;
+            alertBox.classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('errorAlert').classList.add('hidden');
+        }
+
+        // ── Render Complete Data ──
+        function renderResults(data, phone) {
+            const summary = data.summary || {};
+            const reports = data.reports || [];
+
+            const totalParcels = Number(summary.total_parcel) || 0;
+            const successParcels = Number(summary.success_parcel) || 0;
+            const cancelledParcels = Number(summary.cancelled_parcel) || 0;
+            const successRatio = Number(summary.success_ratio) || (totalParcels > 0 ? ((successParcels / totalParcels) * 100) : 0);
+            const roundedRatio = Math.round(successRatio * 10) / 10;
+            const reportsCount = reports.length;
+
+            // 1. Executive Risk Scoring
+            const riskAssessment = calculateRiskScore({
+                total: totalParcels,
+                success: successParcels,
+                cancelled: cancelledParcels,
+                ratio: roundedRatio,
+                reports: reportsCount
+            });
+
+            applyRiskUI(riskAssessment, phone, roundedRatio);
+
+            // 2. Stats Grid
+            document.getElementById('statTotal').textContent = totalParcels.toLocaleString();
+            document.getElementById('statDelivered').textContent = successParcels.toLocaleString();
+            document.getElementById('statReturned').textContent = cancelledParcels.toLocaleString();
+            document.getElementById('statRatio').textContent = roundedRatio + '%';
+            document.getElementById('statRatioBar').style.width = Math.min(100, Math.max(0, roundedRatio)) + '%';
+
+            const delPct = totalParcels > 0 ? Math.round((successParcels / totalParcels) * 100) : 0;
+            const retPct = totalParcels > 0 ? Math.round((cancelledParcels / totalParcels) * 100) : 0;
+            document.getElementById('statDeliveredPct').textContent = `${delPct}% সফল ডেলিভারি`;
+            document.getElementById('statReturnedPct').textContent = `${retPct}% রিটার্ন রেট`;
+
+            // Fraud Reports KPI
+            const statReports = document.getElementById('statReports');
+            const statReportsText = document.getElementById('statReportsText');
+            const reportsBadgeIcon = document.getElementById('reportsBadgeIcon');
+
+            statReports.textContent = reportsCount;
+            if (reportsCount > 0) {
+                statReports.className = 'text-2xl sm:text-3xl font-extrabold font-mono text-red-500';
+                statReportsText.textContent = `${reportsCount} টি কুরিয়ার ফ্রড রেকর্ড`;
+                statReportsText.className = 'text-[11px] text-red-400 font-bold mt-1';
+                reportsBadgeIcon.className = 'w-7 h-7 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center text-xs animate-pulse';
+            } else {
+                statReports.className = 'text-2xl sm:text-3xl font-extrabold font-mono text-emerald-400';
+                statReportsText.textContent = 'কোন অভিযোগ পাওয়া যায়নি';
+                statReportsText.className = 'text-[11px] text-emerald-400/90 mt-1';
+                reportsBadgeIcon.className = 'w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs';
             }
 
-            // 2. Render Couriers
-            const grid = document.getElementById('courierGrid');
-            grid.innerHTML = '';
-            const excludeKeys = ['summary', 'reports'];
+            // Calculation note (if provided)
+            const calcBox = document.getElementById('calcNoteBox');
+            if (summary.calculation_note) {
+                document.getElementById('calcNoteText').textContent = summary.calculation_note;
+                calcBox.classList.remove('hidden');
+            } else {
+                calcBox.classList.add('hidden');
+            }
+
+            // 3. Quick Action Buttons
+            document.getElementById('btnWhatsApp').href = `https://wa.me/88${phone}`;
+            document.getElementById('btnCall').href = `tel:${phone}`;
+
+            // 4. Fraud Reports List
+            renderFraudReports(reports);
+
+            // 5. Courier Details (Grid & Table)
+            renderCouriers(data);
+
+            // Show results
+            document.getElementById('resultsWrapper').classList.remove('hidden');
             
-            for (const key in data) {
-                if (excludeKeys.includes(key)) continue;
-                
-                const c = data[key];
-                if (!c || typeof c !== 'object' || c.total_parcel === undefined) continue;
-                if (c.total_parcel === 0) continue; // Skip empty ones if desired (or show them, let's show if total > 0)
+            // Smooth scroll to risk card
+            document.getElementById('resultsWrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
 
-                let logoHtml = '';
-                if(c.logo) {
-                    logoHtml = `<img src="${c.logo}" alt="${c.name}" class="h-6 object-contain">`;
-                } else {
-                    logoHtml = `<span class="font-bold text-gray-700">${c.name}</span>`;
-                }
+        // ── Risk Calculation Engine ──
+        function calculateRiskScore({ total, success, cancelled, ratio, reports }) {
+            // Level 1: Extreme Fraud Alert (Reports exist OR ratio < 40%)
+            if (reports > 0 || (total >= 3 && ratio < 45)) {
+                return {
+                    level: 'DANGER',
+                    badge: 'উচ্চ ঝুঁকি (HIGH FRAUD RISK)',
+                    title: 'সতর্কতা: উচ্চ ঝুঁকি / ফ্রড রেকর্ড বিদ্যমান',
+                    desc: reports > 0 
+                        ? `এই নম্বরের বিরুদ্ধে ${reports}টি মার্চেন্ট ফ্রড রিপোর্ট পাওয়া গেছে।`
+                        : `গ্রাহকের পূর্ববর্তী পার্সেল রিটার্ন রেট অতিরিক্ত বেশি (${100 - Math.round(ratio)}% রিটার্ন)।`,
+                    recommendation: '🚨 পরামর্শ: অগ্রিম সম্পূর্ণ পেমেন্ট বা কুরিয়ার চার্জ ছাড়া অর্ডার পাঠাবেন না। ফোন করে বিস্তারিত যাচাই করুন।',
+                    color: 'red',
+                    icon: 'fa-solid fa-triangle-exclamation'
+                };
+            }
 
-                let ratioColor = 'text-green-600';
-                if(c.success_ratio < 60) ratioColor = 'text-red-600';
-                else if(c.success_ratio < 80) ratioColor = 'text-yellow-600';
+            // Level 2: Moderate Caution (Ratio 45% - 75% OR high return count)
+            if (total >= 2 && ratio < 75) {
+                return {
+                    level: 'WARNING',
+                    badge: 'মধ্যম ঝুঁকি (MODERATE RISK)',
+                    title: 'সতর্ক বার্তা: পার্সেল রিটার্ন প্রবণতা আছে',
+                    desc: `সফলতার হার ${ratio}% এবং ${cancelled}টি পার্সেল রিটার্ন হয়েছে।`,
+                    recommendation: '⚠️ পরামর্শ: কমপক্ষে ডেলিভারি চার্জ (১০০-১৫০ টাকা) অগ্রিম গ্রহণ করার পরামর্শ দেওয়া হচ্ছে।',
+                    color: 'amber',
+                    icon: 'fa-solid fa-circle-exclamation'
+                };
+            }
 
-                grid.innerHTML += `
-                    <div class="glass-card p-4 flex flex-col h-full border border-gray-100">
-                        <div class="flex justify-between items-center border-b pb-2 mb-3">
-                            ${logoHtml}
-                            <span class="text-xs font-bold bg-gray-100 px-2 py-1 rounded text-gray-600">${c.name}</span>
+            // Level 3: New Customer (0 or 1 parcel)
+            if (total <= 1) {
+                return {
+                    level: 'INFO',
+                    badge: 'নতুন গ্রাহক (NEW / LOW DATA)',
+                    title: 'নতুন নম্বর: পর্যাপ্ত হিস্ট্রি নেই',
+                    desc: total === 0 ? 'এই নম্বরে কোনো কুরিয়ার বুকিং ডাটা নেই।' : 'এই নম্বরে মাত্র ১টি পার্সেল বুকিং রেকর্ড আছে।',
+                    recommendation: 'ℹ️ পরামর্শ: নতুন গ্রাহক হিসেবে স্বাভাবিক নিয়মে ফোন করে অর্ডার ও ঠিকানা নিশ্চিত করে বুক করুন।',
+                    color: 'blue',
+                    icon: 'fa-solid fa-user-clock'
+                };
+            }
+
+            // Level 4: Highly Trusted / Safe (Ratio >= 75% and total >= 2)
+            return {
+                level: 'SAFE',
+                badge: 'বিশ্বস্ত গ্রাহক (VERIFIED & SAFE)',
+                title: 'গ্রাহকের পার্সেল রেকর্ড চমৎকার (COD নিরাপদ)',
+                desc: `মোট ${total}টি অর্ডারে ${ratio}% সফল ডেলিভারির ইতিবাচক রেকর্ড রয়েছে।`,
+                recommendation: '✅ পরামর্শ: সম্পূর্ণ ক্যাশ অন ডেলিভারিতে পার্সেল পাঠানো নিরাপদ।',
+                color: 'emerald',
+                icon: 'fa-solid fa-shield-check'
+            };
+        }
+
+        function applyRiskUI(risk, phone, ratio) {
+            const card = document.getElementById('riskCard');
+            const iconBox = document.getElementById('riskIconBox');
+            const badge = document.getElementById('riskBadge');
+            const title = document.getElementById('riskTitle');
+            const desc = document.getElementById('riskDesc');
+            const glow = document.getElementById('riskGlow');
+            const sugBox = document.getElementById('suggestionBox');
+            const sugIcon = document.getElementById('suggestionIcon');
+            const sugText = document.getElementById('suggestionText');
+
+            document.getElementById('customerPhoneBadge').textContent = `+88 ${phone}`;
+            badge.textContent = risk.badge;
+            title.textContent = risk.title;
+            desc.textContent = risk.desc;
+            sugText.textContent = risk.recommendation;
+
+            // Reset classes
+            card.className = 'card-box relative overflow-hidden rounded-2xl border p-5 sm:p-7 shadow-xl ';
+            iconBox.className = 'w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-2xl sm:text-3xl font-extrabold shadow-lg shrink-0 ';
+            badge.className = 'text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ';
+            sugBox.className = 'mt-5 p-4 rounded-xl border flex items-start gap-3 ';
+
+            if (risk.color === 'red') {
+                card.classList.add('bg-gradient-to-r', 'from-red-950/40', 'via-gray-900', 'to-gray-900', 'border-red-500/40');
+                iconBox.classList.add('bg-red-500/20', 'text-red-400', 'border', 'border-red-500/30', 'glow-red');
+                badge.classList.add('bg-red-500/20', 'text-red-300', 'border-red-500/30');
+                glow.className = 'absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20 pointer-events-none bg-red-600';
+                sugBox.classList.add('bg-red-950/30', 'border-red-500/30');
+                sugIcon.className = 'fa-solid fa-triangle-exclamation text-red-400 text-lg mt-0.5';
+            } else if (risk.color === 'amber') {
+                card.classList.add('bg-gradient-to-r', 'from-amber-950/40', 'via-gray-900', 'to-gray-900', 'border-amber-500/40');
+                iconBox.classList.add('bg-amber-500/20', 'text-amber-400', 'border', 'border-amber-500/30');
+                badge.classList.add('bg-amber-500/20', 'text-amber-300', 'border-amber-500/30');
+                glow.className = 'absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20 pointer-events-none bg-amber-600';
+                sugBox.classList.add('bg-amber-950/30', 'border-amber-500/30');
+                sugIcon.className = 'fa-solid fa-circle-exclamation text-amber-400 text-lg mt-0.5';
+            } else if (risk.color === 'blue') {
+                card.classList.add('bg-gradient-to-r', 'from-blue-950/40', 'via-gray-900', 'to-gray-900', 'border-blue-500/40');
+                iconBox.classList.add('bg-blue-500/20', 'text-blue-400', 'border', 'border-blue-500/30');
+                badge.classList.add('bg-blue-500/20', 'text-blue-300', 'border-blue-500/30');
+                glow.className = 'absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20 pointer-events-none bg-blue-600';
+                sugBox.classList.add('bg-blue-950/30', 'border-blue-500/30');
+                sugIcon.className = 'fa-solid fa-circle-info text-blue-400 text-lg mt-0.5';
+            } else {
+                // Emerald / Safe
+                card.classList.add('bg-gradient-to-r', 'from-emerald-950/40', 'via-gray-900', 'to-gray-900', 'border-emerald-500/40');
+                iconBox.classList.add('bg-emerald-500/20', 'text-emerald-400', 'border', 'border-emerald-500/30', 'glow-green');
+                badge.classList.add('bg-emerald-500/20', 'text-emerald-300', 'border-emerald-500/30');
+                glow.className = 'absolute -top-24 -right-24 w-72 h-72 rounded-full blur-3xl opacity-20 pointer-events-none bg-emerald-600';
+                sugBox.classList.add('bg-emerald-950/30', 'border-emerald-500/30');
+                sugIcon.className = 'fa-solid fa-shield-check text-emerald-400 text-lg mt-0.5';
+            }
+
+            iconBox.innerHTML = `<i class="${risk.icon}"></i>`;
+        }
+
+        // ── Render Fraud Reports ──
+        function renderFraudReports(reports) {
+            const section = document.getElementById('fraudReportsSection');
+            const list = document.getElementById('reportsList');
+            const badge = document.getElementById('reportsCountBadge');
+
+            list.innerHTML = '';
+            if (!reports || reports.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            badge.textContent = `${reports.length} টি অভিযোগ নথিভুক্ত`;
+
+            reports.forEach((r, idx) => {
+                const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) : 'তারিখ নেই';
+                const reporterName = r.name || 'অজ্ঞাত মার্চেন্ট';
+                const courierName = r.courierName || 'কুরিয়ার রিপোর্ট';
+                const details = r.details || 'কোন বিবরণ উল্লেখ করা হয়নি।';
+
+                const cardHtml = `
+                    <div class="p-4 rounded-xl bg-red-950/30 border border-red-500/30 flex items-start gap-3.5 shadow-sm">
+                        <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 border border-red-500/30">
+                            ${r.courierLogo ? `<img src="${r.courierLogo}" alt="${courierName}" class="w-7 h-7 object-contain">` : `<i class="fa-solid fa-triangle-exclamation"></i>`}
                         </div>
-                        <div class="grid grid-cols-2 gap-2 text-sm flex-grow">
-                            <div class="text-gray-500">Total:</div>
-                            <div class="font-bold text-right">${c.total_parcel}</div>
-                            
-                            <div class="text-gray-500">Success:</div>
-                            <div class="font-bold text-green-600 text-right">${c.success_parcel}</div>
-                            
-                            <div class="text-gray-500">Cancelled:</div>
-                            <div class="font-bold text-red-600 text-right">${c.cancelled_parcel}</div>
-                        </div>
-                        <div class="mt-3 pt-2 border-t flex justify-between items-center">
-                            <span class="text-xs text-gray-500 font-semibold">Success Ratio</span>
-                            <span class="font-bold ${ratioColor}">${c.success_ratio}%</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div class="flex items-center gap-2">
+                                    <h4 class="font-bold text-sm text-red-200">${escapeHtml(reporterName)}</h4>
+                                    <span class="text-[11px] px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-medium border border-red-500/30">${escapeHtml(courierName)}</span>
+                                </div>
+                                <span class="text-[11px] text-gray-400 flex items-center gap-1 font-mono">
+                                    <i class="fa-regular fa-clock"></i> ${dateStr}
+                                </span>
+                            </div>
+                            <p class="text-xs sm:text-sm text-red-200/90 mt-1.5 leading-relaxed bg-black/20 p-2.5 rounded-lg border border-red-900/30 font-medium">
+                                "${escapeHtml(details)}"
+                            </p>
                         </div>
                     </div>
                 `;
+                list.insertAdjacentHTML('beforeend', cardHtml);
+            });
+
+            section.classList.remove('hidden');
+        }
+
+        // ── Render Couriers ──
+        function renderCouriers(data) {
+            const grid = document.getElementById('couriersGrid');
+            const tbody = document.getElementById('couriersTableBody');
+            grid.innerHTML = '';
+            tbody.innerHTML = '';
+
+            const excludeKeys = ['summary', 'reports'];
+            const courierList = [];
+
+            for (const key in data) {
+                if (excludeKeys.includes(key)) continue;
+                const c = data[key];
+                if (!c || typeof c !== 'object') continue;
+                courierList.push({ key, ...c });
             }
 
-            // 3. Render Reports
-            const rList = document.getElementById('reportsList');
-            const rContainer = document.getElementById('reportsContainer');
-            rList.innerHTML = '';
+            // Sort by total parcels descending
+            courierList.sort((a, b) => (b.total_parcel || 0) - (a.total_parcel || 0));
 
-            if (data.reports && data.reports.length > 0) {
-                data.reports.forEach(r => {
-                    let dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString() : '';
-                    rList.innerHTML += `
-                        <div class="glass-card p-4 border-l-4 border-red-500 bg-red-50 flex items-start gap-3">
-                            <div class="mt-1 flex-shrink-0">
-                                ${r.courierLogo ? `<img src="${r.courierLogo}" class="w-8 h-8 object-contain rounded-full bg-white p-1 shadow-sm">` : `<i class="fa-solid fa-circle-exclamation text-red-500 text-xl"></i>`}
-                            </div>
-                            <div class="flex-grow">
-                                <div class="flex justify-between items-start">
-                                    <h3 class="font-bold text-gray-900">${r.name || 'Unknown'} <span class="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded ml-2">${r.courierName || 'Report'}</span></h3>
-                                    <span class="text-xs text-gray-500 font-semibold">${dateStr}</span>
-                                </div>
-                                <p class="text-sm text-gray-700 mt-1">${r.details || 'No details provided.'}</p>
-                            </div>
+            courierList.forEach(c => {
+                const total = Number(c.total_parcel) || 0;
+                const success = Number(c.success_parcel) || 0;
+                const cancelled = Number(c.cancelled_parcel) || 0;
+                const ratio = Math.round((Number(c.success_ratio) || 0) * 10) / 10;
+                const returnRatio = total > 0 ? Math.round((cancelled / total) * 100) : 0;
+
+                let ratioBadgeClass = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
+                if (ratio < 50 && total > 0) ratioBadgeClass = 'text-red-400 bg-red-500/10 border-red-500/20';
+                else if (ratio < 75 && total > 0) ratioBadgeClass = 'text-amber-400 bg-amber-500/10 border-amber-500/20';
+                else if (total === 0) ratioBadgeClass = 'text-gray-400 bg-gray-800 border-gray-700';
+
+                // Notice tag
+                let noticeHtml = '';
+                if (c.notice) {
+                    noticeHtml = `
+                        <div class="mt-2.5 pt-2 border-t border-gray-800/80 text-[11px] text-gray-400 flex items-start gap-1.5" title="${escapeHtml(c.notice)}">
+                            <i class="fa-solid fa-circle-info text-blue-400 mt-0.5 shrink-0"></i>
+                            <span class="line-clamp-2">${escapeHtml(c.notice)}</span>
                         </div>
                     `;
-                });
-                rContainer.classList.remove('hidden');
+                }
+
+                // Volume band badge
+                let bandBadge = '';
+                if (c.volume_band) {
+                    bandBadge = `<span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700">${c.volume_band} band</span>`;
+                }
+
+                // 1. Grid Card Item
+                const cardHtml = `
+                    <div class="courier-card card-box p-4 rounded-xl bg-gray-900/60 border border-gray-800 hover:border-gray-700 transition flex flex-col justify-between" 
+                         data-total="${total}" 
+                         data-ratio="${ratio}">
+                        
+                        <div>
+                            <!-- Header -->
+                            <div class="flex items-center justify-between gap-2 pb-3 border-b border-gray-800">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg bg-white/5 border border-gray-700 flex items-center justify-center p-1 shrink-0 overflow-hidden">
+                                        ${c.logo ? `<img src="${c.logo}" alt="${escapeHtml(c.name)}" class="w-full h-full object-contain" onerror="this.onerror=null;this.parentElement.innerHTML='<span class=\'font-bold text-xs text-gray-300\'>${escapeHtml(c.name.substring(0,2))}</span>'">` : `<span class="font-bold text-xs text-gray-300">${escapeHtml(c.name.substring(0,2))}</span>`}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h4 class="font-bold text-sm text-white truncate">${escapeHtml(c.name)}</h4>
+                                        <div class="flex items-center gap-1.5 mt-0.5">
+                                            ${bandBadge}
+                                            ${c.counts_cached_at ? `<span class="text-[10px] text-gray-500 font-mono">Synced: ${c.counts_cached_at}</span>` : ''}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full border ${ratioBadgeClass}">
+                                    ${total > 0 ? ratio + '%' : 'N/A'}
+                                </span>
+                            </div>
+
+                            <!-- Metrics Row -->
+                            <div class="grid grid-cols-3 gap-2 text-center py-3">
+                                <div class="p-2 rounded-lg bg-gray-950/40 border border-gray-800/80">
+                                    <div class="text-[10px] text-gray-400 uppercase font-medium">মোট</div>
+                                    <div class="text-base font-bold font-mono text-white mt-0.5">${total}</div>
+                                </div>
+                                <div class="p-2 rounded-lg bg-gray-950/40 border border-gray-800/80">
+                                    <div class="text-[10px] text-emerald-400 uppercase font-medium">ডেলিভার্ড</div>
+                                    <div class="text-base font-bold font-mono text-emerald-400 mt-0.5">${success}</div>
+                                </div>
+                                <div class="p-2 rounded-lg bg-gray-950/40 border border-gray-800/80">
+                                    <div class="text-[10px] text-red-400 uppercase font-medium">বাতিল</div>
+                                    <div class="text-base font-bold font-mono text-red-400 mt-0.5">${cancelled}</div>
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between text-[11px] text-gray-400">
+                                    <span>ডেলিভারি অনুপাত</span>
+                                    <span class="font-mono text-gray-300">${total > 0 ? ratio + '%' : '0%'}</span>
+                                </div>
+                                <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden flex">
+                                    <div class="bg-emerald-500 h-full transition-all" style="width: ${Math.min(100, Math.max(0, ratio))}%"></div>
+                                    <div class="bg-red-500 h-full transition-all" style="width: ${Math.min(100, Math.max(0, returnRatio))}%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${noticeHtml}
+                    </div>
+                `;
+                grid.insertAdjacentHTML('beforeend', cardHtml);
+
+                // 2. Table Row Item
+                const rowHtml = `
+                    <tr class="courier-row hover:bg-gray-800/40 transition" data-total="${total}" data-ratio="${ratio}">
+                        <td class="p-3.5 font-medium text-white flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded bg-white/5 border border-gray-700 flex items-center justify-center p-1 shrink-0">
+                                ${c.logo ? `<img src="${c.logo}" class="w-full h-full object-contain">` : `<span class="text-xs">${escapeHtml(c.name.substring(0,2))}</span>`}
+                            </div>
+                            <span>${escapeHtml(c.name)}</span>
+                        </td>
+                        <td class="p-3.5 text-center font-mono font-bold">${total}</td>
+                        <td class="p-3.5 text-center font-mono text-emerald-400 font-bold">${success}</td>
+                        <td class="p-3.5 text-center font-mono text-red-400 font-bold">${cancelled}</td>
+                        <td class="p-3.5 text-center font-mono">
+                            <span class="px-2 py-0.5 rounded-full border text-xs font-bold ${ratioBadgeClass}">
+                                ${total > 0 ? ratio + '%' : 'N/A'}
+                            </span>
+                        </td>
+                        <td class="p-3.5 text-xs text-gray-400">
+                            ${c.notice ? `<span class="truncate block max-w-xs" title="${escapeHtml(c.notice)}">${escapeHtml(c.notice)}</span>` : '<span class="text-gray-600">—</span>'}
+                        </td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', rowHtml);
+            });
+
+            // Apply default filter ("active")
+            filterCourierCards();
+        }
+
+        // ── Filter Courier Cards ──
+        function filterCourierCards() {
+            const filter = document.getElementById('courierFilter').value;
+            const cards = document.querySelectorAll('.courier-card');
+            const rows = document.querySelectorAll('.courier-row');
+            let visibleCount = 0;
+
+            const checkVisible = (total, ratio) => {
+                if (filter === 'active') return total > 0;
+                if (filter === 'high-cancel') return total > 0 && ratio < 70;
+                return true; // 'all'
+            };
+
+            cards.forEach(card => {
+                const total = Number(card.getAttribute('data-total')) || 0;
+                const ratio = Number(card.getAttribute('data-ratio')) || 0;
+                const show = checkVisible(total, ratio);
+                card.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+
+            rows.forEach(row => {
+                const total = Number(row.getAttribute('data-total')) || 0;
+                const ratio = Number(row.getAttribute('data-ratio')) || 0;
+                row.style.display = checkVisible(total, ratio) ? '' : 'none';
+            });
+
+            const emptyState = document.getElementById('courierEmptyState');
+            emptyState.classList.toggle('hidden', visibleCount > 0);
+        }
+
+        // ── Grid / Table View Switcher ──
+        function setCourierView(view) {
+            const grid = document.getElementById('couriersGrid');
+            const table = document.getElementById('couriersTableWrapper');
+            const gridBtn = document.getElementById('viewGridBtn');
+            const tableBtn = document.getElementById('viewTableBtn');
+
+            if (view === 'grid') {
+                grid.classList.remove('hidden');
+                table.classList.add('hidden');
+                gridBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white shadow-sm';
+                tableBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold text-gray-400 hover:text-white';
             } else {
-                rContainer.classList.add('hidden');
+                grid.classList.add('hidden');
+                table.classList.remove('hidden');
+                gridBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold text-gray-400 hover:text-white';
+                tableBtn.className = 'px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white shadow-sm';
             }
+        }
+
+        // ── Copy Summary Report (WhatsApp / CRM ready) ──
+        function copySummaryText() {
+            if (!currentResultData) return;
+            const summary = currentResultData.summary || {};
+            const total = summary.total_parcel || 0;
+            const success = summary.success_parcel || 0;
+            const cancelled = summary.cancelled_parcel || 0;
+            const ratio = summary.success_ratio || 0;
+            const reportsCount = (currentResultData.reports || []).length;
+
+            const text = [
+                `🛡️ কুরিয়ার ফ্রড চেক রিপোর্ট (+88${currentPhone})`,
+                `• সার্বিক ডেলিভারি হার: ${ratio}% (মোট: ${total}, সফল: ${success}, রিটার্ন: ${cancelled})`,
+                `• ফ্রড অভিযোগ: ${reportsCount > 0 ? `${reportsCount} টি রিপোর্ট পাওয়া গেছে 🚨` : 'কোন অভিযোগ নেই ✅'}`,
+                `• স্থিতি: ${reportsCount > 0 ? 'উচ্চ ঝুঁকি (Advance Required)' : (ratio < 75 ? 'মধ্যম ঝুঁকি (Caution)' : 'নিরাপদ গ্রাহক (COD OK)')}`,
+                `যাচাইকৃত: ${new Date().toLocaleDateString('bn-BD')} | BD Courier Intelligence`
+            ].join('\n');
+
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('রিপোর্ট টেক্সট ক্লিপবোর্ডে কপি হয়েছে!', 'success');
+            }).catch(() => {
+                showToast('কপি করতে সমস্যা হয়েছে', 'error');
+            });
+        }
+
+        // ── Recent Searches (localStorage) ──
+        function loadRecentSearches() {
+            const listEl = document.getElementById('recentList');
+            const stored = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+            
+            if (stored.length === 0) {
+                listEl.innerHTML = '<span class="text-gray-500 italic">কোন সার্চ নেই</span>';
+                return;
+            }
+
+            listEl.innerHTML = '';
+            stored.slice(0, 4).forEach(phone => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 font-mono text-[11px] border border-gray-700/60 transition';
+                btn.textContent = phone;
+                btn.onclick = () => quickFill(phone);
+                listEl.appendChild(btn);
+            });
+        }
+
+        function saveRecentSearch(phone) {
+            let stored = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+            stored = stored.filter(p => p !== phone);
+            stored.unshift(phone);
+            if (stored.length > 8) stored.pop();
+            localStorage.setItem(RECENT_KEY, JSON.stringify(stored));
+            loadRecentSearches();
+        }
+
+        // ── Toast Notification ──
+        function showToast(msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.textContent = msg;
+            if (type === 'error') {
+                toastIcon.className = 'fa-solid fa-triangle-exclamation text-red-400 text-sm';
+            } else if (type === 'info') {
+                toastIcon.className = 'fa-solid fa-circle-info text-blue-400 text-sm';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-sm';
+            }
+
+            toast.classList.remove('translate-y-16', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-16', 'opacity-0');
+            }, 2500);
+        }
+
+        // ── Dark / Light Theme Toggle ──
+        function initTheme() {
+            const savedTheme = localStorage.getItem('bdc_theme') || 'dark';
+            if (savedTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+                document.body.classList.remove('bg-[#0b101b]', 'text-gray-100');
+                document.body.classList.add('bg-gray-100', 'text-gray-900');
+                document.getElementById('themeIcon').className = 'fa-solid fa-moon';
+            }
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const icon = document.getElementById('themeIcon');
+            if (isDark) {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+                document.body.classList.remove('bg-[#0b101b]', 'text-gray-100');
+                document.body.classList.add('bg-gray-100', 'text-gray-900');
+                icon.className = 'fa-solid fa-moon';
+                localStorage.setItem('bdc_theme', 'light');
+            } else {
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('dark');
+                document.body.classList.remove('bg-gray-100', 'text-gray-900');
+                document.body.classList.add('bg-[#0b101b]', 'text-gray-100');
+                icon.className = 'fa-solid fa-sun';
+                localStorage.setItem('bdc_theme', 'dark');
+            }
+        }
+
+        // ── API Modal Settings ──
+        function openApiModal() {
+            document.getElementById('apiKeyInput').value = getActiveApiKey();
+            document.getElementById('apiModal').classList.remove('hidden');
+        }
+
+        function closeApiModal() {
+            document.getElementById('apiModal').classList.add('hidden');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key) {
+                localStorage.setItem(API_STORAGE_KEY, key);
+                showToast('API Key সফলভাবে সংরক্ষিত হয়েছে');
+            } else {
+                localStorage.removeItem(API_STORAGE_KEY);
+                showToast('ডিফল্ট API Key ব্যবহার করা হবে');
+            }
+            closeApiModal();
+        }
+
+        function resetDefaultApiKey() {
+            document.getElementById('apiKeyInput').value = DEFAULT_API_KEY;
+            localStorage.removeItem(API_STORAGE_KEY);
+            showToast('ডিফল্ট API Key সেট করা হয়েছে');
+            closeApiModal();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>"']/g, m => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[m]);
         }
     </script>
 </body>

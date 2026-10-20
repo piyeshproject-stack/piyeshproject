@@ -51,7 +51,7 @@
                 <form id="trackingForm">
                     <div class="form-group">
                         <label class="form-label" for="tracking_mode">Tracking Mode</label>
-                        <select class="form-input" id="tracking_mode" name="tracking_mode">
+                        <select class="form-select" id="tracking_mode" name="tracking_mode">
                             <option value="browser_only">Browser Only (Standard)</option>
                             <option value="built_in_server_side">Built-in Server-Side (No browser scripts)</option>
                             <option value="smart_fallback">Smart Fallback (Browser first, fallback if blocked)</option>
@@ -84,7 +84,9 @@
                         <input class="form-input" type="text" id="custom_external_url" name="custom_external_url" placeholder="https://...">
                     </div>
 
-                    <button type="submit" id="saveBtn" style="display:none;">Save</button>
+                    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-light);">
+                        <button type="submit" id="saveBtn" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 700;">🚀 Save & Deploy Changes</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -167,5 +169,14 @@
             });
         });
     </script>
+
+    <!-- Premium Icons & Offline Logic (Dynamic Injected) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+        });
+    </script>
+    <script src="../assets/js/offline-handler.js"></script>
 </body>
 </html>

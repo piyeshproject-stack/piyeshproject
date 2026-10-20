@@ -15,10 +15,22 @@
     <script src="../assets/js/imgbb-uploader.js?v=1791100000002"></script>
     <style>
         .banner-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-        .banner-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
-        .banner-img  { width: 100%; height: 150px; object-fit: cover; background: var(--bg-card); display: block; }
-        .banner-body { padding: 12px; }
-        .banner-footer { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--border); }
+        .banner-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .banner-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: rgba(139, 26, 26, 0.25);
+        }
+        .banner-img  { width: 100%; height: 160px; object-fit: cover; background: var(--bg-card); display: block; }
+        .banner-body { padding: 14px; }
+        .banner-footer { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border-light); background: rgba(0,0,0,0.01); }
     </style>
     <link rel="stylesheet" href="../assets/css/premium-icons.css">
 </head>
@@ -155,18 +167,22 @@ function loadBanners() {
 function renderBanners() {
     var grid = document.getElementById('bannerGrid');
     if (!allBanners.length) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#8E8E93;"><div style="font-size:40px;margin-bottom:12px;"><i data-lucide="image" class="lucide-icon icon-hover-pulse"></i></div><div>No banners yet</div></div>';
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text-muted);"><div style="font-size:40px;margin-bottom:12px;"><i data-lucide="image" class="lucide-icon icon-hover-pulse"></i></div><div>No banners yet</div></div>';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         return;
     }
     grid.innerHTML = '';
     allBanners.forEach(function(b) {
         var card = document.createElement('div'); card.className = 'banner-card';
         card.innerHTML =
-            '<img src="' + (b.image_url||'') + '" class="banner-img">' +
+            '<img src="' + (b.image_url||'') + '" class="banner-img" onerror="this.src=\'https://via.placeholder.com/600x300?text=No+Image\'">' +
             '<div class="banner-body">' +
-                '<div style="font-weight:700;">' + (b.title||'No title') + '</div>' +
-                '<div style="font-size:12px;color:#8E8E93;">' + (b.subtitle||'') + '</div>' +
-                '<div style="font-size:11px;color:#8E8E93;margin-top:4px;">Sort: ' + (b.sort_order||0) + ' | <span class="' + (b.is_active?'':'') + '" style="color:' + (b.is_active?'#34C759':'#FF3B30') + ';">' + (b.is_active?'Active':'Inactive') + '</span></div>' +
+                '<div style="font-weight:700;color:var(--text-dark);font-size:14px;">' + (b.title||'Untitled Banner') + '</div>' +
+                (b.subtitle ? '<div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">' + b.subtitle + '</div>' : '') +
+                '<div style="font-size:11.5px;color:var(--text-muted);margin-top:8px;display:flex;align-items:center;justify-content:space-between;">' +
+                    '<span>Sort: ' + (b.sort_order||0) + '</span>' +
+                    '<span class="badge ' + (b.is_active ? 'badge-delivered' : 'badge-cancelled') + '">' + (b.is_active ? 'Active' : 'Inactive') + '</span>' +
+                '</div>' +
             '</div>' +
             '<div class="banner-footer">' +
                 '<button class="btn btn-ghost btn-sm" style="flex:1;" onclick=\'editBanner(' + JSON.stringify(b).replace(/'/g,"&apos;") + ')\'><i data-lucide="edit-3" class="lucide-icon icon-hover-pulse"></i> Edit</button>' +
@@ -174,6 +190,7 @@ function renderBanners() {
             '</div>';
         grid.appendChild(card);
     });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function updateBannerPreview() {

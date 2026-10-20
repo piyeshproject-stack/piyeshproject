@@ -13,10 +13,23 @@
     <script src="../assets/js/appwrite-init.js"></script>
     <script src="assets/js/admin-common.js?v=5"></script>
     <style>
-        .review-card { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; }
+        .review-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 18px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+        }
+        .review-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: rgba(139, 26, 26, 0.25);
+        }
         .review-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
         .stars { color: #FF9500; font-size: 16px; }
-        .review-img { width: 80px; height: 80px; border-radius: 10px; object-fit: cover; margin-top: 8px; }
+        .review-img { width: 84px; height: 84px; border-radius: 10px; object-fit: cover; margin-top: 10px; border: 1px solid var(--border); }
         .pending-indicator { width: 8px; height: 8px; background: var(--warning); border-radius: 50%; display: inline-block; margin-right: 6px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
     </style>
@@ -35,16 +48,16 @@
         <div class="filter-bar">
             <select class="form-select" id="reviewFilter" onchange="filterReviews()" style="width:auto;min-width:180px;">
                 <option value="">All Reviews</option>
-                <option value="pending"><i data-lucide="hourglass" class="lucide-icon icon-spin icon-warning"></i> Pending Approval</option>
-                <option value="approved"><i data-lucide="check-circle-2" class="lucide-icon icon-success icon-pulse"></i> Approved</option>
+                <option value="pending">⏳ Pending Approval</option>
+                <option value="approved">✅ Approved</option>
             </select>
             <select class="form-select" id="ratingFilter" onchange="filterReviews()" style="width:auto;min-width:140px;">
                 <option value="">All Ratings</option>
-                <option value="5"><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i> 5 Stars</option>
-                <option value="4"><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i> 4 Stars</option>
-                <option value="3"><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i> 3 Stars</option>
-                <option value="2"><i data-lucide="star" class="lucide-icon icon-warning"></i><i data-lucide="star" class="lucide-icon icon-warning"></i> 2 Stars</option>
-                <option value="1"><i data-lucide="star" class="lucide-icon icon-warning"></i> 1 Star</option>
+                <option value="5">⭐⭐⭐⭐⭐ 5 Stars</option>
+                <option value="4">⭐⭐⭐⭐ 4 Stars</option>
+                <option value="3">⭐⭐⭐ 3 Stars</option>
+                <option value="2">⭐⭐ 2 Stars</option>
+                <option value="1">⭐ 1 Star</option>
             </select>
         </div>
         <div id="reviewsList"></div>
@@ -112,7 +125,8 @@ function filterReviews() {
 function renderReviews(reviews) {
     var list = document.getElementById('reviewsList');
     if (!reviews.length) {
-        list.innerHTML = '<div style="text-align:center;padding:60px;color:#8E8E93;"><div style="font-size:40px;"><i data-lucide="star" class="lucide-icon icon-warning"></i></div><div style="margin-top:12px;">No reviews found</div></div>';
+        list.innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted);"><div style="font-size:40px;"><i data-lucide="star" class="lucide-icon icon-warning"></i></div><div style="margin-top:12px;">No reviews found</div></div>';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         return;
     }
     list.innerHTML = '';
@@ -126,16 +140,16 @@ function renderReviews(reviews) {
             '<div class="review-header">' +
                 '<div>' +
                     (!rv.is_approved ? '<span class="pending-indicator"></span>' : '') +
-                    '<b>' + (rv.customer_name || 'Anonymous') + '</b>' +
-                    (rv.customer_phone ? ' <span style="font-size:12px;color:#8E8E93;">(' + rv.customer_phone + ')</span>' : '') +
+                    '<b style="color:var(--text-dark);">' + (rv.customer_name || 'Anonymous') + '</b>' +
+                    (rv.customer_phone ? ' <span style="font-size:12px;color:var(--text-muted);">(' + rv.customer_phone + ')</span>' : '') +
                     '<div class="stars" style="margin-top:2px;">' + stars + '</div>' +
                 '</div>' +
                 '<div style="text-align:right;">' +
-                    '<div style="font-size:12px;color:#007AFF;font-weight:600;">' + productName + '</div>' +
-                    '<div style="font-size:11px;color:#8E8E93;">' + formatDate(rv.created_at) + '</div>' +
+                    '<div style="font-size:12px;color:var(--primary);font-weight:700;">' + productName + '</div>' +
+                    '<div style="font-size:11px;color:var(--text-muted);">' + formatDate(rv.created_at) + '</div>' +
                 '</div>' +
             '</div>' +
-            (rv.review_text ? '<div style="font-size:13.5px;line-height:1.6;margin-bottom:8px;">' + rv.review_text + '</div>' : '') +
+            (rv.review_text ? '<div style="font-size:13.5px;line-height:1.6;margin-bottom:8px;color:var(--text-body);">' + rv.review_text + '</div>' : '') +
             (rv.review_image ? '<img src="' + rv.review_image + '" class="review-img">' : '') +
             '<div style="display:flex;gap:8px;margin-top:12px;">' +
                 (!rv.is_approved
@@ -145,6 +159,7 @@ function renderReviews(reviews) {
             '</div>';
         list.appendChild(card);
     });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function approveReview(id) {

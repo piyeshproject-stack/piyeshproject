@@ -37,19 +37,19 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--primary-hover));
+            background: linear-gradient(90deg, var(--accent), var(--accent-hover));
             border-radius: 99px 99px 0 0;
             opacity: 0;
             transition: opacity 0.2s;
         }
         .section-card.active::before { opacity: 1; }
         .section-card:hover {
-            border-color: rgba(255,77,77,0.25);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+            border-color: rgba(139, 26, 26, 0.3);
+            box-shadow: var(--shadow-card-hover);
             transform: translateY(-2px);
         }
         .section-card.inactive {
-            opacity: 0.55;
+            opacity: 0.65;
         }
         .section-card-header {
             display: flex;

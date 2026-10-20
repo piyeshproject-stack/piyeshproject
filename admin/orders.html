@@ -20,10 +20,10 @@
         .detail-block span  { font-size: 14px; font-weight: 600; }
         .order-items-list { margin-top: 12px; }
         .order-item-row {
-            display: flex; gap: 10px; align-items: center;
-            padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px; margin-bottom: 8px;
+            display: flex; gap: 12px; align-items: center;
+            padding: 10px 12px; background: var(--bg-card-subtle); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px;
         }
-        .order-item-img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--bg-card); flex-shrink: 0; }
+        .order-item-img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: #FFFFFF; border: 1px solid var(--border); flex-shrink: 0; }
         @media (max-width: 700px) { .detail-grid { grid-template-columns: 1fr 1fr; } }
     </style>
     <link rel="stylesheet" href="../assets/css/premium-icons.css">
@@ -484,22 +484,22 @@
 
             '<div class="order-items-list">' + itemsHtml + '</div>' +
 
-            (o.addons && o.addons !== 'None' ? '<div style="background:rgba(255,149,0,0.08);border:1.5px solid rgba(255,149,0,0.25);border-radius:12px;padding:12px;margin-top:12px;font-size:13px;"><b style="color:#FF9500;">🎁 Selected Add-ons & Add-Once:</b><div style="font-weight:600;margin-top:4px;color:#eee;">' + o.addons + '</div></div>' : '') +
+            (o.addons && o.addons !== 'None' ? '<div style="background:var(--warning-bg);border:1px solid var(--warning-border);border-radius:12px;padding:12px;margin-top:12px;font-size:13px;"><b style="color:var(--warning);">🎁 Selected Add-ons:</b><div style="font-weight:600;margin-top:4px;color:var(--text-primary);">' + o.addons + '</div></div>' : '') +
 
-            '<div style="background:rgba(0,0,0,0.2);border-radius:12px;padding:14px;margin-top:12px;">' +
+            '<div style="background:var(--bg-card-subtle);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:12px;">' +
                 '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span>Subtotal</span><span>' + formatMoney(o.subtotal) + '</span></div>' +
                 (o.addon_total > 0 ? '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span>Add-ons</span><span>' + formatMoney(o.addon_total) + '</span></div>' : '') +
                 '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;"><span>Delivery</span><span>' + formatMoney(o.delivery_charge) + '</span></div>' +
-                (o.promo_discount > 0 ? '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;color:#34C759;"><span>Discount (' + o.promo_code + ')</span><span>-' + formatMoney(o.promo_discount) + '</span></div>' : '') +
-                '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px;margin-top:6px;"><span>Total</span><span>' + formatMoney(o.grand_total) + '</span></div>' +
-                (o.advance_payable > 0 ? '<div style="display:flex;justify-content:space-between;font-size:13px;color:#FF9500;margin-top:6px;"><span>Advance Paid</span><span>' + formatMoney(o.advance_payable) + '</span></div>' : '') +
+                (o.promo_discount > 0 ? '<div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;color:var(--success);"><span>Discount (' + o.promo_code + ')</span><span>-' + formatMoney(o.promo_discount) + '</span></div>' : '') +
+                '<div style="display:flex;justify-content:space-between;font-size:16px;font-weight:800;border-top:1.5px solid var(--border);padding-top:10px;margin-top:6px;"><span>Total</span><span style="color:var(--accent);">' + formatMoney(o.grand_total) + '</span></div>' +
+                (o.advance_payable > 0 ? '<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--warning);margin-top:6px;"><span>Advance Paid</span><span>' + formatMoney(o.advance_payable) + '</span></div>' : '') +
             '</div>' +
 
-            '<div style="background:rgba(0,122,255,0.08);border:1px solid rgba(0,122,255,0.15);border-radius:12px;padding:14px;margin-top:12px;">' +
-                '<div style="font-size:12px;font-weight:700;color:#007AFF;margin-bottom:8px;"><i data-lucide="credit-card" class="lucide-icon icon-bounce"></i> Payment Info</div>' +
-                '<div style="font-size:13px;"><b>Method:</b> ' + (o.payment_method||'—') + ' | <b>Status:</b> ' + (o.payment_status||'—') + '</div>' +
-                (o.payment_sender ? '<div style="font-size:13px;margin-top:4px;"><b>Sender:</b> <code>' + o.payment_sender + '</code></div>' : '') +
-                (o.payment_trx_id ? '<div style="font-size:13px;margin-top:4px;"><b>TrxID:</b> <code>' + o.payment_trx_id + '</code></div>' : '') +
+            '<div style="background:var(--blue-bg);border:1px solid var(--blue-border);border-radius:12px;padding:14px;margin-top:12px;">' +
+                '<div style="font-size:12px;font-weight:700;color:var(--blue);margin-bottom:8px;"><i data-lucide="credit-card" class="lucide-icon icon-bounce"></i> Payment Info</div>' +
+                '<div style="font-size:13px;color:var(--text-primary);"><b>Method:</b> ' + (o.payment_method||'—') + ' | <b>Status:</b> ' + (o.payment_status||'—') + '</div>' +
+                (o.payment_sender ? '<div style="font-size:13px;margin-top:4px;color:var(--text-primary);"><b>Sender:</b> <code style="background:rgba(0,0,0,0.04);padding:2px 6px;border-radius:4px;">' + o.payment_sender + '</code></div>' : '') +
+                (o.payment_trx_id ? '<div style="font-size:13px;margin-top:4px;color:var(--text-primary);"><b>TrxID:</b> <code style="background:rgba(0,0,0,0.04);padding:2px 6px;border-radius:4px;">' + o.payment_trx_id + '</code></div>' : '') +
             '</div>' +
 
             // Tracking section

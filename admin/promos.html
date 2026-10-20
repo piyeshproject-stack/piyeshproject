@@ -210,10 +210,11 @@
                             <th>Minimum Spend</th>
                             <th>Applicable For</th>
                             <th>Expiry / Uses</th>
+                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="promoBody"><tr><td colspan="7" style="text-align:center;padding:40px;color:#8E8E93;">Loading...</td></tr></tbody>
+                    <tbody id="promoBody"><tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -727,7 +728,7 @@ function renderPromos() {
     });
 
     if (!visiblePromos.length) {
-        html = '<tr><td colspan="7" style="text-align:center;padding:40px;color:#8E8E93;">No promo codes yet</td></tr>';
+        html = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted);">No promo codes yet</td></tr>';
     }
 
     visiblePromos.forEach(function(p) {

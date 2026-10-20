@@ -19,22 +19,23 @@
         .best-prod-item {
             display: flex; align-items: center; gap: 12px;
             padding: 12px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid var(--border);
         }
         .best-prod-item:last-child { border-bottom: none; }
         .best-rank {
             width: 28px; height: 28px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 8px;
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-sm);
             display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: 800; color: #8E8E93;
+            font-size: 12px; font-weight: 800; color: var(--text-muted);
             flex-shrink: 0;
         }
-        .best-rank.gold   { background: rgba(255,149,0,0.15); color: #FF9500; }
-        .best-rank.silver { background: rgba(142,142,147,0.15); color: #C7C7CC; }
-        .best-rank.bronze { background: rgba(191,90,242,0.15); color: #BF5AF2; }
-        .best-prod-name { flex: 1; font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .best-prod-count { font-size: 13px; color: #8E8E93; }
+        .best-rank.gold   { background: rgba(245,158,11,0.15); color: #B45309; border-color: rgba(245,158,11,0.3); }
+        .best-rank.silver { background: rgba(100,116,139,0.12); color: #475569; border-color: rgba(100,116,139,0.25); }
+        .best-rank.bronze { background: rgba(194,65,12,0.12); color: #C2410C; border-color: rgba(194,65,12,0.25); }
+        .best-prod-name { flex: 1; font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary); }
+        .best-prod-count { font-size: 12.5px; color: var(--text-muted); font-weight: 500; }
 
         .dashboard-grid {
             display: grid;
@@ -393,12 +394,14 @@
                 datasets: [{
                     label: 'Revenue (৳)',
                     data: data,
-                    borderColor: '#007AFF',
-                    backgroundColor: 'rgba(0,122,255,0.08)',
+                    borderColor: '#8B1A1A',
+                    backgroundColor: 'rgba(139, 26, 26, 0.08)',
                     borderWidth: 2.5,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#007AFF',
+                    pointBackgroundColor: '#8B1A1A',
+                    pointBorderColor: '#FFFFFF',
+                    pointBorderWidth: 1.5,
                     pointRadius: 4,
                     pointHoverRadius: 6,
                 }]
@@ -409,11 +412,13 @@
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: 'rgba(19,19,31,0.95)',
-                        borderColor: 'rgba(255,255,255,0.1)',
+                        backgroundColor: 'rgba(26, 10, 10, 0.92)',
+                        borderColor: 'rgba(139, 26, 26, 0.25)',
                         borderWidth: 1,
-                        titleColor: '#F5F5F7',
-                        bodyColor: '#8E8E93',
+                        padding: 10,
+                        titleColor: '#FFFFFF',
+                        bodyColor: '#E2E8F0',
+                        cornerRadius: 8,
                         callbacks: {
                             label: function(ctx) {
                                 return ' ৳' + ctx.parsed.y.toLocaleString();
@@ -423,12 +428,12 @@
                 },
                 scales: {
                     x: {
-                        grid: { color: 'rgba(255,255,255,0.04)' },
-                        ticks: { color: '#8E8E93', font: {size:11} }
+                        grid: { color: 'rgba(139, 26, 26, 0.05)' },
+                        ticks: { color: '#7A4A4A', font: {size:11, family:'Inter'} }
                     },
                     y: {
-                        grid: { color: 'rgba(255,255,255,0.04)' },
-                        ticks: { color: '#8E8E93', font: {size:11},
+                        grid: { color: 'rgba(139, 26, 26, 0.05)' },
+                        ticks: { color: '#7A4A4A', font: {size:11, family:'Inter'},
                             callback: function(v) { return '৳' + v.toLocaleString(); }
                         }
                     }
