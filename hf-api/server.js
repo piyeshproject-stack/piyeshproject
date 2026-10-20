@@ -247,14 +247,15 @@ app.post('/api/delete-order', authenticateAdmin, async (req, res) => {
 // ── 11. ADMIN UPDATE SETTINGS (/api/update-settings) ──
 app.post('/api/update-settings', authenticateAdmin, async (req, res) => {
     try {
-        // Auto-migrate SEO columns if missing
+        // Auto-migrate SEO & AI columns if missing
         const seoCols = [
             'seo_title TEXT DEFAULT ""',
             'seo_description TEXT DEFAULT ""',
             'seo_keywords TEXT DEFAULT ""',
             'seo_og_image TEXT DEFAULT ""',
             'google_site_verification TEXT DEFAULT ""',
-            'site_url TEXT DEFAULT ""'
+            'site_url TEXT DEFAULT ""',
+            'ai_config TEXT DEFAULT ""'
         ];
         for (const col of seoCols) {
             try { await queryD1(`ALTER TABLE settings ADD COLUMN ${col}`, [], true); } catch(e) {}
@@ -272,7 +273,8 @@ app.post('/api/update-settings', authenticateAdmin, async (req, res) => {
                 messaging_apps=?,
                 marquee_text=?, marquee_link=?, marquee_is_active=?,
                 crypto_coins=?, custom_admin_js=?, custom_admin_css=?, pwa_icon_url=?, external_link_handler=?,
-                seo_title=?, seo_description=?, seo_keywords=?, seo_og_image=?, google_site_verification=?, site_url=?
+                seo_title=?, seo_description=?, seo_keywords=?, seo_og_image=?, google_site_verification=?, site_url=?,
+                ai_config=?
             WHERE id=1
         `;
         const params = [
@@ -289,7 +291,8 @@ app.post('/api/update-settings', authenticateAdmin, async (req, res) => {
             p.marquee_text, p.marquee_link, p.marquee_is_active ? 1 : 0,
             typeof p.crypto_coins === 'string' ? p.crypto_coins : JSON.stringify(p.crypto_coins || []),
             p.custom_admin_js, p.custom_admin_css, p.pwa_icon_url, p.external_link_handler,
-            p.seo_title || '', p.seo_description || '', p.seo_keywords || '', p.seo_og_image || '', p.google_site_verification || '', p.site_url || ''
+            p.seo_title || '', p.seo_description || '', p.seo_keywords || '', p.seo_og_image || '', p.google_site_verification || '', p.site_url || '',
+            typeof p.ai_config === 'string' ? p.ai_config : JSON.stringify(p.ai_config || {})
         ];
         const data = await queryD1(sql, params, true);
         res.json(data);

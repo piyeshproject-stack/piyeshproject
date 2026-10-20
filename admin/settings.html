@@ -15,7 +15,7 @@
     <script src="assets/js/admin-common.js?v=5"></script>
     <script src="../assets/js/imgbb-uploader.js"></script>
     <script src="../assets/js/r2-uploader.js"></script>
-    <script src="../assets/js/ai-config.js"></script>
+    <script src="../assets/js/ai-config.js?v=3.8.3"></script>
     <style>
         .settings-section { margin-bottom: 28px; }
         .settings-section-title {
@@ -537,9 +537,8 @@
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label">Admin AI Model</label>
                         <select class="form-input" id="adminAiModel">
-                            <option value="gemini-3.8-live-extended-thinking" selected>Gemini 3.8 Live Extended Thinking (Deep Reasoning & SEO)</option>
-                            <option value="gemini-3.8-live">Gemini 3.8 Live (Fast & Accurate)</option>
-                            <option value="gemini-3-flash-live">Gemini 3 Flash Live (Ultra Responsive)</option>
+                            <option value="gemini-3.8-pro" selected>Gemini 3.8 Live Extended Thinking (Deep Reasoning & SEO)</option>
+                            <option value="gemini-3.8-flash">Gemini 3.8 Live (Fast & High Capability)</option>
                             <option value="gemini-2.5-pro">Gemini 2.5 Pro (Fallback)</option>
                         </select>
                         <div class="form-hint">অ্যাডমিন টাস্ক ও ডেসক্রিপশন রচনার জন্য উচ্চ বুদ্ধিমত্তাসম্পন্ন মডেল নির্বাচন করুন।</div>
@@ -567,8 +566,8 @@
                         <div class="form-group" style="margin-bottom:0;">
                             <label class="form-label">Customer Chat Model</label>
                             <select class="form-input" id="userAiModel">
-                                <option value="gemini-3-flash-live" selected>Gemini 3 Flash Live (Instant Chat)</option>
-                                <option value="gemini-3.8-live">Gemini 3.8 Live (Detailed Explanation)</option>
+                                <option value="gemini-3.8-flash" selected>Gemini 3.8 Live (Detailed Explanation & Fast)</option>
+                                <option value="gemini-3.8-pro">Gemini 3.8 Live Extended Thinking</option>
                                 <option value="gemini-2.5-flash">Gemini 2.5 Flash (Standard)</option>
                             </select>
                         </div>
@@ -885,12 +884,14 @@
             } catch(e){}
         }
         setVal('adminAiKey', aiCfg.admin_api_key || '');
-        if (document.getElementById('adminAiModel') && aiCfg.admin_model) {
-            document.getElementById('adminAiModel').value = aiCfg.admin_model;
+        if (document.getElementById('adminAiModel')) {
+            var am = (typeof AIConfig !== 'undefined' && AIConfig.normalizeModelId) ? AIConfig.normalizeModelId(aiCfg.admin_model || 'gemini-3.8-pro') : (aiCfg.admin_model || 'gemini-3.8-pro');
+            document.getElementById('adminAiModel').value = am;
         }
         setVal('userAiKey', aiCfg.user_api_key || '');
-        if (document.getElementById('userAiModel') && aiCfg.user_model) {
-            document.getElementById('userAiModel').value = aiCfg.user_model;
+        if (document.getElementById('userAiModel')) {
+            var um = (typeof AIConfig !== 'undefined' && AIConfig.normalizeModelId) ? AIConfig.normalizeModelId(aiCfg.user_model || 'gemini-3.8-flash') : (aiCfg.user_model || 'gemini-3.8-flash');
+            document.getElementById('userAiModel').value = um;
         }
         if (document.getElementById('userAiAudioModel') && aiCfg.audio_model) {
             document.getElementById('userAiAudioModel').value = aiCfg.audio_model;
@@ -907,11 +908,17 @@
     }
 
     function collectAiConfig() {
+        var adminModel = (document.getElementById('adminAiModel') ? document.getElementById('adminAiModel').value : 'gemini-3.8-pro');
+        var userModel = (document.getElementById('userAiModel') ? document.getElementById('userAiModel').value : 'gemini-3.8-flash');
+        if (typeof AIConfig !== 'undefined' && AIConfig.normalizeModelId) {
+            adminModel = AIConfig.normalizeModelId(adminModel);
+            userModel = AIConfig.normalizeModelId(userModel);
+        }
         return {
             admin_api_key: (document.getElementById('adminAiKey') ? document.getElementById('adminAiKey').value.trim() : ''),
-            admin_model: (document.getElementById('adminAiModel') ? document.getElementById('adminAiModel').value : 'gemini-3.8-live-extended-thinking'),
+            admin_model: adminModel,
             user_api_key: (document.getElementById('userAiKey') ? document.getElementById('userAiKey').value.trim() : ''),
-            user_model: (document.getElementById('userAiModel') ? document.getElementById('userAiModel').value : 'gemini-3-flash-live'),
+            user_model: userModel,
             audio_model: (document.getElementById('userAiAudioModel') ? document.getElementById('userAiAudioModel').value : 'gemini-2.5-flash-native-audio-dialog'),
             enable_user_chat: document.getElementById('aiToggleChat') ? document.getElementById('aiToggleChat').checked : true,
             enable_voice_call: document.getElementById('aiToggleVoice') ? document.getElementById('aiToggleVoice').checked : true,
@@ -928,7 +935,8 @@
 
     function testAdminAiKey() {
         var key = (document.getElementById('adminAiKey') ? document.getElementById('adminAiKey').value.trim() : '');
-        var model = (document.getElementById('adminAiModel') ? document.getElementById('adminAiModel').value : 'gemini-3.8-live-extended-thinking');
+        var model = (document.getElementById('adminAiModel') ? document.getElementById('adminAiModel').value : 'gemini-3.8-pro');
+        if (typeof AIConfig !== 'undefined' && AIConfig.normalizeModelId) model = AIConfig.normalizeModelId(model);
         var statusEl = document.getElementById('adminAiKeyStatus');
         if (!key) {
             showToast('⚠️ Admin AI Key দিন', 'warning');
@@ -970,7 +978,8 @@
 
     function testUserAiKey() {
         var key = (document.getElementById('userAiKey') ? document.getElementById('userAiKey').value.trim() : '');
-        var model = (document.getElementById('userAiModel') ? document.getElementById('userAiModel').value : 'gemini-3-flash-live');
+        var model = (document.getElementById('userAiModel') ? document.getElementById('userAiModel').value : 'gemini-3.8-flash');
+        if (typeof AIConfig !== 'undefined' && AIConfig.normalizeModelId) model = AIConfig.normalizeModelId(model);
         var statusEl = document.getElementById('userAiKeyStatus');
         if (!key) {
             showToast('⚠️ Customer User AI Key দিন', 'warning');
