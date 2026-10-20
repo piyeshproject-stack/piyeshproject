@@ -17,6 +17,10 @@
     <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
     <script src="assets/js/appwrite-init.js"></script>
     <script src="assets/js/cf-db.js"></script>
+    <link rel="stylesheet" href="assets/css/ai-components.css">
+    <script src="assets/js/ai-config.js"></script>
+    <script src="assets/js/ai-product-chat.js"></script>
+    <script src="assets/js/ai-compare.js"></script>
     <style>
         .product-page { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 24px 0; }
         .gallery-main { position: relative; aspect-ratio: 1; border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-light); }
@@ -171,6 +175,10 @@
                     </button>
                 </div>
                 <button class="btn btn-outline btn-full" onclick="directOrder()">⚡ Buy Now</button>
+                <button type="button" class="btn-ai-ask" id="askAiBtn" onclick="openProductAiChat()">
+                    <span class="ai-sparkle-icon">✨</span>
+                    <span>Ask with AI (পণ্য সম্পর্কে জানুন &amp; ভয়েস কল)</span>
+                </button>
                 <button class="btn btn-full" id="msgOrderBtn" style="display:none;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-weight:700;border:none;" onclick="openMsgSheet()">
                     💬 Order by Message
                 </button>

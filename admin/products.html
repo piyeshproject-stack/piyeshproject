@@ -17,6 +17,7 @@
     <script src="../assets/js/r2-uploader.js"></script>
     <script src="../assets/js/piexif.js"></script>
     <script src="../assets/js/image-seo-injector.js"></script>
+    <script src="../assets/js/ai-config.js"></script>
     <style>
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
         .product-card {
@@ -250,7 +251,12 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 10px;">
-                    <label class="form-label">🏷️ Product Focus Tags / Keywords</label>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                        <label class="form-label" style="margin-bottom:0;">🏷️ Product Focus Tags / Keywords</label>
+                        <button type="button" class="btn btn-sm" onclick="generateAISeoTags()" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; border-radius: 6px; padding: 3px 10px; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <span>✨ AI Generate Tags &amp; Title</span>
+                        </button>
+                    </div>
                     <input class="form-input" id="pTags" placeholder="e.g. leather wallet, cowhide, slim wallet, gents gift (কমা দিয়ে লিখো)" oninput="updateSeoTagPreview()">
                 </div>
 
@@ -1383,42 +1389,98 @@
     })();
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
     
-    // AI Description Generator
+    // AI Description Generator (Google AI Studio / Gemini Integration)
     async function generateAIDesc() {
         const productName = document.getElementById('pName').value.trim();
+        const basePrice = document.getElementById('pBasePrice').value.trim();
         if (!productName) {
-            alert('Please enter a Product Name first before generating a description.');
+            showToast('⚠️ Please enter a Product Name first', 'warning');
             document.getElementById('pName').focus();
             return;
         }
 
         const ed = document.getElementById('pDesc');
         const oldContent = ed.innerHTML;
-        ed.innerHTML = '<span style="color:#8E8E93;"><i class="lucide-icon" data-lucide="loader-2"></i> AI is thinking... Please wait...</span>';
+        ed.innerHTML = '<span style="color:#7c3aed;font-weight:600;"><i class="lucide-icon" data-lucide="loader-2"></i> ✨ Gemini AI is crafting a high-converting description...</span>';
         if(typeof lucide !== 'undefined') lucide.createIcons();
 
         try {
+            // First try client-side Google AI Studio configured key
+            if (typeof AIConfig !== 'undefined') {
+                const prompt = 'Write an attractive, premium e-commerce product description in Bengali (বাংলা) for the product: "' + productName + '"' + (basePrice ? ' (Price: ৳' + basePrice + ')' : '') + '. Highlight benefits, premium build quality, specifications and customer value. Return only clean HTML markup using <p>, <ul>, <li>, <strong> tags.';
+                const res = await AIConfig.generateText({
+                    isAdmin: true,
+                    prompt: prompt,
+                    systemInstruction: 'You are an expert e-commerce copywriter. Provide clean, engaging HTML formatted product description without markdown backticks.'
+                });
+                if (res && res.text) {
+                    ed.innerHTML = res.text.replace(/```html/gi, '').replace(/```/g, '').trim();
+                    updateRteCharCount();
+                    showToast('✅ Description generated with Gemini AI (' + res.modelUsed + ')!', 'success');
+                    return;
+                }
+            }
+
+            // Fallback to server endpoint
             const token = localStorage.getItem('adminToken');
             const response = await fetch('/api/ai-generate', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                 body: JSON.stringify({ prompt: "Write an attractive product description for: " + productName })
             });
             const data = await response.json();
-
             if (data.success && data.result) {
                 ed.innerHTML = data.result;
                 updateRteCharCount();
+                showToast('✅ Description generated!', 'success');
             } else {
-                alert('AI Generation Failed: ' + (data.error || 'Unknown error'));
+                showToast('❌ AI Generation Failed: ' + (data.error || 'Check AI settings'), 'error');
                 ed.innerHTML = oldContent;
             }
         } catch (e) {
-            alert('Error calling AI: ' + e.message);
+            showToast('❌ AI Error: ' + e.message, 'error');
             ed.innerHTML = oldContent;
+        }
+    }
+
+    // AI SEO Tags & Title Generator
+    async function generateAISeoTags() {
+        const productName = document.getElementById('pName').value.trim();
+        if (!productName) {
+            showToast('⚠️ Please enter a Product Name first', 'warning');
+            document.getElementById('pName').focus();
+            return;
+        }
+
+        showToast('⏳ Generating SEO tags & keywords with Gemini AI...', 'info');
+
+        try {
+            if (typeof AIConfig !== 'undefined') {
+                const prompt = 'Analyze this product and generate 8-10 high-search-volume SEO focus tags (comma-separated) and an optimized SEO Title for Google search in Bangladesh: "' + productName + '". Return JSON: {"tags": "tag1, tag2, tag3, tag4", "seo_title": "SEO Optimized Title"}';
+                const res = await AIConfig.generateText({
+                    isAdmin: true,
+                    prompt: prompt,
+                    systemInstruction: 'You are an expert e-commerce SEO specialist. Return ONLY valid JSON format.'
+                });
+
+                var cleaned = (res.text || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+                var jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    var parsed = JSON.parse(jsonMatch[0]);
+                    if (parsed.tags && document.getElementById('pTags')) {
+                        document.getElementById('pTags').value = parsed.tags;
+                        if (typeof updateSeoTagPreview === 'function') updateSeoTagPreview();
+                    }
+                    if (parsed.seo_title && document.getElementById('pSeoTitle')) {
+                        document.getElementById('pSeoTitle').value = parsed.seo_title;
+                    }
+                    showToast('✅ SEO Tags & Title generated with ' + res.modelUsed + '!', 'success');
+                    return;
+                }
+            }
+            showToast('⚠️ AI Key not configured in Settings.', 'warning');
+        } catch (e) {
+            showToast('❌ SEO Generator Error: ' + e.message, 'error');
         }
     }
     </script>

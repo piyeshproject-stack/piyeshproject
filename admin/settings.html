@@ -15,6 +15,7 @@
     <script src="assets/js/admin-common.js?v=5"></script>
     <script src="../assets/js/imgbb-uploader.js"></script>
     <script src="../assets/js/r2-uploader.js"></script>
+    <script src="../assets/js/ai-config.js"></script>
     <style>
         .settings-section { margin-bottom: 28px; }
         .settings-section-title {
@@ -503,6 +504,100 @@
                 </div>
             </div>
 
+            <!-- Google AI Studio Configuration -->
+            <div class="card" style="margin-bottom:20px;border:1px solid rgba(168,85,247,0.3);background:linear-gradient(180deg,rgba(168,85,247,0.03),transparent);">
+                <div class="settings-section-title" style="color:#9333ea;border-color:rgba(168,85,247,0.2);">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9333ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></svg>
+                    Google AI Studio Configuration (Gemini API)
+                    <span style="margin-left:auto;font-size:11px;background:#9333ea;color:#fff;padding:2px 8px;border-radius:12px;font-weight:700;text-transform:none;">Active</span>
+                </div>
+
+                <div style="font-size:12px;background:rgba(168,85,247,0.06);border:1px solid rgba(168,85,247,0.15);border-radius:10px;padding:12px;margin-bottom:16px;color:#6b21a8;line-height:1.6;">
+                    ✨ <strong>Smart AI Integration:</strong> Google AI Studio এর API Key ব্যবহার করে সাইটে <strong>Ask with AI</strong> (ভয়েস কল সহ), <strong>Product Comparison</strong> এবং অ্যাডমিন প্যানেলে <strong>Smart SEO Generator</strong> চালু করুন।
+                    <div style="margin-top:4px;"><a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#9333ea;font-weight:700;text-decoration:underline;">🔗 Google AI Studio থেকে API Key সংগ্রহ করুন</a></div>
+                </div>
+
+                <!-- Admin AI Config Section -->
+                <div style="padding:14px;border:1px solid var(--border);border-radius:10px;background:#fff;margin-bottom:16px;">
+                    <div style="font-size:12px;font-weight:700;color:var(--text-dark);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                        🛡️ <strong>Admin AI Configuration</strong>
+                        <span style="font-size:10px;color:var(--text-secondary);font-weight:normal;">(পণ্য SEO, মেটা ট্যাগ ও অ্যাডমিন অ্যানালিটিক্স এর জন্য)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Admin API Key</label>
+                        <div style="display:flex;gap:8px;">
+                            <input class="form-input" id="adminAiKey" type="password" placeholder="AIzaSy... (Admin Google AI Studio Key)" style="flex:1;">
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="togglePassVisibility('adminAiKey')">👁️</button>
+                            <button type="button" class="btn btn-sm" style="background:rgba(147,51,234,0.1);color:#9333ea;border:1px solid rgba(147,51,234,0.3);font-weight:700;" onclick="testAdminAiKey()">🔍 Test Admin Key</button>
+                        </div>
+                        <div id="adminAiKeyStatus" style="font-size:11px;margin-top:6px;display:none;padding:6px 10px;border-radius:6px;"></div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label">Admin AI Model</label>
+                        <select class="form-input" id="adminAiModel">
+                            <option value="gemini-3.8-live-extended-thinking" selected>Gemini 3.8 Live Extended Thinking (Deep Reasoning & SEO)</option>
+                            <option value="gemini-3.8-live">Gemini 3.8 Live (Fast & Accurate)</option>
+                            <option value="gemini-3-flash-live">Gemini 3 Flash Live (Ultra Responsive)</option>
+                            <option value="gemini-2.5-pro">Gemini 2.5 Pro (Fallback)</option>
+                        </select>
+                        <div class="form-hint">অ্যাডমিন টাস্ক ও ডেসক্রিপশন রচনার জন্য উচ্চ বুদ্ধিমত্তাসম্পন্ন মডেল নির্বাচন করুন।</div>
+                    </div>
+                </div>
+
+                <!-- User Facing AI Config Section -->
+                <div style="padding:14px;border:1px solid var(--border);border-radius:10px;background:#fff;margin-bottom:16px;">
+                    <div style="font-size:12px;font-weight:700;color:var(--text-dark);margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+                        👥 <strong>Customer / User AI Configuration</strong>
+                        <span style="font-size:10px;color:var(--text-secondary);font-weight:normal;">(কাস্টমার চ্যাট, প্রশ্ন-উত্তর ও ভয়েস কলের জন্য)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">User API Key <span style="font-weight:normal;color:var(--text-secondary);">(রেট লিমিট ও কোটা আলাদা রাখতে পৃথক কি ব্যবহার সুপারিশকৃত)</span></label>
+                        <div style="display:flex;gap:8px;">
+                            <input class="form-input" id="userAiKey" type="password" placeholder="AIzaSy... (User Customer Chat API Key)" style="flex:1;">
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="togglePassVisibility('userAiKey')">👁️</button>
+                            <button type="button" class="btn btn-sm" style="background:rgba(59,130,246,0.1);color:#2563eb;border:1px solid rgba(59,130,246,0.3);font-weight:700;" onclick="testUserAiKey()">🔍 Test User Key</button>
+                        </div>
+                        <div id="userAiKeyStatus" style="font-size:11px;margin-top:6px;display:none;padding:6px 10px;border-radius:6px;"></div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label">Customer Chat Model</label>
+                            <select class="form-input" id="userAiModel">
+                                <option value="gemini-3-flash-live" selected>Gemini 3 Flash Live (Instant Chat)</option>
+                                <option value="gemini-3.8-live">Gemini 3.8 Live (Detailed Explanation)</option>
+                                <option value="gemini-2.5-flash">Gemini 2.5 Flash (Standard)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label">Live Voice Call Model</label>
+                            <select class="form-input" id="userAiAudioModel">
+                                <option value="gemini-2.5-flash-native-audio-dialog" selected>Gemini 2.5 Flash Native Audio Dialog</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature Toggles -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:10px;">
+                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+                        <input type="checkbox" id="aiToggleChat" checked style="accent-color:#9333ea;width:16px;height:16px;">
+                        <span>💬 Product Page AI Chat</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+                        <input type="checkbox" id="aiToggleVoice" checked style="accent-color:#9333ea;width:16px;height:16px;">
+                        <span>📞 Live Voice Call Mode</span>
+                    </label>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;cursor:pointer;background:#fff;padding:8px 12px;border:1px solid var(--border);border-radius:8px;">
+                        <input type="checkbox" id="aiToggleCompare" checked style="accent-color:#9333ea;width:16px;height:16px;">
+                        <span>⚖️ Hold-to-Compare AI</span>
+                    </label>
+                </div>
+            </div>
+
             <!-- System Tools (Cache) -->
             <div class="card" style="margin-bottom:20px;border:1px solid rgba(255,59,48,0.2);">
                 <div class="settings-section-title" style="color:#FF3B30;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> System Tools</div>
@@ -656,6 +751,7 @@
         adminInit('settings');
         loadSettings();
         loadImgbbKey();
+        populateAiFields({});
         updateGatewayUrlDisplay();
 
         // Logo upload button (R2 → ImgBB fallback)
@@ -769,6 +865,149 @@
         setVal('siteUrl',                 s.site_url || '');
         if (s.seo_og_image) previewSettingImg('seoOgImage', 'ogImagePreview');
         updateSeoPreview();
+    }
+
+    // ── Google AI Studio Settings Helpers ──
+    function togglePassVisibility(id) {
+        var el = document.getElementById(id);
+        if (el) el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    function populateAiFields(s) {
+        var aiCfg = {};
+        if (typeof AIConfig !== 'undefined') {
+            aiCfg = AIConfig.getConfig();
+        }
+        if (s && s.ai_config) {
+            try {
+                var fromDb = typeof s.ai_config === 'string' ? JSON.parse(s.ai_config) : s.ai_config;
+                aiCfg = Object.assign({}, aiCfg, fromDb);
+            } catch(e){}
+        }
+        setVal('adminAiKey', aiCfg.admin_api_key || '');
+        if (document.getElementById('adminAiModel') && aiCfg.admin_model) {
+            document.getElementById('adminAiModel').value = aiCfg.admin_model;
+        }
+        setVal('userAiKey', aiCfg.user_api_key || '');
+        if (document.getElementById('userAiModel') && aiCfg.user_model) {
+            document.getElementById('userAiModel').value = aiCfg.user_model;
+        }
+        if (document.getElementById('userAiAudioModel') && aiCfg.audio_model) {
+            document.getElementById('userAiAudioModel').value = aiCfg.audio_model;
+        }
+        if (document.getElementById('aiToggleChat')) {
+            document.getElementById('aiToggleChat').checked = aiCfg.enable_user_chat !== false;
+        }
+        if (document.getElementById('aiToggleVoice')) {
+            document.getElementById('aiToggleVoice').checked = aiCfg.enable_voice_call !== false;
+        }
+        if (document.getElementById('aiToggleCompare')) {
+            document.getElementById('aiToggleCompare').checked = aiCfg.enable_comparison !== false;
+        }
+    }
+
+    function collectAiConfig() {
+        return {
+            admin_api_key: (document.getElementById('adminAiKey') ? document.getElementById('adminAiKey').value.trim() : ''),
+            admin_model: (document.getElementById('adminAiModel') ? document.getElementById('adminAiModel').value : 'gemini-3.8-live-extended-thinking'),
+            user_api_key: (document.getElementById('userAiKey') ? document.getElementById('userAiKey').value.trim() : ''),
+            user_model: (document.getElementById('userAiModel') ? document.getElementById('userAiModel').value : 'gemini-3-flash-live'),
+            audio_model: (document.getElementById('userAiAudioModel') ? document.getElementById('userAiAudioModel').value : 'gemini-2.5-flash-native-audio-dialog'),
+            enable_user_chat: document.getElementById('aiToggleChat') ? document.getElementById('aiToggleChat').checked : true,
+            enable_voice_call: document.getElementById('aiToggleVoice') ? document.getElementById('aiToggleVoice').checked : true,
+            enable_comparison: document.getElementById('aiToggleCompare') ? document.getElementById('aiToggleCompare').checked : true
+        };
+    }
+
+    function saveAiSettings() {
+        var cfg = collectAiConfig();
+        if (typeof AIConfig !== 'undefined') {
+            AIConfig.saveConfig(cfg);
+        }
+    }
+
+    function testAdminAiKey() {
+        var key = (document.getElementById('adminAiKey') ? document.getElementById('adminAiKey').value.trim() : '');
+        var model = (document.getElementById('adminAiModel') ? document.getElementById('adminAiModel').value : 'gemini-3.8-live-extended-thinking');
+        var statusEl = document.getElementById('adminAiKeyStatus');
+        if (!key) {
+            showToast('⚠️ Admin AI Key দিন', 'warning');
+            if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.style.background = 'rgba(255,59,48,0.1)';
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = '❌ Key is missing! Google AI Studio থেকে কী সংগ্রহ করুন।';
+            }
+            return;
+        }
+        showToast('⏳ Testing Admin AI Key with Google AI Studio...', 'info');
+        if (statusEl) {
+            statusEl.style.display = 'block';
+            statusEl.style.background = 'rgba(147,51,234,0.1)';
+            statusEl.style.color = '#7c3aed';
+            statusEl.textContent = '⏳ Verifying key & models with Google AI Studio...';
+        }
+        AIConfig.testApiKey(key, model)
+            .then(function(res) {
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.style.background = 'rgba(34,197,94,0.1)';
+                    statusEl.style.color = '#15803d';
+                    statusEl.innerHTML = '✅ <strong>Admin Key Valid!</strong> ' + (res.models ? res.models.length + ' models available.' : 'Connection successful.');
+                }
+                showToast('✅ Admin AI Key connection successful!', 'success');
+            })
+            .catch(function(err) {
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.style.background = 'rgba(255,59,48,0.1)';
+                    statusEl.style.color = '#dc2626';
+                    statusEl.textContent = '❌ Test Failed: ' + err.message;
+                }
+                showToast('❌ Admin Key Test Failed: ' + err.message, 'error');
+            });
+    }
+
+    function testUserAiKey() {
+        var key = (document.getElementById('userAiKey') ? document.getElementById('userAiKey').value.trim() : '');
+        var model = (document.getElementById('userAiModel') ? document.getElementById('userAiModel').value : 'gemini-3-flash-live');
+        var statusEl = document.getElementById('userAiKeyStatus');
+        if (!key) {
+            showToast('⚠️ Customer User AI Key দিন', 'warning');
+            if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.style.background = 'rgba(255,59,48,0.1)';
+                statusEl.style.color = '#dc2626';
+                statusEl.textContent = '❌ Key is missing! Google AI Studio থেকে কী সংগ্রহ করুন।';
+            }
+            return;
+        }
+        showToast('⏳ Testing User AI Key with Google AI Studio...', 'info');
+        if (statusEl) {
+            statusEl.style.display = 'block';
+            statusEl.style.background = 'rgba(59,130,246,0.1)';
+            statusEl.style.color = '#1d4ed8';
+            statusEl.textContent = '⏳ Verifying key & models with Google AI Studio...';
+        }
+        AIConfig.testApiKey(key, model)
+            .then(function(res) {
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.style.background = 'rgba(34,197,94,0.1)';
+                    statusEl.style.color = '#15803d';
+                    statusEl.innerHTML = '✅ <strong>User Key Valid!</strong> ' + (res.models ? res.models.length + ' models available.' : 'Ready for customer chat.');
+                }
+                showToast('✅ Customer AI Key connection successful!', 'success');
+            })
+            .catch(function(err) {
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.style.background = 'rgba(255,59,48,0.1)';
+                    statusEl.style.color = '#dc2626';
+                    statusEl.textContent = '❌ Test Failed: ' + err.message;
+                }
+                showToast('❌ User Key Test Failed: ' + err.message, 'error');
+            });
     }
 
     // ── Worker-Free 100% Client-Side Sitemap Generator ──
@@ -947,6 +1186,7 @@
             // Review ImgBB Key (from Supabase)
             setVal('reviewImgbbKey', s.review_imgbb_key || '');
             populateSeoFields(s);
+            populateAiFields(s);
             });
         } else if (CONFIG.DB_PROVIDER === 'appwrite') {
             appwriteDatabases.getDocument(APP_DB, 'settings', 'main_settings')
@@ -1022,6 +1262,7 @@
 
                 setVal('reviewImgbbKey', s.review_imgbb_key || '');
                 populateSeoFields(s);
+                populateAiFields(s);
             }).catch(function(err) {
                 // 404 means document not yet created — create initial empty document
                 if (err.code === 404) {
@@ -1121,6 +1362,7 @@
 
                 setVal('reviewImgbbKey', s.review_imgbb_key || '');
                 populateSeoFields(s);
+                populateAiFields(s);
             }).catch(function(err) {
                 document.getElementById('pageLoader').style.display  = 'none';
                 document.getElementById('adminMain').style.display   = 'flex';
@@ -1243,6 +1485,7 @@
             seo_og_image:         document.getElementById('seoOgImage').value.trim(),
             google_site_verification: document.getElementById('googleSiteVerification').value.trim(),
             site_url:             document.getElementById('siteUrl').value.trim(),
+            ai_config:            JSON.stringify(collectAiConfig()),
             id: 1
         };
 
@@ -1254,6 +1497,7 @@
             }
             // ImgBB key আলাদাভাবে localStorage এ সেভ করো
             saveImgbbKey();
+            saveAiSettings();
             showToast('✅ Settings saved!', 'success');
             });
         } else if (CONFIG.DB_PROVIDER === 'appwrite') {
@@ -1267,6 +1511,7 @@
             appwriteDatabases.updateDocument(APP_DB, 'settings', 'main_settings', awPayload)
             .then(function() {
                 saveImgbbKey();
+                saveAiSettings();
                 showToast('✅ Settings saved!', 'success');
             }).catch(function(err) {
                 showToast('<i data-lucide="x-circle" class="lucide-icon icon-danger"></i> Save failed: ' + err.message, 'error');
@@ -1285,6 +1530,7 @@
             .then(function(data) {
                 if (data.success) {
                     saveImgbbKey();
+                    saveAiSettings();
                     showToast('✅ Settings saved!', 'success');
                 } else {
                     showToast('<i data-lucide="x-circle" class="lucide-icon icon-danger"></i> Save failed: ' + data.error, 'error');

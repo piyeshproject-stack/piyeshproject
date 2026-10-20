@@ -16,3 +16,7 @@ node_modules/
 
 # Ignore kilo tool directory
 .kilo/
+
+# Ignore workspace agent skills directory
+.agents/
+
