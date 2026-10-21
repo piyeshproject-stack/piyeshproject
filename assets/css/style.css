@@ -308,8 +308,8 @@ input, select, textarea { font-family: inherit; }
     transform: scale(1.04);
 }
 
-.product-badges { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px; }
-.product-badge  { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px; }
+.product-badges { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px; z-index: 2; pointer-events: none; }
+.product-badge  { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; letter-spacing: 0.2px; white-space: nowrap; display: inline-flex; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
 .badge-sale { background: var(--primary); color: #fff; }
 .badge-new  { background: var(--success); color: #fff; }
 

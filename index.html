@@ -694,16 +694,19 @@ function productCardHtml(p) {
 
     var finalPrice = p.base_price;
     var saleHtml = '';
+    var badgeSaleHtml = '';
     if (p.flash_sale_price > 0) {
         finalPrice = p.base_price - p.flash_sale_price;
         saleHtml = '<span class="product-old-price">৳' + p.base_price + '</span>';
+        var pct = p.base_price > 0 ? Math.round((p.flash_sale_price / p.base_price) * 100) : 0;
+        badgeSaleHtml = '<span class="product-badge badge-sale">৳' + p.flash_sale_price + ' ছাড় (-' + pct + '%)</span>';
     }
 
     return '<a href="product.html?id=' + p.id + '" class="product-card">' +
         '<div class="product-img-wrap">' +
             (img ? '<img src="' + img + '" alt="' + p.name + '" loading="lazy">' : '<div style="height:200px;background:linear-gradient(135deg,#f0f0f5,#e0e0ea);display:flex;align-items:center;justify-content:center;font-size:48px;"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i></div>') +
             '<div class="product-badges">' +
-                (p.flash_sale_price > 0 ? '<span class="product-badge badge-sale">SALE</span>' : '') +
+                badgeSaleHtml +
                 (isNewProduct(p.created_at) ? '<span class="product-badge badge-new">NEW</span>' : '') +
             '</div>' +
         '</div>' +

@@ -65,7 +65,7 @@ export async function onRequestGet(context) {
                     <div class="product-img-wrap">
                         ${img ? `<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name)}" loading="lazy">` : '<div style="height:200px;background:#f0f0f5;"></div>'}
                         <div class="product-badges">
-                            ${p.flash_sale_price > 0 ? '<span class="product-badge badge-sale">SALE</span>' : ''}
+                            ${p.flash_sale_price > 0 ? `<span class="product-badge badge-sale">৳${p.flash_sale_price} ছাড় (-${p.base_price > 0 ? Math.round((p.flash_sale_price / p.base_price) * 100) : 0}%)</span>` : ''}
                         </div>
                     </div>
                     <div class="product-info">

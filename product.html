@@ -130,7 +130,7 @@
             <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:16px;">
                 <span class="price-tag" id="currentPrice">৳0</span>
                 <span class="price-old" id="priceOld"></span>
-                <span id="saleLabel" style="display:none;font-size:12px;background:var(--primary);color:#fff;padding:3px 8px;border-radius:20px;font-weight:700;margin-left:6px;">SALE</span>
+                <span id="saleLabel" style="display:none;font-size:12px;background:var(--primary);color:#fff;padding:3px 10px;border-radius:20px;font-weight:700;margin-left:6px;white-space:nowrap;letter-spacing:0.2px;"></span>
             </div>
 
             <!-- Reviews summary -->
@@ -179,12 +179,14 @@
                     <span class="ai-sparkle-icon">✨</span>
                     <span>Ask with AI (পণ্য সম্পর্কে জানুন &amp; ভয়েস কল)</span>
                 </button>
-                <button class="btn btn-full" id="msgOrderBtn" style="display:none;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-weight:700;border:none;" onclick="openMsgSheet()">
-                    💬 Order by Message
-                </button>
-                <button class="btn btn-full" id="pickupBtn" style="display:none;background:linear-gradient(135deg,#FF9500,#FF6B00);color:#fff;font-weight:700;border:none;" onclick="pickupOrder()">
-                    🚶 Pickup from Store
-                </button>
+                <div id="secondaryOrderBtnsRow" style="display:none;gap:10px;width:100%;align-items:stretch;">
+                    <button class="btn" id="msgOrderBtn" style="display:none;flex:1;min-width:0;width:50%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-weight:700;border:none;justify-content:center;align-items:center;padding:12px 6px;font-size:13px;white-space:nowrap;border-radius:12px;" onclick="openMsgSheet()">
+                        💬 Order by Message
+                    </button>
+                    <button class="btn" id="pickupBtn" style="display:none;flex:1;min-width:0;width:50%;background:linear-gradient(135deg,#FF9500,#FF6B00);color:#fff;font-weight:700;border:none;justify-content:center;align-items:center;padding:12px 6px;font-size:13px;white-space:nowrap;border-radius:12px;" onclick="pickupOrder()">
+                        🚶 Pickup from Store
+                    </button>
+                </div>
             </div>
 
             <!-- Product Meta -->
@@ -563,13 +565,15 @@ document.addEventListener('DOMContentLoaded', function() {
         try { setupReviewUpload(); } catch(e) {}
         try { loadRelatedProducts(); } catch(e) { console.error('related error:', e); }
 
-        if ((settings.allow_whatsapp_order || settings.allow_msg_order) && settings.messaging_apps) {
-            document.getElementById('msgOrderBtn').style.display = 'flex';
-        }
+        var showMsg = !!((settings.allow_whatsapp_order || settings.allow_msg_order) && settings.messaging_apps);
+        var showPickup = !!settings.allow_pickup;
+        var msgBtn = document.getElementById('msgOrderBtn');
+        var pickupBtn = document.getElementById('pickupBtn');
+        var secRow = document.getElementById('secondaryOrderBtnsRow');
 
-        if (settings.allow_pickup) {
-            document.getElementById('pickupBtn').style.display = 'flex';
-        }
+        if (msgBtn) msgBtn.style.display = showMsg ? 'flex' : 'none';
+        if (pickupBtn) pickupBtn.style.display = showPickup ? 'flex' : 'none';
+        if (secRow) secRow.style.display = (showMsg || showPickup) ? 'flex' : 'none';
 
         document.getElementById('pageLoader').style.display = 'none';
         document.getElementById('productPage').style.display = 'grid';
@@ -616,7 +620,8 @@ function productCardHtml(p) {
     else if (p.gallery_images && p.gallery_images.length) imgUrl = p.gallery_images[0];
     var price = p.flash_sale_price > 0 ? p.base_price - p.flash_sale_price : p.base_price;
     var origPrice = p.flash_sale_price > 0 ? '<del style="font-size:12px;color:#999;">৳' + p.base_price + '</del>' : '';
-    var badge = p.flash_sale_price > 0 ? '<div style="position:absolute;top:8px;left:8px;background:#ff4444;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;">৳' + p.flash_sale_price + ' OFF</div>' : '';
+    var pct = (p.base_price > 0 && p.flash_sale_price > 0) ? Math.round((p.flash_sale_price / p.base_price) * 100) : 0;
+    var badge = p.flash_sale_price > 0 ? '<div style="position:absolute;top:8px;left:8px;background:var(--primary,#ff4444);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.15);letter-spacing:0.2px;">৳' + p.flash_sale_price + ' ছাড় (-' + pct + '%)</div>' : '';
     return '<a href="product.html?id=' + p.id + '" style="text-decoration:none;color:inherit;">' +
         '<div class="product-card" style="cursor:pointer;">' +
             '<div class="product-img-wrap" style="position:relative;">' +
@@ -959,11 +964,18 @@ function updatePrice(size) {
     document.getElementById('currentPrice').textContent = '৳' + finalPrice;
 
     if (flashDiscount > 0) {
-        document.getElementById('priceOld').textContent = '৳' + (base + extra);
-        document.getElementById('saleLabel').style.display = 'inline-flex';
+        var oldPrice = base + extra;
+        var pct = oldPrice > 0 ? Math.round((flashDiscount / oldPrice) * 100) : 0;
+        document.getElementById('priceOld').textContent = '৳' + oldPrice;
+        var saleEl = document.getElementById('saleLabel');
+        if (saleEl) {
+            saleEl.textContent = '৳' + flashDiscount + ' ছাড় (-' + pct + '%)';
+            saleEl.style.display = 'inline-flex';
+        }
     } else {
         document.getElementById('priceOld').textContent = '';
-        document.getElementById('saleLabel').style.display = 'none';
+        var saleEl = document.getElementById('saleLabel');
+        if (saleEl) saleEl.style.display = 'none';
     }
 
     var stickyPrice = document.getElementById('stickyPrice');
@@ -1432,10 +1444,32 @@ function updateCartBadge() {
 }
 
 function scrollToOrder() {
-    var el = document.getElementById('colorSection') || document.getElementById('mainOrderButtons');
-    if(el) {
-        var y = el.getBoundingClientRect().top + window.scrollY - 80; // offset for nav
-        window.scrollTo({top: y, behavior: 'smooth'});
+    var target = null;
+    var colorSec = document.getElementById('colorSection');
+    var sizeSec = document.getElementById('sizeSection');
+    var mainBtns = document.getElementById('mainOrderButtons');
+    
+    // Pick the first visible purchase section (colors, sizes, or action buttons)
+    if (colorSec && colorSec.offsetParent !== null) {
+        target = colorSec;
+    } else if (sizeSec && sizeSec.offsetParent !== null) {
+        target = sizeSec;
+    } else if (mainBtns && mainBtns.offsetParent !== null) {
+        target = mainBtns;
+    } else {
+        target = document.getElementById('productPage') || document.body;
+    }
+
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (mainBtns) {
+            mainBtns.style.transition = 'box-shadow 0.3s ease, transform 0.3s ease';
+            mainBtns.style.boxShadow = '0 0 0 3px rgba(139,26,26,0.3), 0 8px 24px rgba(0,0,0,0.08)';
+            mainBtns.style.borderRadius = '16px';
+            setTimeout(function() {
+                mainBtns.style.boxShadow = '';
+            }, 1600);
+        }
     }
 }
 
