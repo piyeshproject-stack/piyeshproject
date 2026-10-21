@@ -1,12 +1,12 @@
 /**
  * AI Configuration & Gemini API Client for E-Commerce
  * Google AI Studio Integration
- * Active Models:
- *  - gemini-3.8-live (Permanent Customer Chat & Live Audio Engine via BidiGenerateContent WebSocket)
- *  - gemini-2.5-flash-native-audio-preview-12-2025 (Dedicated Native Audio Dialog Fallback)
- *  - gemini-3.8-pro   (High Intelligence, Extended Thinking, Admin SEO & Descriptions)
- *  - gemini-3.8-flash (High Speed Fallback)
- *  - gemini-2.5-flash (Standard Fallback)
+ *
+ * Active Modern Models:
+ *  - gemini-3.8-live (Permanent Customer Chat & Live Audio Dialog via WebSocket bidiGenerateContent)
+ *  - gemini-3.5-flash (High Speed, Rock-Solid REST Engine for Comparisons & Admin Tasks)
+ *  - gemini-3.8-flash (High Intelligence Flash Model)
+ *  - gemini-3.5-flash-lite (Ultra Fast Lightweight Model)
  */
 
 (function (window) {
@@ -14,56 +14,54 @@
 
     var STORAGE_KEY_V2 = 'ecom_ai_settings_v2';
     var STORAGE_KEY_V1 = 'ecom_ai_settings_v1';
-    var MODELS_CACHE_KEY = 'ecom_ai_cached_models_v2';
 
     // Model Endpoints
     var PERMANENT_USER_MODEL = 'gemini-3.8-live';
-    var NATIVE_AUDIO_MODEL   = 'gemini-2.5-flash-native-audio-preview-12-2025';
-    var SMART_ADMIN_MODEL    = 'gemini-3.8-pro';
-    var FALLBACK_FLASH       = 'gemini-3.8-flash';
-    var FALLBACK_25          = 'gemini-2.5-flash';
+    var PRIMARY_REST_MODEL   = 'gemini-3.5-flash';
+    var ADVANCED_REST_MODEL  = 'gemini-3.8-flash';
+    var LITE_REST_MODEL      = 'gemini-3.5-flash-lite';
 
     var AI_MODELS = {
         TEXT_USER: [
             { id: PERMANENT_USER_MODEL, name: 'Gemini 3.8 Live (Permanent Customer Chat Engine)' }
         ],
         TEXT_ADMIN: [
-            { id: SMART_ADMIN_MODEL,  name: 'Gemini 3.8 Pro (Extended Thinking - Best for Descriptions & SEO)' },
-            { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash (High Speed & Intelligence)' },
-            { id: 'gemini-2.5-pro',   name: 'Gemini 2.5 Pro (Standard Pro)' },
-            { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (Fallback)' }
+            { id: PRIMARY_REST_MODEL,  name: 'Gemini 3.5 Flash (Super Fast & Highly Recommended)' },
+            { id: ADVANCED_REST_MODEL, name: 'Gemini 3.8 Flash (High Intelligence)' },
+            { id: LITE_REST_MODEL,     name: 'Gemini 3.5 Flash Lite (Ultra Lightweight)' }
         ],
         AUDIO_MODELS: [
-            { id: PERMANENT_USER_MODEL, name: 'Gemini 3.8 Live (Primary Voice Dialog)' },
-            { id: NATIVE_AUDIO_MODEL,   name: 'Gemini 2.5 Flash Native Audio Preview (Dedicated Audio Fallback)' }
+            { id: PERMANENT_USER_MODEL, name: 'Gemini 3.8 Live (Real-Time Voice & Streaming Audio)' }
         ]
     };
 
     var DEFAULT_CONFIG = {
         admin_api_key: '',
-        admin_model:   SMART_ADMIN_MODEL,
+        admin_model:   PRIMARY_REST_MODEL,
         user_api_key:  '',
         user_model:    PERMANENT_USER_MODEL, // Permanently gemini-3.8-live
-        audio_model:   NATIVE_AUDIO_MODEL,   // gemini-2.5-flash-native-audio-preview-12-2025
+        audio_model:   PERMANENT_USER_MODEL, // gemini-3.8-live
         enable_user_chat:  true,
         enable_voice_call: true,
         enable_comparison: true
     };
 
     function normalizeModelId(id) {
-        if (!id) return PERMANENT_USER_MODEL;
+        if (!id) return PRIMARY_REST_MODEL;
         var clean = id.toString().toLowerCase().trim().replace(/^models\//, '');
 
-        if (clean === 'gemini-3.8-live' || clean.includes('3.8-live')) return PERMANENT_USER_MODEL;
-        if (clean.includes('native-audio') || clean.includes('native-audio-preview') || clean.includes('2.5-flash-native')) {
-            return NATIVE_AUDIO_MODEL;
+        if (clean === 'gemini-3.8-live' || clean.includes('3.8-live') || clean.includes('live')) {
+            return PERMANENT_USER_MODEL;
         }
-        if (clean === 'gemini-3.8-pro' || clean.includes('3.8-pro') || clean.includes('3.8-live-extended')) return 'gemini-3.8-pro';
+        if (clean === 'gemini-3.5-flash' || clean.includes('3.5-flash')) return 'gemini-3.5-flash';
         if (clean === 'gemini-3.8-flash' || clean.includes('3.8-flash')) return 'gemini-3.8-flash';
-        if (clean === 'gemini-2.5-flash' || clean.includes('2.5-flash')) return 'gemini-2.5-flash';
-        if (clean === 'gemini-2.5-pro' || clean.includes('2.5-pro')) return 'gemini-2.5-pro';
+        if (clean === 'gemini-3.5-flash-lite' || clean.includes('3.5-flash-lite') || clean.includes('flash-lite')) return 'gemini-3.5-flash-lite';
+        if (clean === 'gemini-3.7-flash' || clean.includes('3.7-flash')) return 'gemini-3.7-flash';
 
-        if (clean.includes('2.0') || clean.includes('1.5')) return PERMANENT_USER_MODEL;
+        // Discontinued legacy models (2.5, 2.0, 1.5) mapped to modern stable models
+        if (clean.includes('2.5') || clean.includes('2.0') || clean.includes('1.5') || clean.includes('pro')) {
+            return PRIMARY_REST_MODEL;
+        }
 
         return clean;
     }
@@ -71,7 +69,8 @@
     var AIConfig = {
         MODELS: AI_MODELS,
         USER_MODEL: PERMANENT_USER_MODEL,
-        AUDIO_MODEL: NATIVE_AUDIO_MODEL,
+        AUDIO_MODEL: PERMANENT_USER_MODEL,
+        PRIMARY_REST_MODEL: PRIMARY_REST_MODEL,
         normalizeModelId: normalizeModelId,
 
         getConfig: function () {
@@ -91,15 +90,15 @@
 
             var merged = Object.assign({}, DEFAULT_CONFIG, dbParsed, saved);
 
-            // User Chat is permanently gemini-3.8-live for customers
+            // User Chat & Audio are permanently gemini-3.8-live for customers
             merged.user_model  = PERMANENT_USER_MODEL;
-            merged.audio_model = NATIVE_AUDIO_MODEL;
+            merged.audio_model = PERMANENT_USER_MODEL;
 
             // Share key if only one is configured
             if (merged.admin_api_key && !merged.user_api_key) merged.user_api_key = merged.admin_api_key;
             if (merged.user_api_key && !merged.admin_api_key) merged.admin_api_key = merged.user_api_key;
 
-            merged.admin_model = normalizeModelId(merged.admin_model || SMART_ADMIN_MODEL);
+            merged.admin_model = normalizeModelId(merged.admin_model || PRIMARY_REST_MODEL);
             return merged;
         },
 
@@ -108,7 +107,7 @@
             var merged  = Object.assign({}, current, cfg);
 
             merged.user_model  = PERMANENT_USER_MODEL;
-            merged.audio_model = NATIVE_AUDIO_MODEL;
+            merged.audio_model = PERMANENT_USER_MODEL;
 
             if (merged.admin_api_key && !merged.user_api_key) merged.user_api_key = merged.admin_api_key;
             if (merged.user_api_key && !merged.admin_api_key) merged.admin_api_key = merged.user_api_key;
@@ -123,7 +122,7 @@
         },
 
         testApiKey: async function (apiKey, testModel) {
-            if (!apiKey || !apiKey.trim()) throw new Error('API Key is missing');
+            if (!apiKey || !apiKey.trim()) throw new Error('API Key দিন');
             apiKey = apiKey.trim();
 
             var listRes  = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + encodeURIComponent(apiKey));
@@ -151,10 +150,10 @@
                 var apiKey = (opts.apiKey || config.user_api_key || config.admin_api_key || '').trim();
                 if (!apiKey) return reject(new Error('Google AI Studio API Key পাওয়া যায়নি।'));
 
-                var targetModel = 'models/' + (opts.model || PERMANENT_USER_MODEL).replace(/^models\//, '');
+                var targetModel = 'models/' + PERMANENT_USER_MODEL;
                 var versions = ['v1beta', 'v1alpha'];
 
-                function tryConnect(vIdx, modelEndpoint) {
+                function tryConnect(vIdx) {
                     var ver = versions[vIdx];
                     var wsUrl = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.' + ver + '.GenerativeService.BidiGenerateContent?key=' + encodeURIComponent(apiKey);
 
@@ -168,24 +167,60 @@
                     var fullText = '';
                     var audioChunks = [];
                     var setupAccepted = false;
-                    var hasTimedOut = false;
+                    var isResolved = false;
 
-                    var timeoutId = setTimeout(function () {
-                        hasTimedOut = true;
-                        try { ws.close(); } catch (e) {}
-                        if (modelEndpoint !== 'models/' + NATIVE_AUDIO_MODEL) {
-                            tryConnect(0, 'models/' + NATIVE_AUDIO_MODEL);
+                    // Rolling inactivity timer (resets whenever any chunk arrives)
+                    var inactivityTimeout = null;
+                    var maxSessionTimeout = null;
+
+                    function clearTimers() {
+                        if (inactivityTimeout) { clearTimeout(inactivityTimeout); inactivityTimeout = null; }
+                        if (maxSessionTimeout) { clearTimeout(maxSessionTimeout); maxSessionTimeout = null; }
+                    }
+
+                    function resetInactivityTimer() {
+                        if (inactivityTimeout) clearTimeout(inactivityTimeout);
+                        // 22 seconds of silence from the server triggers completion
+                        inactivityTimeout = setTimeout(function () {
+                            if (fullText && fullText.trim().length > 0) {
+                                finishSuccess();
+                            } else {
+                                try { ws.close(); } catch(e){}
+                                reject(new Error('Live WebSocket response timed out.'));
+                            }
+                        }, 22000);
+                    }
+
+                    // Max total session timeout: 90 seconds
+                    maxSessionTimeout = setTimeout(function () {
+                        if (fullText && fullText.trim().length > 0) {
+                            finishSuccess();
                         } else {
-                            reject(new Error('Live WebSocket connection timed out'));
+                            try { ws.close(); } catch(e){}
+                            reject(new Error('Live WebSocket session exceeded max duration.'));
                         }
-                    }, 14000);
+                    }, 90000);
+
+                    function finishSuccess() {
+                        if (isResolved) return;
+                        isResolved = true;
+                        clearTimers();
+                        try { ws.close(); } catch(e){}
+                        resolve({
+                            success: true,
+                            modelUsed: PERMANENT_USER_MODEL,
+                            text: fullText.trim(),
+                            audioChunks: audioChunks
+                        });
+                    }
 
                     ws.onopen = function () {
+                        resetInactivityTimer();
                         var setupPayload = {
                             setup: {
-                                model: modelEndpoint,
+                                model: targetModel,
                                 generationConfig: {
-                                    responseModalities: ['AUDIO'] // Returns audio + outputAudioTranscription
+                                    responseModalities: ['AUDIO'] // Returns audio chunks + outputAudioTranscription text
                                 },
                                 outputAudioTranscription: {}
                             }
@@ -199,11 +234,12 @@
                     };
 
                     ws.onmessage = async function (event) {
+                        resetInactivityTimer();
                         try {
                             var rawText = event.data instanceof Blob ? await event.data.text() : event.data;
                             var msg = JSON.parse(rawText);
 
-                            // Setup complete -> Send user turn
+                            // Setup complete -> Send user query
                             if (msg.setupComplete !== undefined) {
                                 setupAccepted = true;
                                 var clientContentPayload = {
@@ -224,11 +260,12 @@
                             // Receive server response
                             if (msg.serverContent) {
                                 var parts = (msg.serverContent.modelTurn && msg.serverContent.modelTurn.parts) || [];
+                                var turnText = '';
+
                                 for (var p = 0; p < parts.length; p++) {
                                     var part = parts[p];
                                     if (part.text) {
-                                        fullText += part.text;
-                                        if (typeof onTextChunk === 'function') onTextChunk(part.text, fullText);
+                                        turnText += part.text;
                                     }
                                     if (part.inlineData && part.inlineData.mimeType && part.inlineData.mimeType.startsWith('audio/pcm')) {
                                         audioChunks.push(part.inlineData.data);
@@ -236,20 +273,18 @@
                                 }
 
                                 if (msg.serverContent.outputTranscription && msg.serverContent.outputTranscription.text) {
-                                    var tText = msg.serverContent.outputTranscription.text;
-                                    fullText += tText;
-                                    if (typeof onTextChunk === 'function') onTextChunk(tText, fullText);
+                                    if (!turnText) {
+                                        turnText = msg.serverContent.outputTranscription.text;
+                                    }
+                                }
+
+                                if (turnText) {
+                                    fullText += turnText;
+                                    if (typeof onTextChunk === 'function') onTextChunk(turnText, fullText);
                                 }
 
                                 if (msg.serverContent.turnComplete) {
-                                    clearTimeout(timeoutId);
-                                    try { ws.close(); } catch(e){}
-                                    resolve({
-                                        success: true,
-                                        modelUsed: modelEndpoint.replace(/^models\//, ''),
-                                        text: fullText,
-                                        audioChunks: audioChunks
-                                    });
+                                    finishSuccess();
                                 }
                             }
                         } catch (err) {
@@ -262,31 +297,35 @@
                     };
 
                     ws.onclose = function (event) {
-                        clearTimeout(timeoutId);
-                        if (hasTimedOut) return;
+                        clearTimers();
+                        if (isResolved) return;
+
+                        // If text or audio was already delivered, consider it a successful reply!
+                        if (fullText && fullText.trim().length > 0) {
+                            finishSuccess();
+                            return;
+                        }
 
                         if (!setupAccepted) {
                             if (vIdx < versions.length - 1) {
-                                tryConnect(vIdx + 1, modelEndpoint);
-                            } else if (modelEndpoint !== 'models/' + NATIVE_AUDIO_MODEL) {
-                                tryConnect(0, 'models/' + NATIVE_AUDIO_MODEL);
+                                tryConnect(vIdx + 1);
                             } else {
                                 reject(new Error('WebSocket closed (Code ' + event.code + '): ' + (event.reason || 'Handshake failed')));
                             }
-                        } else if (!fullText && !audioChunks.length) {
+                        } else {
                             reject(new Error('Connection closed before reply'));
                         }
                     };
                 }
 
-                tryConnect(0, targetModel);
+                tryConnect(0);
             });
         },
 
         /**
          * Stream Text or Live Dialog
-         * For Customer: Uses Gemini 3.8 Live WebSocket with sub-second response!
-         * For Admin: Uses REST generateContent with gemini-3.8-pro / gemini-3.8-flash.
+         * For Customer: Uses Gemini 3.8 Live WebSocket with sub-second streaming!
+         * For Fallback: Uses Gemini 3.5 Flash REST API.
          */
         streamText: async function (opts, onChunk) {
             var config = this.getConfig();
@@ -296,14 +335,14 @@
                 throw new Error('Google AI Studio API Key পাওয়া যায়নি। Admin Settings → AI Configuration থেকে API Key দিন।');
             }
 
-            // Customer Chat: Always use Gemini 3.8 Live via Bidi WebSocket!
+            // Customer Chat: Always prioritize Gemini 3.8 Live WebSocket
             if (!opts.isAdmin) {
                 try {
                     return await this.sendLiveWebSocket(opts, onChunk);
                 } catch (wsErr) {
                     console.warn('Live WebSocket failed, attempting REST fallback:', wsErr);
-                    // Fallback to REST only if WebSocket is unavailable on network
-                    return await this.generateText(Object.assign({}, opts, { model: FALLBACK_FLASH, apiKey: apiKey }), onChunk);
+                    // Fallback to stable Gemini 3.5 Flash via REST
+                    return await this.generateText(Object.assign({}, opts, { model: PRIMARY_REST_MODEL, apiKey: apiKey }), onChunk);
                 }
             }
 
@@ -312,7 +351,8 @@
         },
 
         /**
-         * REST generateContent for Admin Tasks (SEO, Description Generator)
+         * REST generateContent for Comparison & Admin Tasks
+         * Uses active models: gemini-3.5-flash, gemini-3.8-flash, gemini-3.5-flash-lite
          */
         generateText: async function (opts, onChunk) {
             var config = this.getConfig();
@@ -322,7 +362,7 @@
                 throw new Error('Google AI Studio API Key পাওয়া যায়নি। Admin Settings → AI Configuration থেকে API Key দিন।');
             }
 
-            var chosenModel = normalizeModelId(opts.model || (opts.isAdmin ? config.admin_model : FALLBACK_FLASH));
+            var chosenModel = normalizeModelId(opts.model || (opts.isAdmin ? config.admin_model : PRIMARY_REST_MODEL));
 
             var contents = [];
             if (opts.history && Array.isArray(opts.history)) {
@@ -344,8 +384,11 @@
                 maxOutputTokens: opts.maxTokens || 1200
             };
 
-            var tryModels = [chosenModel, SMART_ADMIN_MODEL, FALLBACK_FLASH, FALLBACK_25];
-            tryModels = tryModels.filter(function (val, idx, arr) { return arr.indexOf(val) === idx; });
+            // Modern, verified active models ONLY
+            var tryModels = [chosenModel, PRIMARY_REST_MODEL, ADVANCED_REST_MODEL, LITE_REST_MODEL];
+            tryModels = tryModels.filter(function (val, idx, arr) {
+                return val && arr.indexOf(val) === idx && !val.includes('2.5') && !val.includes('1.5');
+            });
 
             var lastErr = null;
             for (var i = 0; i < tryModels.length; i++) {
@@ -353,7 +396,7 @@
                 var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent?key=' + encodeURIComponent(apiKey);
 
                 var controller = new AbortController();
-                var timeoutId = setTimeout(function () { controller.abort(); }, 15000);
+                var timeoutId = setTimeout(function () { controller.abort(); }, 18000);
 
                 try {
                     var res = await fetch(url, {
@@ -367,9 +410,12 @@
                     var data = await res.json();
                     if (data.error) {
                         lastErr = data.error.message || 'API Error';
+                        // If 404, 503, or discontinued, automatically try next candidate
                         if (res.status === 404 ||
+                            res.status === 503 ||
                             lastErr.includes('not found') ||
                             lastErr.includes('not supported') ||
+                            lastErr.includes('high demand') ||
                             lastErr.includes('no longer available')) {
                             continue;
                         }
@@ -384,12 +430,7 @@
                 } catch (e) {
                     clearTimeout(timeoutId);
                     lastErr = e.message;
-                    if (i < tryModels.length - 1 && (
-                        e.message.includes('not found') ||
-                        e.message.includes('not supported') ||
-                        e.message.includes('no longer available') ||
-                        e.name === 'AbortError'
-                    )) {
+                    if (i < tryModels.length - 1) {
                         continue;
                     }
                     if (i === tryModels.length - 1) throw e;

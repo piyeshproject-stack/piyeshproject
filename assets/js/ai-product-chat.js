@@ -300,20 +300,29 @@
         ].filter(Boolean).join('\n');
 
         var streamId = createStreamingBubble();
+        var streamedSoFar = '';
         try {
             var res = await window.AIConfig.streamText({
                 prompt: question,
                 systemInstruction: systemPrompt,
                 history: chatHistory.slice(-6)
             }, function (chunk, currentFull) {
+                streamedSoFar = currentFull;
                 updateStreamingBubble(streamId, currentFull);
             });
 
-            finalizeStreamingBubble(streamId, res.text, res.audioChunks);
+            var finalText = (res && res.text) || streamedSoFar;
+            finalizeStreamingBubble(streamId, finalText, (res && res.audioChunks) || []);
         } catch (err) {
-            removeElement(streamId);
-            var errText = 'দুঃখিত! ' + (err.message || 'AI উত্তর দিতে পারেনি। অনুগ্রহ করে আবার চেষ্টা করুন।');
-            appendMessage('assistant', errText, []);
+            console.error('AI Chat Error:', err);
+            // If answer was already streamed to the user, NEVER delete it!
+            if (streamedSoFar && streamedSoFar.trim().length > 5) {
+                finalizeStreamingBubble(streamId, streamedSoFar, []);
+            } else {
+                removeElement(streamId);
+                var errText = 'দুঃখিত! AI উত্তর দিতে পারেনি। অনুগ্রহ করে আবার প্রশ্নটি করুন।';
+                appendMessage('assistant', errText, []);
+            }
         }
     }
 

@@ -177,13 +177,25 @@
                 ].join('\n');
 
                 var res = await window.AIConfig.generateText({
+                    model: 'gemini-3.5-flash',
                     prompt: prompt,
                     systemInstruction: 'You are an expert e-commerce product comparison analyst. Provide structured, fair, and easy to read comparison in Bengali.'
                 });
 
-                result.innerHTML = (res.text || 'তুলনা সম্পন্ন হয়েছে।').replace(/\n/g, '<br>');
+                var formattedText = (res.text || 'তুলনা সম্পন্ন হয়েছে।')
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/`([^`]+)`/g, '<code>$1</code>')
+                    .replace(/^[•\-] (.+)$/gm, '<li>$1</li>')
+                    .replace(/(<li>.*<\/li>\n?)+/g, '<ul style="margin:6px 0;padding-left:18px;">$&</ul>')
+                    .replace(/\n\n+/g, '<br><br>')
+                    .replace(/\n/g, '<br>');
+
+                result.innerHTML = formattedText;
             } catch (err) {
-                result.innerHTML = '<div style="color:#ef4444;">❌ AI তুলনা লোড করতে ব্যর্থ হয়েছে: ' + err.message + '</div>';
+                console.error('AI comparison err:', err);
+                result.innerHTML = '<div style="color:#ef4444;padding:12px 0;font-weight:600;">❌ দুঃখিত, AI তুলনা তৈরি করতে সাময়িক সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।</div>';
             }
         },
 

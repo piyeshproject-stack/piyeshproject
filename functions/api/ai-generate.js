@@ -36,14 +36,14 @@ export async function onRequestPost(context) {
 
         // 2. If Gemini Key is present, call Google Generative Language API
         if (geminiApiKey) {
+            const cleanedModel = geminiModel ? geminiModel.replace(/^models\//, '') : 'gemini-3.5-flash';
             const tryModels = [
-                geminiModel.replace(/^models\//, ''),
-                'gemini-3.8-live',
-                'gemini-3.8-pro',
+                cleanedModel,
+                'gemini-3.5-flash',
                 'gemini-3.8-flash',
-                'gemini-2.5-flash-native-audio-preview-12-2025',
-                'gemini-2.5-flash'
-            ];
+                'gemini-3.5-flash-lite',
+                'gemini-3.7-flash'
+            ].filter(m => m && !m.includes('live') && !m.includes('native-audio') && !m.includes('2.5') && !m.includes('1.5'));
             // Remove duplicates
             const uniqueModels = [...new Set(tryModels)];
 
