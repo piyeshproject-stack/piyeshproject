@@ -34,8 +34,7 @@
     </div>
     <div id="mMenuCats"></div>
     <hr style="margin:16px 0;border-color:#eee;">
-    <a href="track.html" style="display:flex;align-items:center;gap:10px;padding:10px;font-weight:600;color:#444;border-radius:10px;background:#f5f5f5;margin-bottom:8px;"><i data-lucide="package" class="lucide-icon icon-bounce"></i> Track Order</a>
-    <a href="admin/index.html" style="display:flex;align-items:center;gap:10px;padding:10px;font-weight:600;color:#444;border-radius:10px;background:#f5f5f5;"><i data-lucide="lock" class="lucide-icon"></i> Admin Panel</a>
+    <a href="track.html" style="display:flex;align-items:center;gap:10px;padding:10px;font-weight:600;color:#444;border-radius:10px;background:#f5f5f5;"><i data-lucide="package" class="lucide-icon icon-bounce"></i> Track Order</a>
 </div>
 
 <!-- Navbar -->
@@ -406,10 +405,9 @@ function renderCategories(cats) {
         } else if (iconUrl) {
             iconHtml = '<img src="' + iconUrl + '" style="width:20px;height:20px;object-fit:cover;border-radius:4px;">';
         }
-        html += '<a href="shop.html?cat=' + c.id + '" class="cat-pill" data-cat="' + c.id + '" style="display:inline-flex;align-items:center;gap:6px;">' +
-            iconHtml + c.name + '</a>';
-        mmHtml += '<a href="shop.html?cat=' + c.id + '" style="display:flex;align-items:center;gap:6px;padding:10px;font-weight:600;color:#444;border-radius:10px;margin-bottom:4px;">' +
-            iconHtml + c.name + '</a>';
+        html += '<a href="shop.html?cat=' + c.id + '" class="cat-pill" data-cat="' + c.id + '" style="display:inline-flex;align-items:center;gap:6px;">' + iconHtml + c.name + '</a>';
+        var mmIcon = iconUrl.startsWith('<') ? '<span class="mmenu-cat-icon">' + iconUrl + '</span>' : (iconUrl ? '<span class="mmenu-cat-icon"><img src="' + iconUrl + '" alt=""></span>' : '<span class="mmenu-cat-icon">📁</span>');
+        mmHtml += '<a href="shop.html?cat=' + c.id + '">' + mmIcon + '<span>' + c.name + '</span></a>';
     });
 
     row.innerHTML = html;

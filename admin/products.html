@@ -17,7 +17,7 @@
     <script src="../assets/js/r2-uploader.js"></script>
     <script src="../assets/js/piexif.js"></script>
     <script src="../assets/js/image-seo-injector.js"></script>
-    <script src="../assets/js/ai-config.js?v=3.8.6"></script>
+    <script src="../assets/js/ai-config.js?v=3.8.7"></script>
     <style>
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
         .product-card {
@@ -1401,17 +1401,42 @@
 
         const ed = document.getElementById('pDesc');
         const oldContent = ed.innerHTML;
-        ed.innerHTML = '<span style="color:#7c3aed;font-weight:600;"><i class="lucide-icon" data-lucide="loader-2"></i> ✨ Gemini AI is crafting a high-converting description...</span>';
+        const existingText = ed.innerText.trim();
+
+        ed.innerHTML = '<span style="color:#7c3aed;font-weight:600;"><i class="lucide-icon" data-lucide="loader-2"></i> ✨ Gemini AI বিস্তারিত ও প্রফেশনাল ডেসক্রিপশন তৈরি করছে...</span>';
         if(typeof lucide !== 'undefined') lucide.createIcons();
+
+        var promptParts = [
+            'পণ্যটির নাম: "' + productName + '"' + (basePrice ? ' (মূল্য: ৳' + basePrice + ')' : '')
+        ];
+
+        if (existingText && existingText.length > 5 && !existingText.includes('Gemini AI')) {
+            promptParts.push('ব্যবহারকারী/মার্চেন্ট পণ্যটির নিচের তথ্য ও মূল ফিচারসমূহ উল্লেখ করেছেন:');
+            promptParts.push('"""\n' + existingText + '\n"""');
+            promptParts.push('নির্দেশনা:');
+            promptParts.push('১. উপরে মার্চেন্টের দেওয়া প্রতিটি ফিচার, সুবিধা এবং স্পেসিফিকেশন অবশ্যই বজায় রাখতে হবে এবং সেগুলোকে আরও আকর্ষণীয়ভাবে উপস্থাপন করতে হবে।');
+            promptParts.push('২. শুধুমাত্র ২ লাইন নয়, বরং একটি পূর্ণাঙ্গ, তথ্যবহুল ও আকর্ষণীয় প্রিমিয়াম ই-কমার্স ডেসক্রিপশন বাংলায় (বাংলা ভাষায়) লিখুন।');
+        } else {
+            promptParts.push('নির্দেশনা:');
+            promptParts.push('এই পণ্যটির জন্য একটি আকর্ষণীয়, তথ্যবহুল ও প্রিমিয়াম ই-কমার্স প্রোডাক্ট ডেসক্রিপশন বাংলায় লিখুন (শুধুমাত্র ২ লাইন নয়, পূর্ণাঙ্গ ও আকর্ষণীয় ডেসক্রিপশন হতে হবে)।');
+        }
+
+        promptParts.push('ডেসক্রিপশনের কাঠামো এমন রাখুন:');
+        promptParts.push('- সুন্দর আকর্ষণীয় পরিচিতি প্যারাগ্রাফ (<p>)');
+        promptParts.push('- প্রধান প্রধান আকর্ষণীয় ফিচার ও সুবিধাসমূহ (বুলেট পয়েন্ট সহ <ul>, <li>, <strong>)');
+        promptParts.push('- টেকনিক্যাল স্পেসিফিকেশন ও ব্যবহারের নিয়ম (প্রযোজ্য ক্ষেত্রে)');
+        promptParts.push('- কেন এই পণ্যটি কিনবেন / প্যাকেজে কী থাকছে');
+        promptParts.push('শুধুমাত্র পরিচ্ছন্ন HTML ট্যাগ (<p>, <ul>, <li>, <strong>, <br>) ব্যবহার করে রিটার্ন দিন। কোনো প্রকার ব্যাকটিক (```html) ব্যবহার করবেন না।');
+
+        var prompt = promptParts.join('\n');
 
         try {
             // First try client-side Google AI Studio configured key
             if (typeof AIConfig !== 'undefined') {
-                const prompt = 'Write an attractive, premium e-commerce product description in Bengali (বাংলা) for the product: "' + productName + '"' + (basePrice ? ' (Price: ৳' + basePrice + ')' : '') + '. Highlight benefits, premium build quality, specifications and customer value. Return only clean HTML markup using <p>, <ul>, <li>, <strong> tags.';
                 const res = await AIConfig.generateText({
                     isAdmin: true,
                     prompt: prompt,
-                    systemInstruction: 'You are an expert e-commerce copywriter. Provide clean, engaging HTML formatted product description without markdown backticks.'
+                    systemInstruction: 'You are an expert e-commerce copywriter. Write a persuasive, detailed, and high-converting product description in Bengali. Always retain and expand on user-provided feature notes. Format with clean HTML (<p>, <ul>, <li>, <strong>) without markdown code blocks.'
                 });
                 if (res && res.text) {
                     ed.innerHTML = res.text.replace(/```html/gi, '').replace(/```/g, '').trim();
@@ -1426,11 +1451,11 @@
             const response = await fetch('/api/ai-generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                body: JSON.stringify({ prompt: "Write an attractive product description for: " + productName })
+                body: JSON.stringify({ prompt: prompt })
             });
             const data = await response.json();
             if (data.success && data.result) {
-                ed.innerHTML = data.result;
+                ed.innerHTML = data.result.replace(/```html/gi, '').replace(/```/g, '').trim();
                 updateRteCharCount();
                 showToast('✅ Description generated!', 'success');
             } else {

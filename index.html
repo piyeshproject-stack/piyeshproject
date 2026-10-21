@@ -20,10 +20,10 @@
     <script src="assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
     <script src="assets/js/appwrite-init.js"></script>
-    <link rel="stylesheet" href="assets/css/ai-components.css?v=3.8.6">
-    <script src="assets/js/ai-config.js?v=3.8.6"></script>
-    <script src="assets/js/ai-product-chat.js?v=3.8.6"></script>
-    <script src="assets/js/ai-compare.js?v=3.8.6"></script>
+    <link rel="stylesheet" href="assets/css/ai-components.css?v=3.8.7">
+    <script src="assets/js/ai-config.js?v=3.8.7"></script>
+    <script src="assets/js/ai-product-chat.js?v=3.8.7"></script>
+    <script src="assets/js/ai-compare.js?v=3.8.7"></script>
     <link rel="stylesheet" href="assets/css/premium-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" type="module"></script>
@@ -47,8 +47,7 @@
     </div>
     <div id="mMenuCats"></div>
     <hr style="margin:16px 0;border-color:#eee;">
-    <a href="track.html" style="display:flex;align-items:center;gap:10px;padding:10px;font-weight:600;color:#444;border-radius:10px;background:#f5f5f5;margin-bottom:8px;"><i data-lucide="package" class="lucide-icon icon-bounce"></i> Track Order</a>
-    <a href="admin/index.html" style="display:flex;align-items:center;gap:10px;padding:10px;font-weight:600;color:#444;border-radius:10px;background:#f5f5f5;"><i data-lucide="lock" class="lucide-icon"></i> Admin Panel</a>
+    <a href="track.html" style="display:flex;align-items:center;gap:10px;padding:10px;font-weight:600;color:#444;border-radius:10px;background:#f5f5f5;"><i data-lucide="package" class="lucide-icon icon-bounce"></i> Track Order</a>
 </div>
 
 <!-- Navbar -->
@@ -581,10 +580,9 @@ function renderCategories(cats) {
         html += '<a href="shop.html?cat=' + c.id + '" style="display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--text-dark);min-width:60px;flex-shrink:0; text-align:center;">' +
             iconHtml + '<span style="font-size:12px;font-weight:600;line-height:1.2;">' + c.name + '</span></a>';
             
-        // Keep mobile menu as is
-        var mmIcon = iconUrl.startsWith('<') ? '<span style="width:20px;height:20px;display:inline-block;">'+iconUrl+'</span>' : (iconUrl ? '<img src="'+iconUrl+'" style="width:20px;height:20px;object-fit:cover;border-radius:4px;">' : '📁');
-        mmHtml += '<a href="shop.html?cat=' + c.id + '" style="display:flex;align-items:center;gap:8px;padding:10px;font-weight:600;color:#444;border-radius:10px;margin-bottom:4px;">' +
-            mmIcon + c.name + '</a>';
+        // Clean mobile menu category item with strictly bounded icon
+        var mmIcon = iconUrl.startsWith('<') ? '<span class="mmenu-cat-icon">' + iconUrl + '</span>' : (iconUrl ? '<span class="mmenu-cat-icon"><img src="' + iconUrl + '" alt=""></span>' : '<span class="mmenu-cat-icon">📁</span>');
+        mmHtml += '<a href="shop.html?cat=' + c.id + '">' + mmIcon + '<span>' + c.name + '</span></a>';
     });
 
     row.innerHTML = html;

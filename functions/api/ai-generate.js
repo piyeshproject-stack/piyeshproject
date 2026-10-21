@@ -68,7 +68,7 @@ export async function onRequestPost(context) {
                     const data = await res.json();
                     if (data.error) {
                         lastGeminiErr = data.error.message || 'Gemini error';
-                        if (res.status === 404 || lastGeminiErr.includes('not found') || lastGeminiErr.includes('no longer available')) {
+                        if (res.status === 404 || res.status === 503 || lastGeminiErr.includes('not found') || lastGeminiErr.includes('high demand') || lastGeminiErr.includes('no longer available')) {
                             continue;
                         }
                         throw new Error(lastGeminiErr);
