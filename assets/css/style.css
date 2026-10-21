@@ -276,11 +276,37 @@ input, select, textarea { font-family: inherit; }
     border-color: rgba(139,26,26,0.15);
 }
 
+/* Permanent Fixed-Ratio Frame for Product Cards — Never breaks on any image ratio */
 .product-img-wrap {
-    position: relative; aspect-ratio: 1; overflow: hidden; background: var(--bg-subtle);
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: 220px;
+    overflow: hidden;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-sizing: border-box;
 }
-.product-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
-.product-card:hover .product-img-wrap img { transform: scale(1.07); }
+
+.product-img-wrap img {
+    max-width: 100%;
+    max-height: 100%;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;          /* Preserves 100% of product photo, never cuts edges */
+    object-position: center;
+    padding: 6px;                 /* Breathing room padding */
+    transition: transform 0.35s ease;
+    display: block;
+    box-sizing: border-box;
+}
+
+.product-card:hover .product-img-wrap img {
+    transform: scale(1.04);
+}
 
 .product-badges { position: absolute; top: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px; }
 .product-badge  { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px; }

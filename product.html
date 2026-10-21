@@ -17,22 +17,22 @@
     <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
     <script src="assets/js/appwrite-init.js"></script>
     <script src="assets/js/cf-db.js"></script>
-    <link rel="stylesheet" href="assets/css/ai-components.css?v=3.8.3">
-    <script src="assets/js/ai-config.js?v=3.8.3"></script>
-    <script src="assets/js/ai-product-chat.js?v=3.8.3"></script>
-    <script src="assets/js/ai-compare.js?v=3.8.3"></script>
+    <link rel="stylesheet" href="assets/css/ai-components.css?v=3.8.4">
+    <script src="assets/js/ai-config.js?v=3.8.4"></script>
+    <script src="assets/js/ai-product-chat.js?v=3.8.4"></script>
+    <script src="assets/js/ai-compare.js?v=3.8.4"></script>
     <style>
         .product-page { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 24px 0; }
-        .gallery-main { position: relative; aspect-ratio: 1; border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-light); }
-        .gallery-main img, .gallery-main iframe { width: 100%; height: 100%; object-fit: cover; border: none; }
+        .gallery-main { position: relative; aspect-ratio: 1; border-radius: var(--radius-lg); overflow: hidden; background: #f8fafc; border: 1px solid var(--border-light); display: flex; align-items: center; justify-content: center; }
+        .gallery-main img, .gallery-main iframe { width: 100%; height: 100%; object-fit: contain; object-position: center; border: none; padding: 10px; box-sizing: border-box; }
         .gallery-btn { position: absolute; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.8); border: none; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10; transition: var(--transition); }
         .gallery-btn:hover { background: #fff; box-shadow: 0 6px 16px rgba(0,0,0,0.15); color: var(--primary); }
         .prev-btn { left: 10px; }
         .next-btn { right: 10px; }
         .gallery-thumbs { display: flex; gap: 10px; margin-top: 10px; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 8px; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; }
         .gallery-thumbs::-webkit-scrollbar { display: none; }
-        .gallery-thumb-wrap { position: relative; width: 70px; height: 70px; flex-shrink: 0; }
-        .gallery-thumb { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; cursor: pointer; border: 2px solid transparent; transition: var(--transition); }
+        .gallery-thumb-wrap { position: relative; width: 70px; height: 70px; flex-shrink: 0; background: #f8fafc; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--border-light); }
+        .gallery-thumb { width: 100%; height: 100%; object-fit: contain; cursor: pointer; border: 2px solid transparent; transition: var(--transition); padding: 4px; box-sizing: border-box; }
         .gallery-thumb.active { border-color: var(--primary); }
         .color-swatches { display: flex; gap: 10px; overflow-x: auto; flex-wrap: nowrap; margin-bottom: 16px; padding-bottom: 24px; scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none; }
         .color-swatches::-webkit-scrollbar { display: none; }

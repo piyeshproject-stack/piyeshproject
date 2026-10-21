@@ -506,6 +506,17 @@
     color: #fff;
 }
 
+.ai-btn-voice-trigger.recording {
+    background: #ef4444 !important;
+    color: #fff !important;
+    animation: micPulseAnim 1s infinite alternate ease-in-out;
+}
+
+@keyframes micPulseAnim {
+    from { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    to { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
 .ai-btn-send {
     background: var(--ai-gradient);
     color: #fff;

@@ -1,23 +1,21 @@
 /**
  * AI Product Chat & Live Voice Call Assistant
- * Supports:
- *  - Product Question & Answer powered by Google Gemini API
- *  - Voice Call Mode (Interactive Speech Input & Audio Output)
- *  - Window Minimize to floating dock
- *  - Product Specification context injection
+ * v3.8.4 — Instant streaming, live voice call with proper mic permission & speech synthesis
  */
 
 (function (window) {
     'use strict';
 
-    var currentProduct = null;
-    var chatHistory = [];
-    var isVoiceActive = false;
-    var isListening = false;
-    var speechRecognition = null;
-    var synth = window.speechSynthesis || null;
+    var currentProduct     = null;
+    var chatHistory        = [];
+    var isVoiceActive      = false;
+    var isListening        = false;
+    var speechRecognition  = null;
+    var synth              = window.speechSynthesis || null;
+    var isSpeaking         = false;
+    var hasGreetedInCall   = false;
 
-    // Initialize DOM elements when ready
+    // ─── Build Chat UI DOM ─────────────────────────────────────────
     function initAiChat() {
         if (document.getElementById('aiChatBackdrop')) return;
 
@@ -30,13 +28,13 @@
             '        <div class="ai-bot-avatar">✨</div>',
             '        <div>',
             '          <div class="ai-header-title">পণ্য সহকারী AI</div>',
-            '          <div class="ai-header-subtitle"><span class="ai-pulse-dot" style="display:inline-block;margin-right:2px;"></span> Online | Ask anything</div>',
+            '          <div class="ai-header-subtitle"><span class="ai-pulse-dot" style="display:inline-block;margin-right:2px;"></span> Online | Ultra-Fast AI</div>',
             '        </div>',
             '      </div>',
             '      <div class="ai-header-actions">',
-            '        <button class="ai-btn-ctrl" id="aiHeaderVoiceBtn" title="Voice Call Mode" onclick="window.ProductAiChat.toggleVoiceMode()">📞</button>',
-            '        <button class="ai-btn-ctrl" title="Minimize" onclick="window.ProductAiChat.minimize()">─</button>',
-            '        <button class="ai-btn-ctrl" title="Close" onclick="window.ProductAiChat.close()">✕</button>',
+            '        <button class="ai-btn-ctrl" id="aiHeaderVoiceBtn" title="ভয়েস কল মোড" onclick="window.ProductAiChat.toggleVoiceMode()">📞</button>',
+            '        <button class="ai-btn-ctrl" title="ছোট করুন" onclick="window.ProductAiChat.minimize()">─</button>',
+            '        <button class="ai-btn-ctrl" title="বন্ধ করুন" onclick="window.ProductAiChat.close()">✕</button>',
             '      </div>',
             '    </div>',
             '',
@@ -44,27 +42,27 @@
             '    <div class="ai-product-bar" id="aiProductBar">',
             '      <img class="ai-product-bar-img" id="aiBarImg" src="" alt="">',
             '      <div class="ai-product-bar-details">',
-            '        <div class="ai-product-bar-name" id="aiBarName">Loading product...</div>',
+            '        <div class="ai-product-bar-name" id="aiBarName">পণ্য লোড হচ্ছে...</div>',
             '        <div class="ai-product-bar-price" id="aiBarPrice">৳0</div>',
             '      </div>',
             '    </div>',
             '',
-            '    <!-- Text Chat Area -->',
+            '    <!-- Text Chat Messages -->',
             '    <div class="ai-chat-messages" id="aiChatMessages"></div>',
             '',
-            '    <!-- Quick Suggested Chips -->',
+            '    <!-- Suggested Quick Chips -->',
             '    <div class="ai-chips-row" id="aiChipsRow">',
-            '      <button class="ai-chip" onclick="window.ProductAiChat.sendChip(this.textContent)">প্রধান ফিচারগুলো কী?</button>',
-            '      <button class="ai-chip" onclick="window.ProductAiChipClick(\'ডেলিভারি চার্জ ও সময় কত?\')">ডেলিভারি সময় কত?</button>',
-            '      <button class="ai-chip" onclick="window.ProductAiChipClick(\'এই প্রোডাক্টে কি কোনো অফার বা ছাড় আছে?\')">কোনো ডিসকাউন্ট আছে?</button>',
-            '      <button class="ai-chip" onclick="window.ProductAiChipClick(\'ক্যাশ অন ডেলিভারিতে অর্ডার করব কীভাবে?\')">অর্ডার প্রসেস কী?</button>',
+            '      <button class="ai-chip" onclick="window.ProductAiChipClick(\'এই পণ্যের প্রধান ফিচারগুলো কী?\')">প্রধান ফিচারগুলো কী?</button>',
+            '      <button class="ai-chip" onclick="window.ProductAiChipClick(\'ডেলিভারি চার্জ ও সময় কত লাগবে?\')">ডেলিভারি সময় কত?</button>',
+            '      <button class="ai-chip" onclick="window.ProductAiChipClick(\'এই প্রোডাক্টে কি কোনো বিশেষ ডিসকাউন্ট বা অফার আছে?\')">কোনো ডিসকাউন্ট আছে?</button>',
+            '      <button class="ai-chip" onclick="window.ProductAiChipClick(\'ক্যাশ অন ডেলিভারিতে অর্ডার করার নিয়ম কী?\')">অর্ডার প্রসেস কী?</button>',
             '    </div>',
             '',
             '    <!-- Live Voice Call Panel -->',
             '    <div class="ai-voice-panel" id="aiVoicePanel">',
             '      <div class="ai-voice-orb" id="aiVoiceOrb"></div>',
-            '      <div class="ai-voice-status-title" id="aiVoiceStatusTitle">AI Voice Call Connected</div>',
-            '      <div class="ai-voice-status-desc" id="aiVoiceStatusDesc">মাইক্রোফোনে কথা বলুন, পণ্য সম্পর্কে যে কোনো প্রশ্ন করুন।</div>',
+            '      <div class="ai-voice-status-title" id="aiVoiceStatusTitle">AI Voice Call</div>',
+            '      <div class="ai-voice-status-desc" id="aiVoiceStatusDesc">ভয়েস কল কানেক্ট হচ্ছে...</div>',
             '      <div class="ai-sound-waves" id="aiSoundWaves">',
             '        <div class="ai-wave-bar"></div>',
             '        <div class="ai-wave-bar"></div>',
@@ -74,16 +72,19 @@
             '      </div>',
             '      <div class="ai-voice-actions">',
             '        <button class="ai-btn-call-end" onclick="window.ProductAiChat.toggleVoiceMode()">',
-            '          <span>🛑 End Call</span>',
+            '          <span>🛑 কল শেষ করুন</span>',
+            '        </button>',
+            '        <button class="btn btn-sm btn-ghost" id="aiVoiceRetryBtn" style="display:none;color:#fff;border:1px solid rgba(255,255,255,0.3);margin-left:8px;" onclick="window.ProductAiChat.startVoiceCallSession()">',
+            '          🔄 আবার চেষ্টা করুন',
             '        </button>',
             '      </div>',
             '    </div>',
             '',
-            '    <!-- Text Input Area -->',
+            '    <!-- Input Bar -->',
             '    <div class="ai-chat-footer" id="aiChatFooter">',
             '      <div class="ai-input-wrap">',
             '        <input type="text" class="ai-input-field" id="aiInputField" placeholder="পণ্য সম্পর্কে প্রশ্ন লিখুন..." onkeypress="if(event.key===\'Enter\') window.ProductAiChat.sendCurrentInput()">',
-            '        <button class="ai-btn-voice-trigger" title="Speak question" onclick="window.ProductAiChat.toggleVoiceMode()">🎤</button>',
+            '        <button class="ai-btn-voice-trigger" title="মুখে বলে প্রশ্ন করুন" onclick="window.ProductAiChat.toggleInputDictation()" id="aiDictateBtn">🎤</button>',
             '        <button class="ai-btn-send" title="Send" onclick="window.ProductAiChat.sendCurrentInput()">➤</button>',
             '      </div>',
             '    </div>',
@@ -102,127 +103,224 @@
         div.innerHTML = html;
         document.body.appendChild(div);
 
-        // Click on backdrop outside window to minimize
-        var backdrop = document.getElementById('aiChatBackdrop');
-        backdrop.addEventListener('click', function (e) {
-            if (e.target === backdrop) {
-                window.ProductAiChat.minimize();
-            }
+        document.getElementById('aiChatBackdrop').addEventListener('click', function (e) {
+            if (e.target === this) window.ProductAiChat.minimize();
         });
-
-        initSpeechRecognition();
     }
 
     window.ProductAiChipClick = function (txt) {
-        if (window.ProductAiChat) {
-            window.ProductAiChat.sendChip(txt);
-        }
+        if (window.ProductAiChat) window.ProductAiChat.sendChip(txt);
     };
+
+    // ─── Voice / Microphone Permission & Speech Recognition ────────
+    async function requestMicPermission() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            return { supported: false, error: 'Browser does not support getUserMedia' };
+        }
+        try {
+            var stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            // CRITICAL FIX: Stop all tracks immediately so the microphone is NOT locked when SpeechRecognition starts!
+            stream.getTracks().forEach(function (track) { track.stop(); });
+            return { supported: true, granted: true };
+        } catch (err) {
+            console.warn('Microphone permission request failed:', err);
+            return { supported: true, granted: false, error: err.name || err.message };
+        }
+    }
 
     function initSpeechRecognition() {
         var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRec) {
-            console.log('Speech recognition not supported in this browser.');
-            return;
+            return null;
         }
-        speechRecognition = new SpeechRec();
-        speechRecognition.continuous = false;
-        speechRecognition.interimResults = false;
-        speechRecognition.lang = 'bn-BD'; // Support Bengali, falls back to English
 
-        speechRecognition.onstart = function () {
+        var rec = new SpeechRec();
+        rec.continuous = false;
+        rec.interimResults = false;
+        rec.lang = 'bn-BD'; // Bengali priority, handles mixed English naturally
+
+        rec.onstart = function () {
             isListening = true;
-            updateVoiceOrb(true, 'কথা বলুন, শুনছি...', 'আপনার প্রশ্ন শেষ হলে AI উত্তর দেবে');
+            updateVoiceOrb(true, 'শুনছি... আপনার প্রশ্ন বলুন', 'কথা বলা শেষ হলে AI সাথে সাথে উত্তর দেবে');
+            var dictBtn = document.getElementById('aiDictateBtn');
+            if (dictBtn) dictBtn.classList.add('recording');
         };
 
-        speechRecognition.onresult = function (event) {
-            var transcript = event.results[0][0].transcript;
+        rec.onresult = function (event) {
+            isListening = false;
+            var transcript = '';
+            if (event.results && event.results[0] && event.results[0][0]) {
+                transcript = event.results[0][0].transcript;
+            }
             if (transcript && transcript.trim()) {
-                updateVoiceOrb(false, 'চিন্তা করছে...', 'Gemini AI আপনার প্রশ্নের উত্তর তৈরি করছে');
-                handleUserQuestion(transcript.trim(), true);
+                var cleanText = transcript.trim();
+                var dictBtn = document.getElementById('aiDictateBtn');
+                if (dictBtn) dictBtn.classList.remove('recording');
+
+                if (isVoiceActive) {
+                    updateVoiceOrb(false, 'চিন্তা করছে...', 'Gemini AI উত্তর তৈরি করছে');
+                    handleUserQuestion(cleanText, true);
+                } else {
+                    var input = document.getElementById('aiInputField');
+                    if (input) input.value = cleanText;
+                    handleUserQuestion(cleanText, false);
+                }
             }
         };
 
-        speechRecognition.onerror = function (event) {
-            console.warn('Speech error:', event.error);
+        rec.onerror = function (event) {
+            console.warn('SpeechRecognition error:', event.error);
             isListening = false;
-            updateVoiceOrb(false, 'শুনতে সমস্যা হয়েছে', 'আবার চেষ্টা করতে ক্লিক করুন');
+            var dictBtn = document.getElementById('aiDictateBtn');
+            if (dictBtn) dictBtn.classList.remove('recording');
+
+            if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                updateVoiceOrb(false, 'মাইক্রোফোনের অনুমতি প্রয়োজন', 'ব্রাউজার সেটিং থেকে মাইক অ্যাকসেস এলাউ (Allow) করুন।');
+                var retryBtn = document.getElementById('aiVoiceRetryBtn');
+                if (retryBtn) retryBtn.style.display = 'inline-block';
+            } else if (event.error === 'no-speech') {
+                if (isVoiceActive && !isSpeaking) {
+                    updateVoiceOrb(false, 'শুনতে পাইনি, আবার বলুন', 'মাইক্রোফোনে কথা বলুন');
+                    setTimeout(function () { if (isVoiceActive && !isSpeaking) startListening(); }, 1000);
+                }
+            } else {
+                updateVoiceOrb(false, 'আবার বলুন', 'মাইক্রোফোনে আবার কথা বলুন');
+            }
         };
 
-        speechRecognition.onend = function () {
+        rec.onend = function () {
             isListening = false;
-            if (isVoiceActive) {
-                // If voice call is still active, don't auto-restart immediately to prevent echo
-            }
-        };
-    }
-
-    function updateVoiceOrb(listening, title, desc) {
-        var orb = document.getElementById('aiVoiceOrb');
-        var waves = document.getElementById('aiSoundWaves');
-        var titleEl = document.getElementById('aiVoiceStatusTitle');
-        var descEl = document.getElementById('aiVoiceStatusDesc');
-
-        if (orb) orb.classList.toggle('listening', listening);
-        if (waves) waves.classList.toggle('active', listening);
-        if (titleEl && title) titleEl.textContent = title;
-        if (descEl && desc) descEl.textContent = desc;
-    }
-
-    function speakText(text) {
-        if (!synth) return;
-        synth.cancel(); // Cancel any ongoing speech
-
-        var utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-
-        // Try to find a Bengali or English voice
-        var voices = synth.getVoices();
-        var bnVoice = voices.find(function(v){ return v.lang && v.lang.startsWith('bn'); });
-        if (bnVoice) utterance.voice = bnVoice;
-
-        utterance.onstart = function() {
-            updateVoiceOrb(true, 'AI কথা বলছে...', 'শুনুন...');
+            var dictBtn = document.getElementById('aiDictateBtn');
+            if (dictBtn) dictBtn.classList.remove('recording');
         };
 
-        utterance.onend = function() {
-            if (isVoiceActive) {
-                updateVoiceOrb(false, 'কথা বলুন, শুনছি...', 'আপনার পরবর্তী প্রশ্ন করুন');
-                setTimeout(startListening, 500);
-            }
-        };
-
-        synth.speak(utterance);
+        return rec;
     }
 
     function startListening() {
-        if (!speechRecognition || isListening) return;
+        if (isSpeaking) return;
+        if (!speechRecognition) {
+            speechRecognition = initSpeechRecognition();
+        }
+        if (!speechRecognition) {
+            updateVoiceOrb(false, 'ভয়েস সাপোর্ট নেই', 'আপনার ব্রাউজারে স্পিচ রিকগনিশন সাপোর্ট নেই। Chrome বা Edge ব্যবহার করুন।');
+            return;
+        }
+        if (isListening) return;
+
         try {
             speechRecognition.start();
         } catch (e) {
-            console.warn('Recognition start error', e);
+            console.warn('Recognition start caught error:', e);
+            // If already started, re-instantiate
+            speechRecognition = initSpeechRecognition();
+            try { speechRecognition.start(); } catch (err2) {}
         }
     }
 
-    // Read product info from page or parameter
+    function stopListening() {
+        if (speechRecognition && isListening) {
+            try { speechRecognition.stop(); } catch (e) {}
+        }
+        isListening = false;
+    }
+
+    function updateVoiceOrb(listening, title, desc) {
+        var orb     = document.getElementById('aiVoiceOrb');
+        var waves   = document.getElementById('aiSoundWaves');
+        var titleEl = document.getElementById('aiVoiceStatusTitle');
+        var descEl  = document.getElementById('aiVoiceStatusDesc');
+
+        if (orb)   orb.classList.toggle('listening', listening);
+        if (waves) waves.classList.toggle('active', listening);
+        if (titleEl && title) titleEl.textContent = title;
+        if (descEl  && desc)  descEl.textContent  = desc;
+    }
+
+    // ─── Text-to-Speech (Speaking AI Response) ───────────────────────
+    function speakText(text) {
+        if (!synth) return;
+        try { synth.cancel(); } catch (e) {}
+
+        // Strip HTML, markdown formatting, emojis for clean speech
+        var clean = (text || '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/[*_#`~]/g, '')
+            .replace(/৳\s*([0-9,]+)/g, '$1 টাকা')
+            .replace(/https?:\/\/\S+/g, '')
+            .trim();
+
+        if (!clean) return;
+
+        var utt = new SpeechSynthesisUtterance(clean);
+        utt.rate  = 1.05;
+        utt.pitch = 1.0;
+
+        var voices = synth.getVoices ? synth.getVoices() : [];
+        var bnVoice = voices.find(function (v) { return v.lang && (v.lang.startsWith('bn') || v.lang.includes('Bengali')); });
+        if (bnVoice) utt.voice = bnVoice;
+
+        utt.onstart = function () {
+            isSpeaking = true;
+            stopListening();
+            updateVoiceOrb(true, 'AI কথা বলছে...', 'শুনুন...');
+        };
+
+        utt.onend = function () {
+            isSpeaking = false;
+            if (isVoiceActive) {
+                updateVoiceOrb(false, 'কথা বলুন, শুনছি...', 'আপনার পরবর্তী প্রশ্ন করুন');
+                setTimeout(function () {
+                    if (isVoiceActive && !isSpeaking) startListening();
+                }, 600);
+            }
+        };
+
+        utt.onerror = function (e) {
+            isSpeaking = false;
+            console.warn('SpeechSynthesis error:', e);
+            if (isVoiceActive) {
+                setTimeout(function () {
+                    if (isVoiceActive && !isSpeaking) startListening();
+                }, 600);
+            }
+        };
+
+        synth.speak(utt);
+    }
+
+    // ─── Product Context ───────────────────────────────────────────
     function resolveProductInfo(passed) {
         if (passed) return passed;
-
-        var name = (document.getElementById('pName') ? document.getElementById('pName').textContent.trim() : '') || 'পণ্য';
-        var price = (document.getElementById('currentPrice') ? document.getElementById('currentPrice').textContent.trim() : '') || '৳0';
-        var sku = (document.getElementById('pSkuVal') ? document.getElementById('pSkuVal').textContent.trim() : '');
-        var desc = (document.getElementById('pDesc') ? document.getElementById('pDesc').innerText.trim() : '');
-        var imgEl = document.getElementById('mainImg');
-        var img = imgEl ? imgEl.src : '';
+        var pNameEl = document.getElementById('pName');
+        var priceEl = document.getElementById('currentPrice');
+        var skuEl   = document.getElementById('pSkuVal');
+        var descEl  = document.getElementById('pDesc') || document.getElementById('pDescContent');
+        var imgEl   = document.getElementById('mainImg');
 
         return {
-            name: name,
-            price: price,
-            sku: sku,
-            description: desc,
-            image: img
+            name:  (pNameEl ? pNameEl.textContent.trim() : '') || 'পণ্য',
+            price: (priceEl ? priceEl.textContent.trim() : '') || '৳0',
+            sku:   (skuEl   ? skuEl.textContent.trim()   : ''),
+            description: (descEl ? descEl.innerText.trim().slice(0, 500) : ''),
+            image: imgEl ? imgEl.src : ''
         };
+    }
+
+    // ─── Format Bot Response ───────────────────────────────────────
+    function formatBotText(text) {
+        if (!text) return '';
+        var t = text
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`([^`]+)`/g, '<code>$1</code>')
+            .replace(/^[•\-] (.+)$/gm, '<li>$1</li>')
+            .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+            .replace(/৳\s*([0-9,]+)/g, '<span class="ai-price-tag">৳$1</span>')
+            .replace(/\n\n+/g, '<br><br>')
+            .replace(/\n/g, '<br>');
+        return t;
     }
 
     function appendMessage(role, text) {
@@ -231,120 +329,140 @@
 
         var msgDiv = document.createElement('div');
         msgDiv.className = 'ai-message ' + (role === 'user' ? 'user' : 'bot');
-
         var timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        msgDiv.innerHTML = [
-            '<div class="ai-bubble">' + escapeHtml(text).replace(/\n/g, '<br>') + '</div>',
-            '<div class="ai-msg-time">' + timeStr + '</div>'
-        ].join('');
+        if (role === 'user') {
+            msgDiv.innerHTML = '<div class="ai-bubble">' + text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>') + '</div><div class="ai-msg-time">' + timeStr + '</div>';
+        } else {
+            msgDiv.innerHTML = '<div class="ai-bubble">' + formatBotText(text) + '</div><div class="ai-msg-time">' + timeStr + '</div>';
+        }
 
         container.appendChild(msgDiv);
         container.scrollTop = container.scrollHeight;
-
         chatHistory.push({ role: role, content: text });
     }
 
-    function showTypingIndicator() {
+    function createStreamingBubble() {
         var container = document.getElementById('aiChatMessages');
         if (!container) return null;
-
-        var id = 'aiTyping_' + Date.now();
+        var id = 'aiStream_' + Date.now();
         var div = document.createElement('div');
         div.id = id;
         div.className = 'ai-message bot';
-        div.innerHTML = [
-            '<div class="ai-typing-indicator">',
-            '  <span class="ai-dot"></span>',
-            '  <span class="ai-dot"></span>',
-            '  <span class="ai-dot"></span>',
-            '</div>'
-        ].join('');
+        var timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        div.innerHTML = '<div class="ai-bubble ai-bubble-streaming" id="' + id + '_inner"><span class="ai-pulse-dot" style="display:inline-block;margin-right:4px;"></span> লিখছে...</div><div class="ai-msg-time">' + timeStr + '</div>';
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
         return id;
     }
 
-    function removeTypingIndicator(id) {
-        if (!id) return;
-        var el = document.getElementById(id);
-        if (el) el.remove();
-    }
-
-    function escapeHtml(str) {
-        return (str || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-    }
-
-    // Build the system prompt with rich product context
-    function buildSystemPrompt(prod) {
-        var storeName = (window.siteSettings && window.siteSettings.store_name) || (typeof CONFIG !== 'undefined' ? CONFIG.STORE_NAME : 'Store');
-        return [
-            'You are an intelligent, friendly, and helpful product assistant for ' + storeName + ' in Bangladesh.',
-            'You are helping a customer who is currently looking at this product:',
-            '----------------------------------------',
-            'Product Name: ' + (prod.name || 'N/A'),
-            'Price: ' + (prod.price || 'N/A'),
-            'SKU: ' + (prod.sku || 'N/A'),
-            'Product Details: ' + (prod.description ? prod.description.substring(0, 1500) : 'High quality item'),
-            'Cash on Delivery: Available across Bangladesh.',
-            'Store Policy: 100% Genuine product with return and replacement support.',
-            '----------------------------------------',
-            'Instructions:',
-            '1. Answer the customer concisely, accurately, and politely.',
-            '2. Always match the customer language: if they ask in Bengali, respond in fluent Bengali. If they ask in English, respond in English.',
-            '3. Highlight the benefits and specifications of this product.',
-            '4. Keep answers brief (2-4 sentences max per response) so it is easy to read on mobile and fast for voice audio.',
-            '5. Encourage the customer if they are ready to order by clicking "Add to Cart" or "Buy Now".'
-        ].join('\n');
-    }
-
-    async function handleUserQuestion(question, fromVoice) {
-        if (!question || !question.trim()) return;
-        question = question.trim();
-
-        appendMessage('user', question);
-
-        var typingId = showTypingIndicator();
-
-        try {
-            var systemPrompt = buildSystemPrompt(currentProduct);
-
-            var res = await window.AIConfig.generateText({
-                prompt: question,
-                systemInstruction: systemPrompt,
-                history: chatHistory.slice(-6) // send last 6 messages
-            });
-
-            removeTypingIndicator(typingId);
-
-            var answer = res.text || 'ধন্যবাদ আপনার প্রশ্নের জন্য। এই পণ্যটি সম্পর্কে আরও কোনো তথ্য জানতে চান?';
-            appendMessage('assistant', answer);
-
-            if (fromVoice || isVoiceActive) {
-                speakText(answer);
-            }
-        } catch (err) {
-            removeTypingIndicator(typingId);
-            var errText = 'দুঃখিত! ' + (err.message || 'AI উত্তর দিতে পারেনি। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।');
-            appendMessage('assistant', errText);
-            if (fromVoice || isVoiceActive) {
-                speakText(errText);
-            }
+    function updateStreamingBubble(id, fullText) {
+        var inner = document.getElementById(id + '_inner');
+        if (inner) {
+            inner.innerHTML = formatBotText(fullText) + '<span class="ai-cursor-pulse">|</span>';
+            var container = document.getElementById('aiChatMessages');
+            if (container) container.scrollTop = container.scrollHeight;
         }
     }
 
+    function finalizeStreamingBubble(id, fullText) {
+        var inner = document.getElementById(id + '_inner');
+        if (inner) {
+            inner.innerHTML = formatBotText(fullText);
+            inner.classList.remove('ai-bubble-streaming');
+        }
+        chatHistory.push({ role: 'assistant', content: fullText });
+    }
+
+    function showTypingIndicator() {
+        var container = document.getElementById('aiChatMessages');
+        if (!container) return null;
+        var id = 'aiTyping_' + Date.now();
+        var div = document.createElement('div');
+        div.id = id;
+        div.className = 'ai-message bot';
+        div.innerHTML = '<div class="ai-bubble ai-bubble-typing"><span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span></div>';
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        return id;
+    }
+
+    function removeElement(id) {
+        if (!id) return;
+        var el = document.getElementById(id);
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+    }
+
+    // ─── Query Handling with Streaming ─────────────────────────────
+    async function handleUserQuestion(question, fromVoice) {
+        appendMessage('user', question);
+
+        var p = currentProduct || resolveProductInfo();
+        var storeName = (window.siteSettings && window.siteSettings.store_name) || (typeof CONFIG !== 'undefined' ? CONFIG.STORE_NAME : 'Store');
+
+        var systemPrompt = [
+            'You are a helpful, courteous, and high-converting e-commerce shopping assistant for "' + storeName + '".',
+            'Currently viewing product: "' + p.name + '", Price: ' + p.price + (p.sku ? (', SKU: ' + p.sku) : '') + '.',
+            p.description ? ('Product details: ' + p.description) : '',
+            'Respond in Bengali (বাংলা) by default (or the language of user inquiry).',
+            'Be concise, friendly, persuasive, and helpful. Mention cash on delivery and delivery guarantee where helpful.',
+            'Keep answers brief for fast reading (2-4 sentences max unless detailed info is requested).'
+        ].filter(Boolean).join('\n');
+
+        // Streaming with AIConfig.streamText (1s first-token latency)
+        if (window.AIConfig && typeof window.AIConfig.streamText === 'function') {
+            var streamId = createStreamingBubble();
+            try {
+                var res = await window.AIConfig.streamText({
+                    prompt: question,
+                    systemInstruction: systemPrompt,
+                    history: chatHistory.slice(-6),
+                    isVoice: fromVoice || isVoiceActive
+                }, function (chunk, currentFull) {
+                    updateStreamingBubble(streamId, currentFull);
+                });
+
+                finalizeStreamingBubble(streamId, res.text);
+                if (fromVoice || isVoiceActive) speakText(res.text);
+                return;
+            } catch (err) {
+                removeElement(streamId);
+                var errText = 'দুঃখিত! ' + (err.message || 'AI উত্তর দিতে পারেনি। অনুগ্রহ করে আবার চেষ্টা করুন।');
+                appendMessage('assistant', errText);
+                if (fromVoice || isVoiceActive) speakText(errText);
+                return;
+            }
+        }
+
+        // Fallback to non-streaming generateText
+        var typingId = showTypingIndicator();
+        try {
+            var res2 = await window.AIConfig.generateText({
+                prompt: question,
+                systemInstruction: systemPrompt,
+                history: chatHistory.slice(-6),
+                isVoice: fromVoice || isVoiceActive
+            });
+            removeElement(typingId);
+            var ans = res2.text || 'ধন্যবাদ।';
+            appendMessage('assistant', ans);
+            if (fromVoice || isVoiceActive) speakText(ans);
+        } catch (err2) {
+            removeElement(typingId);
+            var errText2 = 'দুঃখিত! ' + (err2.message || 'AI উত্তর দিতে পারেনি।');
+            appendMessage('assistant', errText2);
+            if (fromVoice || isVoiceActive) speakText(errText2);
+        }
+    }
+
+    // ─── Public API ───────────────────────────────────────────────
     var ProductAiChat = {
         open: function (productObj) {
             initAiChat();
             currentProduct = resolveProductInfo(productObj);
 
-            // Update UI product header
-            var barImg = document.getElementById('aiBarImg');
-            var barName = document.getElementById('aiBarName');
+            var barImg   = document.getElementById('aiBarImg');
+            var barName  = document.getElementById('aiBarName');
             var barPrice = document.getElementById('aiBarPrice');
 
             if (barImg) {
@@ -355,23 +473,19 @@
                     barImg.style.display = 'none';
                 }
             }
-            if (barName) barName.textContent = currentProduct.name;
+            if (barName)  barName.textContent  = currentProduct.name;
             if (barPrice) barPrice.textContent = currentProduct.price;
 
-            // Reset chat history if empty
             var container = document.getElementById('aiChatMessages');
             if (container && !chatHistory.length) {
                 container.innerHTML = '';
-                var greeting = 'হ্যালো! আমি আপনার স্মার্ট শপিং অ্যাসিস্ট্যান্ট। "' + (currentProduct.name || 'এই পণ্যটি') + '" সম্পর্কে যে কোনো প্রশ্ন করতে পারেন। কিভাবে সাহায্য করতে পারি?';
-                appendMessage('assistant', greeting);
+                appendMessage('assistant', 'হ্যালো! আমি আপনার স্মার্ট শপিং অ্যাসিস্ট্যান্ট। "' + (currentProduct.name || 'এই পণ্যটি') + '" সম্পর্কে যেকোনো প্রশ্ন করতে পারেন। কিভাবে সাহায্য করতে পারি?');
             }
 
             var backdrop = document.getElementById('aiChatBackdrop');
             if (backdrop) backdrop.classList.add('active');
-
             var bubble = document.getElementById('aiFloatingBubble');
             if (bubble) bubble.classList.remove('show');
-
             var input = document.getElementById('aiInputField');
             if (input) setTimeout(function () { input.focus(); }, 300);
         },
@@ -382,6 +496,8 @@
             if (backdrop) backdrop.classList.remove('active');
             var bubble = document.getElementById('aiFloatingBubble');
             if (bubble) bubble.classList.remove('show');
+            stopListening();
+            if (synth) synth.cancel();
         },
 
         minimize: function () {
@@ -401,7 +517,8 @@
         sendCurrentInput: function () {
             var input = document.getElementById('aiInputField');
             if (!input) return;
-            var val = input.value;
+            var val = input.value.trim();
+            if (!val) return;
             input.value = '';
             handleUserQuestion(val, false);
         },
@@ -410,41 +527,78 @@
             handleUserQuestion(chipText, false);
         },
 
+        toggleInputDictation: async function () {
+            if (isListening) {
+                stopListening();
+                return;
+            }
+            var micCheck = await requestMicPermission();
+            if (!micCheck.granted) {
+                alert('মাইক্রোফোনের অনুমতি দিন যাতে মুখে বলে টাইপ করতে পারেন।');
+                return;
+            }
+            startListening();
+        },
+
+        startVoiceCallSession: async function () {
+            var retryBtn = document.getElementById('aiVoiceRetryBtn');
+            if (retryBtn) retryBtn.style.display = 'none';
+
+            updateVoiceOrb(false, 'মাইক্রোফোন অনুমতি চাওয়া হচ্ছে...', 'ব্রাউজারে Allow বাটনে ক্লিক করুন');
+
+            var micCheck = await requestMicPermission();
+            if (!micCheck.granted) {
+                updateVoiceOrb(false, 'মাইক্রোফোনের অনুমতি দিন', 'ব্রাউজারে মাইক্রোফোনের অনুমতি (Allow) দিন, তারপর আবার চেষ্টা করুন।');
+                if (retryBtn) retryBtn.style.display = 'inline-block';
+                return;
+            }
+
+            updateVoiceOrb(false, 'AI কল কানেক্টেড!', 'হ্যালো! শুনছি, বলুন...');
+
+            // Friendly AI greeting on call start
+            if (!hasGreetedInCall) {
+                hasGreetedInCall = true;
+                var greet = 'হ্যালো! আমি আপনার শপিং অ্যাসিস্ট্যান্ট। ' + (currentProduct ? currentProduct.name : 'এই পণ্যটি') + ' সম্পর্কে আপনার কী প্রশ্ন আছে, বলুন?';
+                speakText(greet);
+            } else {
+                updateVoiceOrb(true, 'শুনছি... আপনার প্রশ্ন বলুন', 'কথা বলুন');
+                startListening();
+            }
+        },
+
         toggleVoiceMode: function () {
             isVoiceActive = !isVoiceActive;
 
             var voicePanel = document.getElementById('aiVoicePanel');
-            var messages = document.getElementById('aiChatMessages');
-            var footer = document.getElementById('aiChatFooter');
-            var chips = document.getElementById('aiChipsRow');
-            var headerBtn = document.getElementById('aiHeaderVoiceBtn');
+            var messages   = document.getElementById('aiChatMessages');
+            var footer     = document.getElementById('aiChatFooter');
+            var chips      = document.getElementById('aiChipsRow');
+            var headerBtn  = document.getElementById('aiHeaderVoiceBtn');
 
             if (isVoiceActive) {
                 if (voicePanel) voicePanel.classList.add('active');
-                if (messages) messages.style.display = 'none';
-                if (footer) footer.style.display = 'none';
-                if (chips) chips.style.display = 'none';
-                if (headerBtn) headerBtn.textContent = '💬';
+                if (messages)  messages.style.display = 'none';
+                if (footer)    footer.style.display   = 'none';
+                if (chips)     chips.style.display     = 'none';
+                if (headerBtn) headerBtn.textContent   = '💬';
 
-                updateVoiceOrb(false, 'AI Voice Call Connected', 'মাইক্রোফোনে কথা বলুন, যে কোনো প্রশ্ন করুন');
-                setTimeout(startListening, 600);
+                this.startVoiceCallSession();
             } else {
                 if (synth) synth.cancel();
-                if (speechRecognition) {
-                    try { speechRecognition.stop(); } catch(e){}
-                }
+                stopListening();
+                isSpeaking = false;
+                hasGreetedInCall = false;
+
                 if (voicePanel) voicePanel.classList.remove('active');
-                if (messages) messages.style.display = 'flex';
-                if (footer) footer.style.display = 'block';
-                if (chips) chips.style.display = 'flex';
-                if (headerBtn) headerBtn.textContent = '📞';
+                if (messages)  messages.style.display = 'flex';
+                if (footer)    footer.style.display   = 'block';
+                if (chips)     chips.style.display     = 'flex';
+                if (headerBtn) headerBtn.textContent   = '📞';
             }
         }
     };
 
     window.ProductAiChat = ProductAiChat;
-    window.openProductAiChat = function (prod) {
-        ProductAiChat.open(prod);
-    };
+    window.openProductAiChat = function (prod) { ProductAiChat.open(prod); };
 
 })(window);
