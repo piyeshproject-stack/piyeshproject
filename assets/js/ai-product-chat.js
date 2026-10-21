@@ -535,6 +535,44 @@
         }
     }
 
+    // ─── Robust Universal Microphone Stream Acquisition ───────────
+    async function acquireMicrophoneStream() {
+        // 1. Modern navigator.mediaDevices.getUserMedia (audio: true without complex constraints)
+        if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+            try {
+                return await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (err1) {
+                console.warn('getUserMedia audio:true failed, trying basic audio constraints fallback:', err1);
+                try {
+                    return await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: false,
+                            noiseSuppression: false,
+                            autoGainControl: false
+                        }
+                    });
+                } catch (err2) {
+                    throw err1;
+                }
+            }
+        }
+
+        // 2. Legacy navigator.getUserMedia / webkitGetUserMedia / mozGetUserMedia
+        var legacyFn = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+        if (legacyFn) {
+            return new Promise(function (resolve, reject) {
+                legacyFn.call(navigator, { audio: true }, resolve, reject);
+            });
+        }
+
+        // 3. Diagnose insecure context (HTTP instead of HTTPS or localhost)
+        if (!window.isSecureContext && location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            throw new Error('মাইক্রোফোন ব্যবহারের জন্য সাইটটি HTTPS প্রোটোকলে (বা localhost-এ) চালানো প্রয়োজন।');
+        }
+
+        throw new Error('ব্রাউজারে মাইক্রোফোন অ্যাক্সেস সুবিধা পাওয়া যায়নি।');
+    }
+
     // ─── Direct Live Phone Call (Native Audio WebSocket) ───────────
     async function startVoiceCall() {
         initAiChat();
@@ -579,21 +617,18 @@
 
         updateVoiceCallStatus('thinking', 'সংযোগ হচ্ছে...', 'মাইক্রোফোন সক্রিয় হচ্ছে...');
 
-        // 1. Open Physical Microphone ONCE at call start
+        // 1. Open Physical Microphone ONCE at call start with universal fallback
         try {
             if (!liveStream) {
-                liveStream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    }
-                });
+                liveStream = await acquireMicrophoneStream();
             }
         } catch (micErr) {
             console.error('Microphone access failed:', micErr);
-            updateVoiceCallStatus('idle', 'মাইক্রোফোন বন্ধ', 'ব্রাউজার সেটিং থেকে মাইক্রোফোন Allow করুন');
-            alert('মাইক্রোফোন পারমিশন পাওয়া যায়নি। ব্রাউজারের অ্যাড্রেস বারের লক আইকন থেকে মাইক্রোফোন Allow করুন।');
+            updateVoiceCallStatus('idle', 'মাইক্রোফোন চালু করা যায়নি', micErr.message || 'মাইক্রোফোন সেটিংস চেক করুন');
+            var errEl = document.getElementById('aiLiveAiSpeech');
+            if (errEl) {
+                errEl.textContent = '⚠️ ' + (micErr.message || 'মাইক্রোফোন পাওয়া যায়নি। ব্রাউজারের অ্যাড্রেস বারের লক আইকনে ক্লিক করে মাইক্রোফোন Allow করুন।');
+            }
             return;
         }
 
@@ -782,7 +817,7 @@
     function toggleInputDictation() {
         var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRec) {
-            alert('ভয়েস টাইপিংয়ের জন্য Chrome বা Edge ব্রাউজার ব্যবহার করুন, অথবা সরাসরি "📞 ভয়েস কল" করুন।');
+            startVoiceCall();
             return;
         }
 
