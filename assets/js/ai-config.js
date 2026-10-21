@@ -16,10 +16,11 @@
     var STORAGE_KEY_V1 = 'ecom_ai_settings_v1';
 
     // Model Endpoints
-    var PERMANENT_USER_MODEL = 'gemini-3.8-live';
-    var PRIMARY_REST_MODEL   = 'gemini-3.5-flash';
-    var ADVANCED_REST_MODEL  = 'gemini-3.8-flash';
-    var LITE_REST_MODEL      = 'gemini-3.5-flash-lite';
+    var NATIVE_AUDIO_CALL_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
+    var PERMANENT_USER_MODEL    = 'gemini-3.8-live';
+    var PRIMARY_REST_MODEL      = 'gemini-3.5-flash';
+    var ADVANCED_REST_MODEL     = 'gemini-3.8-flash';
+    var LITE_REST_MODEL         = 'gemini-3.5-flash-lite';
 
     var AI_MODELS = {
         TEXT_USER: [
@@ -31,7 +32,8 @@
             { id: LITE_REST_MODEL,     name: 'Gemini 3.5 Flash Lite (Ultra Lightweight)' }
         ],
         AUDIO_MODELS: [
-            { id: PERMANENT_USER_MODEL, name: 'Gemini 3.8 Live (Real-Time Voice & Streaming Audio)' }
+            { id: NATIVE_AUDIO_CALL_MODEL, name: 'Gemini 2.5 Flash Native Audio (Real-Time Live Phone Call)' },
+            { id: PERMANENT_USER_MODEL,    name: 'Gemini 3.8 Live (Real-Time Voice & Streaming Audio)' }
         ]
     };
 
@@ -39,8 +41,8 @@
         admin_api_key: '',
         admin_model:   PRIMARY_REST_MODEL,
         user_api_key:  '',
-        user_model:    PERMANENT_USER_MODEL, // Permanently gemini-3.8-live
-        audio_model:   PERMANENT_USER_MODEL, // gemini-3.8-live
+        user_model:    PERMANENT_USER_MODEL, // Permanently gemini-3.8-live for text
+        audio_model:   NATIVE_AUDIO_CALL_MODEL, // gemini-2.5-flash-native-audio-preview-12-2025 for voice call
         enable_user_chat:  true,
         enable_voice_call: true,
         enable_comparison: true
@@ -50,6 +52,9 @@
         if (!id) return PRIMARY_REST_MODEL;
         var clean = id.toString().toLowerCase().trim().replace(/^models\//, '');
 
+        if (clean.includes('2.5-flash-native') || clean.includes('native-audio')) {
+            return NATIVE_AUDIO_CALL_MODEL;
+        }
         if (clean === 'gemini-3.8-live' || clean.includes('3.8-live') || clean.includes('live')) {
             return PERMANENT_USER_MODEL;
         }
@@ -58,8 +63,8 @@
         if (clean === 'gemini-3.5-flash-lite' || clean.includes('3.5-flash-lite') || clean.includes('flash-lite')) return 'gemini-3.5-flash-lite';
         if (clean === 'gemini-3.7-flash' || clean.includes('3.7-flash')) return 'gemini-3.7-flash';
 
-        // Discontinued legacy models (2.5, 2.0, 1.5) mapped to modern stable models
-        if (clean.includes('2.5') || clean.includes('2.0') || clean.includes('1.5') || clean.includes('pro')) {
+        // Discontinued legacy models (2.0-flash, 1.5) mapped to modern stable models
+        if (clean.includes('2.0') || clean.includes('1.5') || clean.includes('pro')) {
             return PRIMARY_REST_MODEL;
         }
 
@@ -207,6 +212,179 @@
                 models: available,
                 activeModel: PERMANENT_USER_MODEL,
                 supportsLive: available.includes('gemini-3.8-live') || true
+            };
+        },
+
+        /**
+         * Create a continuous, real-time Live Voice Call Session (Phone Call Mode)
+         * Uses gemini-2.5-flash-native-audio-preview-12-2025 for bidirectional native audio streaming.
+         * Server handles Voice Activity Detection (VAD) automatically without requiring a Send button.
+         */
+        createLiveCallSession: function (opts, callbacks) {
+            callbacks = callbacks || {};
+            var config = this.getConfig();
+            var apiKey = (opts.apiKey || config.user_api_key || config.admin_api_key || '').trim();
+
+            if (!apiKey) {
+                if (typeof callbacks.onError === 'function') {
+                    callbacks.onError(new Error('Google AI Studio API Key পাওয়া যায়নি।'));
+                }
+                return null;
+            }
+
+            var candidateModels = [
+                'models/' + NATIVE_AUDIO_CALL_MODEL,
+                'models/' + PERMANENT_USER_MODEL,
+                'models/gemini-2.0-flash-exp'
+            ];
+            var currentModelIdx = 0;
+            var versions = ['v1beta', 'v1alpha'];
+            var currentVersionIdx = 0;
+            var ws = null;
+            var isClosed = false;
+            var setupAccepted = false;
+
+            function connect() {
+                if (isClosed) return;
+                var ver = versions[currentVersionIdx];
+                var model = candidateModels[currentModelIdx];
+                var wsUrl = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.' + ver + '.GenerativeService.BidiGenerateContent?key=' + encodeURIComponent(apiKey);
+
+                try {
+                    ws = new WebSocket(wsUrl);
+                } catch (e) {
+                    if (typeof callbacks.onError === 'function') callbacks.onError(e);
+                    return;
+                }
+
+                ws.onopen = function () {
+                    var setupPayload = {
+                        setup: {
+                            model: model,
+                            generationConfig: {
+                                responseModalities: ['AUDIO'],
+                                speechConfig: {
+                                    voiceConfig: {
+                                        prebuiltVoiceConfig: {
+                                            voiceName: opts.voiceName || 'Puck'
+                                        }
+                                    }
+                                }
+                            },
+                            outputAudioTranscription: {}
+                        }
+                    };
+                    if (opts.systemInstruction) {
+                        setupPayload.setup.systemInstruction = {
+                            parts: [{ text: opts.systemInstruction }]
+                        };
+                    }
+                    ws.send(JSON.stringify(setupPayload));
+                };
+
+                ws.onmessage = async function (event) {
+                    try {
+                        var rawText = event.data instanceof Blob ? await event.data.text() : event.data;
+                        var msg = JSON.parse(rawText);
+
+                        if (msg.setupComplete !== undefined) {
+                            setupAccepted = true;
+                            if (typeof callbacks.onReady === 'function') {
+                                callbacks.onReady({ model: model, version: ver });
+                            }
+                            return;
+                        }
+
+                        if (msg.serverContent) {
+                            if (msg.serverContent.interrupted) {
+                                if (typeof callbacks.onInterrupted === 'function') {
+                                    callbacks.onInterrupted();
+                                }
+                            }
+
+                            var parts = (msg.serverContent.modelTurn && msg.serverContent.modelTurn.parts) || [];
+                            for (var p = 0; p < parts.length; p++) {
+                                var part = parts[p];
+                                if (part.inlineData && part.inlineData.mimeType && part.inlineData.mimeType.startsWith('audio/pcm')) {
+                                    if (typeof callbacks.onAudioChunk === 'function') {
+                                        callbacks.onAudioChunk(part.inlineData.data);
+                                    }
+                                }
+                            }
+
+                            var text = (msg.serverContent.outputTranscription && msg.serverContent.outputTranscription.text) || '';
+                            if (!text) {
+                                for (var i = 0; i < parts.length; i++) {
+                                    if (parts[i].text) text += parts[i].text;
+                                }
+                            }
+                            if (text && typeof callbacks.onTranscript === 'function') {
+                                callbacks.onTranscript(text);
+                            }
+
+                            if (msg.serverContent.turnComplete) {
+                                if (typeof callbacks.onTurnComplete === 'function') {
+                                    callbacks.onTurnComplete();
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        console.warn('Live call message parse error:', err);
+                    }
+                };
+
+                ws.onerror = function (err) {
+                    console.warn('Live call ws error (' + model + '):', err);
+                };
+
+                ws.onclose = function (event) {
+                    if (isClosed) return;
+                    if (!setupAccepted) {
+                        if (currentModelIdx < candidateModels.length - 1) {
+                            currentModelIdx++;
+                            setTimeout(connect, 300);
+                            return;
+                        } else if (currentVersionIdx < versions.length - 1) {
+                            currentVersionIdx++;
+                            currentModelIdx = 0;
+                            setTimeout(connect, 300);
+                            return;
+                        }
+                    }
+                    if (typeof callbacks.onClose === 'function') {
+                        callbacks.onClose(event);
+                    }
+                };
+            }
+
+            connect();
+
+            return {
+                sendAudioChunk: function (pcm16Base64) {
+                    if (!ws || ws.readyState !== WebSocket.OPEN || !setupAccepted) return false;
+                    try {
+                        ws.send(JSON.stringify({
+                            realtimeInput: {
+                                mediaChunks: [
+                                    {
+                                        mimeType: 'audio/pcm;rate=16000',
+                                        data: pcm16Base64
+                                    }
+                                ]
+                            }
+                        }));
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                },
+                close: function () {
+                    isClosed = true;
+                    if (ws) {
+                        try { ws.close(); } catch (e) {}
+                        ws = null;
+                    }
+                }
             };
         },
 

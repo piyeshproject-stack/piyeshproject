@@ -1,13 +1,14 @@
 /**
  * AI Product Chat Assistant
- * Gemini 3.8 Live Engine (WebSocket BidiGenerateContent & REST Fallback)
+ * Models:
+ *  - gemini-2.5-flash-native-audio-preview-12-2025 (Direct Real-Time Live Phone Call via WebSocket)
+ *  - gemini-3.8-live / gemini-3.5-flash (Text Chat & Comparison Engine)
  * 
  * Features:
- *  - Real physical microphone capture via navigator.mediaDevices.getUserMedia
- *  - Real-time voice volume detection & animated wave bars via Web Audio AnalyserNode
- *  - High-resilience MediaRecorder audio fallback (works on all modern browsers & webviews)
- *  - Full Interactive Voice Call Mode with animated glowing orb and automatic audio reply playback
- *  - Preserved multi-turn conversation context window across text & voice
+ *  - Direct real-time phone call with Native Audio: NO send buttons, server-side VAD auto-detects speech
+ *  - Stream opened once at call start, eliminating repeated permission popups
+ *  - Real-time 16kHz PCM audio streaming & 24kHz streaming audio playback
+ *  - Full multi-turn context memory preserved across voice & text
  */
 
 (function (window) {
@@ -16,227 +17,60 @@
     var currentProduct       = null;
     var chatHistory          = [];
     var isVoiceCallActive    = false;
-    var isDictating          = false;
+    var isMuted              = false;
+    var isAiSpeaking         = false;
 
-    // Audio Playback Manager for 24kHz 16-bit PCM returned by Gemini Live
-    var audioCtx             = null;
-    var activeAudioSource    = null;
-    var activeAudioBtn       = null;
-    var audioChunksStore     = {}; // map of msgId -> array of base64 chunks
+    // Live Voice Call Hardware & Streaming State
+    var liveStream           = null;
+    var liveInputCtx         = null;
+    var liveOutputCtx        = null;
+    var liveProcessor        = null;
+    var liveAnalyser         = null;
+    var liveAnimId           = null;
+    var liveSession          = null;
+    var nextPlayTime         = 0;
+    var activeAudioNodes     = [];
 
-    // ─── Physical Microphone Audio Engine ──────────────────────────
-    var MicEngine = {
-        stream: null,
-        audioCtx: null,
-        analyser: null,
-        animId: null,
-        mediaRecorder: null,
-        recordedChunks: [],
-        speechRec: null,
-        isRecording: false,
-        activeTranscript: '',
+    // Text Chat Audio Playback Manager (for 🔊 শুনুন buttons)
+    var textAudioCtx         = null;
+    var textAudioSource      = null;
+    var textAudioBtn         = null;
+    var audioChunksStore     = {};
 
-        start: async function (callbacks) {
-            callbacks = callbacks || {};
-            if (this.isRecording) {
-                await this.stop();
+    // ─── Helpers: Audio Resampling & Base64 ─────────────────────────
+    function downsampleTo16kHz(inputBuffer, inputSampleRate) {
+        if (inputSampleRate === 16000) {
+            var int16 = new Int16Array(inputBuffer.length);
+            for (var i = 0; i < inputBuffer.length; i++) {
+                var s = Math.max(-1, Math.min(1, inputBuffer[i]));
+                int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
             }
-
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error('আপনার ব্রাউজারে মাইক্রোফোন ব্যবহারের সুবিধা (getUserMedia) সাপোর্ট নেই।');
-            }
-
-            try {
-                this.stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true
-                    }
-                });
-            } catch (err) {
-                console.error('Microphone access error:', err);
-                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    throw new Error('মাইক্রোফোন পারমিশন ব্লক করা আছে। ব্রাউজারের অ্যাড্রেস বারের লক আইকনে ক্লিক করে মাইক্রোফোন Allow করুন।');
-                }
-                if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-                    throw new Error('কোনো মাইক্রোফোন ডিভাইস পাওয়া যায়নি। অনুগ্রহ করে মাইক্রোফোন যুক্ত করুন।');
-                }
-                throw new Error('মাইক্রোফোন চালু করা যায়নি: ' + (err.message || 'Error'));
-            }
-
-            this.isRecording = true;
-            this.activeTranscript = '';
-            this.recordedChunks = [];
-
-            // Web Audio Analyser for live volume measurement & wave animation
-            try {
-                var AudioCtx = window.AudioContext || window.webkitAudioContext;
-                if (AudioCtx) {
-                    this.audioCtx = new AudioCtx();
-                    var source = this.audioCtx.createMediaStreamSource(this.stream);
-                    this.analyser = this.audioCtx.createAnalyser();
-                    this.analyser.fftSize = 256;
-                    source.connect(this.analyser);
-
-                    var dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-                    var self = this;
-
-                    var updateVolume = function () {
-                        if (!self.isRecording || !self.analyser) return;
-                        self.analyser.getByteFrequencyData(dataArray);
-
-                        var sum = 0;
-                        for (var i = 0; i < dataArray.length; i++) {
-                            sum += dataArray[i];
-                        }
-                        var avg = sum / dataArray.length;
-                        var norm = Math.min(1, avg / 120);
-
-                        if (typeof callbacks.onVolume === 'function') {
-                            callbacks.onVolume(norm, dataArray);
-                        }
-                        self.animId = requestAnimationFrame(updateVolume);
-                    };
-                    this.animId = requestAnimationFrame(updateVolume);
-                }
-            } catch (e) {
-                console.warn('Audio analyser init warning:', e);
-            }
-
-            // MediaRecorder for recording audio chunks as fallback or multimodal audio
-            var mime = '';
-            if (typeof MediaRecorder !== 'undefined') {
-                if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) mime = 'audio/webm;codecs=opus';
-                else if (MediaRecorder.isTypeSupported('audio/webm')) mime = 'audio/webm';
-                else if (MediaRecorder.isTypeSupported('audio/mp4')) mime = 'audio/mp4';
-                else if (MediaRecorder.isTypeSupported('audio/ogg')) mime = 'audio/ogg';
-
-                try {
-                    this.mediaRecorder = mime ? new MediaRecorder(this.stream, { mimeType: mime }) : new MediaRecorder(this.stream);
-                    var rec = this.mediaRecorder;
-                    var selfRec = this;
-                    rec.ondataavailable = function (e) {
-                        if (e.data && e.data.size > 0) {
-                            selfRec.recordedChunks.push(e.data);
-                        }
-                    };
-                    rec.start(250);
-                } catch (recErr) {
-                    console.warn('MediaRecorder warning:', recErr);
-                }
-            }
-
-            // Concurrently run SpeechRecognition for fast local transcription if supported
-            var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (SpeechRec) {
-                try {
-                    this.speechRec = new SpeechRec();
-                    this.speechRec.lang = 'bn-BD';
-                    this.speechRec.continuous = true;
-                    this.speechRec.interimResults = true;
-
-                    var selfSpeech = this;
-                    this.speechRec.onresult = function (event) {
-                        var interim = '';
-                        for (var i = event.resultIndex; i < event.results.length; i++) {
-                            var item = event.results[i];
-                            if (item.isFinal) {
-                                selfSpeech.activeTranscript += (selfSpeech.activeTranscript ? ' ' : '') + item[0].transcript;
-                            } else {
-                                interim += item[0].transcript;
-                            }
-                        }
-                        var fullText = (selfSpeech.activeTranscript + ' ' + interim).trim();
-                        if (typeof callbacks.onTranscript === 'function') {
-                            callbacks.onTranscript(fullText, false);
-                        }
-                    };
-
-                    this.speechRec.onerror = function (e) {
-                        console.warn('SpeechRecognition warning:', e.error);
-                    };
-
-                    this.speechRec.start();
-                } catch (srErr) {
-                    console.warn('SpeechRecognition start warning:', srErr);
-                }
-            }
-
-            return true;
-        },
-
-        stop: async function () {
-            if (!this.isRecording) return null;
-            this.isRecording = false;
-
-            if (this.animId) {
-                cancelAnimationFrame(this.animId);
-                this.animId = null;
-            }
-
-            if (this.speechRec) {
-                try { this.speechRec.stop(); } catch (e) {}
-                this.speechRec = null;
-            }
-
-            if (this.audioCtx) {
-                try { this.audioCtx.close(); } catch (e) {}
-                this.audioCtx = null;
-                this.analyser = null;
-            }
-
-            var recordedBlob = null;
-            var recordedBase64 = '';
-            var finalMime = 'audio/webm';
-
-            if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-                var mr = this.mediaRecorder;
-                finalMime = mr.mimeType || 'audio/webm';
-                await new Promise(function (res) {
-                    mr.onstop = res;
-                    try { mr.stop(); } catch (e) { res(); }
-                });
-            }
-
-            if (this.recordedChunks.length > 0) {
-                recordedBlob = new Blob(this.recordedChunks, { type: finalMime });
-                try {
-                    recordedBase64 = await new Promise(function (res) {
-                        var reader = new FileReader();
-                        reader.onloadend = function () {
-                            var dataUrl = reader.result || '';
-                            var b64 = dataUrl.split(',')[1] || '';
-                            res(b64);
-                        };
-                        reader.onerror = function () { res(''); };
-                        reader.readAsDataURL(recordedBlob);
-                    });
-                } catch (e) {}
-            }
-
-            // Stop all media tracks to turn off the physical microphone device indicator
-            if (this.stream) {
-                try {
-                    this.stream.getTracks().forEach(function (track) {
-                        track.stop();
-                    });
-                } catch (e) {}
-                this.stream = null;
-            }
-
-            var result = {
-                transcript: (this.activeTranscript || '').trim(),
-                blob: recordedBlob,
-                base64: recordedBase64,
-                mimeType: finalMime
-            };
-
-            this.recordedChunks = [];
-            this.activeTranscript = '';
-            return result;
+            return int16;
         }
-    };
+
+        var ratio = inputSampleRate / 16000;
+        var outputLength = Math.round(inputBuffer.length / ratio);
+        var result = new Int16Array(outputLength);
+
+        for (var i = 0; i < outputLength; i++) {
+            var srcIndex = Math.floor(i * ratio);
+            var s = Math.max(-1, Math.min(1, inputBuffer[srcIndex] || 0));
+            result[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+        return result;
+    }
+
+    function arrayBufferToBase64(buffer) {
+        var binary = '';
+        var bytes = new Uint8Array(buffer);
+        var len = bytes.byteLength;
+        var chunkSize = 0x8000;
+        for (var i = 0; i < len; i += chunkSize) {
+            var chunk = bytes.subarray(i, i + chunkSize);
+            binary += String.fromCharCode.apply(null, chunk);
+        }
+        return btoa(binary);
+    }
 
     // ─── Build Chat UI DOM ─────────────────────────────────────────
     function initAiChat() {
@@ -251,11 +85,11 @@
             '        <div class="ai-bot-avatar">✨</div>',
             '        <div>',
             '          <div class="ai-header-title">পণ্য সহকারী AI</div>',
-            '          <div class="ai-header-subtitle"><span class="ai-pulse-dot" style="display:inline-block;margin-right:2px;"></span> Online | Gemini 3.8 Live</div>',
+            '          <div class="ai-header-subtitle"><span class="ai-pulse-dot" style="display:inline-block;margin-right:2px;"></span> Online | Gemini 2.5 Live</div>',
             '        </div>',
             '      </div>',
             '      <div class="ai-header-actions">',
-            '        <button class="ai-btn-header-call" id="aiHeaderCallBtn" title="লাইভ ভয়েস কল শুরু করুন" onclick="window.ProductAiChat.toggleVoiceCall()">',
+            '        <button class="ai-btn-header-call" id="aiHeaderCallBtn" title="লাইভ ভয়েস কল" onclick="window.ProductAiChat.toggleVoiceCall()">',
             '          <span>📞</span> <span id="aiHeaderCallBtnText">ভয়েস কল</span>',
             '        </button>',
             '        <button class="ai-btn-ctrl" title="ছোট করুন" onclick="window.ProductAiChat.minimize()">─</button>',
@@ -263,7 +97,7 @@
             '      </div>',
             '    </div>',
             '',
-            '    <!-- Voice Call Panel (Active in Voice Mode) -->',
+            '    <!-- Voice Call Panel (Direct Phone Call Screen) -->',
             '    <div class="ai-voice-panel" id="aiVoicePanel">',
             '      <div class="ai-voice-product-tag" id="aiVoiceProductTag">',
             '        <img id="aiVoiceProdImg" src="" alt="">',
@@ -274,7 +108,7 @@
             '',
             '      <div>',
             '        <div class="ai-voice-status-title" id="aiVoiceStatusTitle">সংযোগ হচ্ছে...</div>',
-            '        <div class="ai-voice-status-desc" id="aiVoiceStatusDesc">মাইক্রোফোন সক্রিয় হচ্ছে...</div>',
+            '        <div class="ai-voice-status-desc" id="aiVoiceStatusDesc">সরাসরি কথা বলুন, সেন্ড বাটনের প্রয়োজন নেই</div>',
             '      </div>',
             '',
             '      <div class="ai-sound-waves" id="aiVoiceWaves">',
@@ -286,13 +120,12 @@
             '      </div>',
             '',
             '      <div class="ai-voice-transcript" id="aiVoiceTranscript">',
-            '        <div class="ai-live-user-speech" id="aiLiveUserSpeech"></div>',
-            '        <div class="ai-live-ai-speech" id="aiLiveAiSpeech">কথা বলুন, আমি শুনছি...</div>',
+            '        <div class="ai-live-ai-speech" id="aiLiveAiSpeech">সংযোগ হচ্ছে... সরাসরি কথা বলুন।</div>',
             '      </div>',
             '',
             '      <div class="ai-voice-actions">',
-            '        <button type="button" class="ai-btn-voice-talk recording" id="aiVoiceTalkBtn" onclick="window.ProductAiChat.toggleVoiceCallMic()">',
-            '          <span>🔴</span> <span id="aiVoiceTalkBtnText">কথা শেষ / পাঠান</span>',
+            '        <button type="button" class="ai-btn-voice-toggle" id="aiVoiceMuteBtn" onclick="window.ProductAiChat.toggleMute()">',
+            '          <span id="aiMuteIcon">🔇</span> <span id="aiMuteText">মিউট</span>',
             '        </button>',
             '        <button type="button" class="ai-btn-voice-toggle" onclick="window.ProductAiChat.showChatView()">',
             '          <span>💬</span> <span>টেক্সট চ্যাট</span>',
@@ -317,11 +150,10 @@
             '',
             '    <!-- Suggested Quick Chips -->',
             '    <div class="ai-chips-row" id="aiChipsRow">',
-            '      <button class="ai-chip" onclick="window.ProductAiChat.startVoiceCall()">📞 সরাসরি ভয়েস কল করুন</button>',
+            '      <button class="ai-chip" onclick="window.ProductAiChat.startVoiceCall()">📞 সরাসরি লাইভ কল করুন</button>',
             '      <button class="ai-chip" onclick="window.ProductAiChipClick(\'এই পণ্যের প্রধান ফিচারগুলো কী?\')">প্রধান ফিচারগুলো কী?</button>',
             '      <button class="ai-chip" onclick="window.ProductAiChipClick(\'ডেলিভারি চার্জ ও সময় কত লাগবে?\')">ডেলিভারি সময় কত?</button>',
             '      <button class="ai-chip" onclick="window.ProductAiChipClick(\'এই প্রোডাক্টে কি কোনো বিশেষ অফার আছে?\')">কোনো অফার আছে?</button>',
-            '      <button class="ai-chip" onclick="window.ProductAiChipClick(\'অর্ডার করার নিয়ম কী?\')">অর্ডার প্রসেস কী?</button>',
             '    </div>',
             '',
             '    <!-- Input Bar -->',
@@ -356,74 +188,117 @@
         if (window.ProductAiChat) window.ProductAiChat.sendChip(txt);
     };
 
-    // ─── Play 24kHz 16-bit PCM Audio Chunks ─────────────────────────
-    function playPcmAudio(chunks, msgId, btnEl, onEnded) {
-        var AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (!AudioCtx) {
-            if (typeof onEnded === 'function') onEnded();
-            return;
+    // ─── Play Live 24kHz Streaming Audio Chunks (Phone Call) ──────
+    function playLivePcmChunk(base64Data) {
+        if (!liveOutputCtx) {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            liveOutputCtx = new AudioCtx({ sampleRate: 24000 });
+        }
+        if (liveOutputCtx.state === 'suspended') {
+            liveOutputCtx.resume();
         }
 
-        // If currently playing, stop previous source
-        if (activeAudioSource) {
-            try { activeAudioSource.stop(); } catch (e) {}
-            activeAudioSource = null;
-            if (activeAudioBtn) {
-                activeAudioBtn.classList.remove('playing');
-                activeAudioBtn.innerHTML = '<span>🔊</span> <span>শুনুন</span>';
+        try {
+            var binaryStr = atob(base64Data);
+            var len = binaryStr.length;
+            var int16 = new Int16Array(len / 2);
+            for (var i = 0; i < len; i += 2) {
+                int16[i / 2] = binaryStr.charCodeAt(i) | (binaryStr.charCodeAt(i + 1) << 8);
             }
-            if (activeAudioBtn === btnEl && !onEnded) {
-                activeAudioBtn = null;
+            var float32 = new Float32Array(int16.length);
+            for (var i = 0; i < int16.length; i++) {
+                float32[i] = int16[i] / 32768;
+            }
+
+            var buffer = liveOutputCtx.createBuffer(1, float32.length, 24000);
+            buffer.getChannelData(0).set(float32);
+
+            var source = liveOutputCtx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(liveOutputCtx.destination);
+
+            var now = liveOutputCtx.currentTime;
+            if (nextPlayTime < now) nextPlayTime = now;
+            source.start(nextPlayTime);
+            nextPlayTime += buffer.duration;
+
+            activeAudioNodes.push(source);
+            source.onended = function () {
+                var idx = activeAudioNodes.indexOf(source);
+                if (idx > -1) activeAudioNodes.splice(idx, 1);
+
+                if (activeAudioNodes.length === 0 && liveOutputCtx.currentTime >= nextPlayTime - 0.05) {
+                    isAiSpeaking = false;
+                    if (isVoiceCallActive) {
+                        updateVoiceCallStatus('listening', 'আপনার কথা শুনছি...', 'সরাসরি কথা বলুন...');
+                    }
+                }
+            };
+        } catch (e) {
+            console.error('playLivePcmChunk error:', e);
+        }
+    }
+
+    function stopLiveAudioPlayback() {
+        activeAudioNodes.forEach(function (src) {
+            try { src.stop(); } catch(e){}
+        });
+        activeAudioNodes = [];
+        if (liveOutputCtx) {
+            nextPlayTime = liveOutputCtx.currentTime;
+        }
+        isAiSpeaking = false;
+    }
+
+    // ─── Play Saved Audio Chunks in Chat View (🔊 শুনুন button) ───
+    function playChatAudio(chunks, msgId, btnEl) {
+        var AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+
+        if (textAudioSource) {
+            try { textAudioSource.stop(); } catch (e) {}
+            textAudioSource = null;
+            if (textAudioBtn) {
+                textAudioBtn.classList.remove('playing');
+                textAudioBtn.innerHTML = '<span>🔊</span> <span>শুনুন</span>';
+            }
+            if (textAudioBtn === btnEl) {
+                textAudioBtn = null;
                 return;
             }
         }
 
-        if (!audioCtx) {
-            audioCtx = new AudioCtx({ sampleRate: 24000 });
+        if (!textAudioCtx) {
+            textAudioCtx = new AudioCtx({ sampleRate: 24000 });
         }
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
+        if (textAudioCtx.state === 'suspended') {
+            textAudioCtx.resume();
         }
 
-        // Fallback to SpeechSynthesis if chunks empty
         if (!chunks || !chunks.length) {
-            var msgText = (document.getElementById(msgId + '_text') ? document.getElementById(msgId + '_text').innerText : '') ||
-                          (document.getElementById('aiLiveAiSpeech') ? document.getElementById('aiLiveAiSpeech').innerText : '');
+            var msgText = document.getElementById(msgId + '_text') ? document.getElementById(msgId + '_text').innerText : '';
             if (msgText && window.speechSynthesis) {
                 window.speechSynthesis.cancel();
-                var clean = msgText.replace(/^AI:\s*/i, '');
-                var utt = new SpeechSynthesisUtterance(clean);
+                var utt = new SpeechSynthesisUtterance(msgText);
                 utt.lang = 'bn-BD';
                 utt.rate = 1.05;
                 if (btnEl) {
                     btnEl.classList.add('playing');
                     btnEl.innerHTML = '<span>⏹️</span> <span>থামান</span>';
-                    activeAudioBtn = btnEl;
+                    textAudioBtn = btnEl;
                 }
                 utt.onend = function () {
                     if (btnEl) {
                         btnEl.classList.remove('playing');
                         btnEl.innerHTML = '<span>🔊</span> <span>শুনুন</span>';
-                        activeAudioBtn = null;
+                        textAudioBtn = null;
                     }
-                    if (typeof onEnded === 'function') onEnded();
-                };
-                utt.onerror = function () {
-                    if (btnEl) {
-                        btnEl.classList.remove('playing');
-                        btnEl.innerHTML = '<span>🔊</span> <span>শুনুন</span>';
-                        activeAudioBtn = null;
-                    }
-                    if (typeof onEnded === 'function') onEnded();
                 };
                 window.speechSynthesis.speak(utt);
-            } else {
-                if (typeof onEnded === 'function') onEnded();
             }
             return;
         }
 
-        // Decode PCM
         try {
             var totalLength = 0;
             var buffers = [];
@@ -442,12 +317,7 @@
                 totalLength += float32.length;
             }
 
-            if (totalLength === 0) {
-                if (typeof onEnded === 'function') onEnded();
-                return;
-            }
-
-            var audioBuffer = audioCtx.createBuffer(1, totalLength, 24000);
+            var audioBuffer = textAudioCtx.createBuffer(1, totalLength, 24000);
             var channel = audioBuffer.getChannelData(0);
             var offset = 0;
             for (var b = 0; b < buffers.length; b++) {
@@ -455,12 +325,12 @@
                 offset += buffers[b].length;
             }
 
-            var source = audioCtx.createBufferSource();
+            var source = textAudioCtx.createBufferSource();
             source.buffer = audioBuffer;
-            source.connect(audioCtx.destination);
+            source.connect(textAudioCtx.destination);
 
-            activeAudioSource = source;
-            activeAudioBtn = btnEl;
+            textAudioSource = source;
+            textAudioBtn = btnEl;
 
             if (btnEl) {
                 btnEl.classList.add('playing');
@@ -468,21 +338,19 @@
             }
 
             source.onended = function () {
-                if (activeAudioSource === source) {
-                    activeAudioSource = null;
+                if (textAudioSource === source) {
+                    textAudioSource = null;
                     if (btnEl) {
                         btnEl.classList.remove('playing');
                         btnEl.innerHTML = '<span>🔊</span> <span>শুনুন</span>';
                     }
-                    activeAudioBtn = null;
+                    textAudioBtn = null;
                 }
-                if (typeof onEnded === 'function') onEnded();
             };
 
             source.start(0);
-        } catch (decErr) {
-            console.error('PCM audio play error:', decErr);
-            if (typeof onEnded === 'function') onEnded();
+        } catch (e) {
+            console.error('playChatAudio error:', e);
         }
     }
 
@@ -571,31 +439,21 @@
         if (el && el.parentNode) el.parentNode.removeChild(el);
     }
 
-    // ─── Query Handling with Gemini 3.8 Live ───────────────────────
-    async function handleUserQuestion(question, audioObj, isVoiceCall) {
-        var hasText = question && question.trim().length > 0;
-        var hasAudio = audioObj && audioObj.base64 && audioObj.base64.length > 0;
-
-        if (!hasText && !hasAudio) return;
-
-        var displayText = hasText ? question.trim() : '🎙️ [ভয়েস মেসেজ]';
-        appendMessage('user', displayText);
-
-        if (isVoiceCall) {
-            updateVoiceCallStatus('thinking', 'AI চিন্তা করছে...', 'উত্তর তৈরি হচ্ছে...');
-            var transcriptEl = document.getElementById('aiLiveUserSpeech');
-            if (transcriptEl) transcriptEl.textContent = 'আপনি: ' + displayText;
-        }
+    // ─── Query Handling for Text Input Bar ─────────────────────────
+    async function handleUserQuestion(question) {
+        if (!question || !question.trim()) return;
+        var q = question.trim();
+        appendMessage('user', q);
 
         var p = currentProduct || resolveProductInfo();
         var storeName = (window.siteSettings && window.siteSettings.store_name) || (typeof CONFIG !== 'undefined' ? CONFIG.STORE_NAME : 'Store');
 
         var systemPrompt = [
-            'You are a friendly, knowledgeable AI shopping assistant for "' + storeName + '".',
+            'You are a courteous, expert AI shopping assistant for "' + storeName + '".',
             'Current Product: "' + p.name + '", Price: ' + p.price + (p.sku ? (', SKU: ' + p.sku) : '') + '.',
             p.description ? ('Details: ' + p.description) : '',
-            'Customer may speak or write in Bengali or English. Always respond politely in fluent Bengali (বাংলা).',
-            'Keep answers natural, helpful, and concise (2-3 sentences max) so it sounds great on voice playback.'
+            'Customer language: Bengali or English. Always respond politely in fluent Bengali (বাংলা).',
+            'Keep answers natural, helpful, and concise (2-3 sentences max).'
         ].filter(Boolean).join('\n');
 
         var streamId = createStreamingBubble();
@@ -603,36 +461,16 @@
 
         try {
             var res = await window.AIConfig.streamText({
-                prompt: question || 'এই পণ্য সম্পর্কে প্রয়োজনীয় তথ্য দিন',
-                audio: hasAudio ? { base64: audioObj.base64, mimeType: audioObj.mimeType } : null,
+                prompt: q,
                 systemInstruction: systemPrompt,
                 history: chatHistory.slice(-8)
             }, function (chunk, currentFull) {
                 streamedSoFar = currentFull;
                 updateStreamingBubble(streamId, currentFull);
-                if (isVoiceCall) {
-                    var aiSpeechEl = document.getElementById('aiLiveAiSpeech');
-                    if (aiSpeechEl) aiSpeechEl.textContent = 'AI: ' + currentFull;
-                }
             });
 
             var finalText = (res && res.text) || streamedSoFar;
-            var chunks = (res && res.audioChunks) || [];
-            finalizeStreamingBubble(streamId, finalText, chunks);
-
-            if (isVoiceCall) {
-                updateVoiceCallStatus('speaking', 'AI কথা বলছে...', 'উত্তর শুনুন');
-                var aiSpeechEl = document.getElementById('aiLiveAiSpeech');
-                if (aiSpeechEl) aiSpeechEl.textContent = 'AI: ' + finalText;
-
-                // Play AI Voice Reply Automatically
-                playPcmAudio(chunks, streamId, null, function onAudioEnded() {
-                    if (isVoiceCallActive) {
-                        updateVoiceCallStatus('listening', 'আপনার কথা শুনছি...', 'বলুন, কিভাবে সাহায্য করতে পারি?');
-                        startVoiceCallListening();
-                    }
-                });
-            }
+            finalizeStreamingBubble(streamId, finalText, (res && res.audioChunks) || []);
         } catch (err) {
             console.error('AI Chat Error:', err);
             if (streamedSoFar && streamedSoFar.trim().length > 5) {
@@ -641,9 +479,6 @@
                 removeElement(streamId);
                 var errText = 'দুঃখিত! AI উত্তর দিতে পারেনি। অনুগ্রহ করে আবার চেষ্টা করুন।';
                 appendMessage('assistant', errText, []);
-                if (isVoiceCall) {
-                    updateVoiceCallStatus('idle', 'ত্রুটি হয়েছে', err.message || 'আবার চেষ্টা করুন');
-                }
             }
         }
     }
@@ -665,14 +500,12 @@
         };
     }
 
-    // ─── Voice Call Mode Handlers ──────────────────────────────────
+    // ─── Voice Call UI State & Wave Animations ─────────────────────
     function updateVoiceCallStatus(state, title, desc) {
         var orb = document.getElementById('aiVoiceOrb');
         var titleEl = document.getElementById('aiVoiceStatusTitle');
         var descEl = document.getElementById('aiVoiceStatusDesc');
         var wavesEl = document.getElementById('aiVoiceWaves');
-        var talkBtn = document.getElementById('aiVoiceTalkBtn');
-        var talkBtnText = document.getElementById('aiVoiceTalkBtnText');
 
         if (orb) {
             orb.className = 'ai-voice-orb ' + (state || '');
@@ -689,79 +522,30 @@
             if (state === 'listening' || state === 'speaking') wavesEl.classList.add('active');
             else wavesEl.classList.remove('active');
         }
-
-        if (talkBtn && talkBtnText) {
-            if (state === 'listening') {
-                talkBtn.classList.add('recording');
-                talkBtnText.textContent = 'কথা শেষ / পাঠান';
-            } else {
-                talkBtn.classList.remove('recording');
-                talkBtnText.textContent = '🎙️ কথা বলুন';
-            }
-        }
     }
 
     function animateWaveBars(volume) {
         for (var i = 1; i <= 5; i++) {
             var bar = document.getElementById('aiWaveBar' + i);
             if (bar) {
-                var factor = (i === 3 ? 1.5 : (i === 2 || i === 4 ? 1.2 : 0.8));
-                var h = Math.max(6, Math.min(38, Math.round(8 + volume * 40 * factor)));
+                var factor = (i === 3 ? 1.6 : (i === 2 || i === 4 ? 1.2 : 0.8));
+                var h = Math.max(6, Math.min(38, Math.round(8 + volume * 42 * factor)));
                 bar.style.height = h + 'px';
             }
         }
     }
 
-    async function startVoiceCallListening() {
-        if (!isVoiceCallActive) return;
-
-        try {
-            updateVoiceCallStatus('listening', 'আপনার কথা শুনছি...', 'পণ্য সম্পর্কে বলুন...');
-            await MicEngine.start({
-                onVolume: function (vol) {
-                    animateWaveBars(vol);
-                },
-                onTranscript: function (transcript) {
-                    var transcriptEl = document.getElementById('aiLiveUserSpeech');
-                    if (transcriptEl && transcript) {
-                        transcriptEl.textContent = 'আপনি: ' + transcript;
-                    }
-                }
-            });
-        } catch (err) {
-            console.error('startVoiceCallListening err:', err);
-            updateVoiceCallStatus('idle', 'মাইক্রোফোন ত্রুটি', err.message);
-            alert(err.message);
-        }
-    }
-
-    async function finishVoiceCallListeningAndSend() {
-        var recorded = await MicEngine.stop();
-        animateWaveBars(0);
-
-        if (!recorded) return;
-
-        var userQuery = (recorded.transcript || '').trim();
-        var hasAudio = (recorded.base64 && recorded.base64.length > 0);
-
-        if (!userQuery && !hasAudio) {
-            updateVoiceCallStatus('listening', 'কোনো কথা শোনা যায়নি', 'অনুগ্রহ করে আবার বলুন...');
-            startVoiceCallListening();
-            return;
-        }
-
-        handleUserQuestion(userQuery, recorded, true);
-    }
-
-    function startVoiceCall() {
+    // ─── Direct Live Phone Call (Native Audio WebSocket) ───────────
+    async function startVoiceCall() {
         initAiChat();
         var backdrop = document.getElementById('aiChatBackdrop');
         if (backdrop) backdrop.classList.add('active');
-
         var bubble = document.getElementById('aiFloatingBubble');
         if (bubble) bubble.classList.remove('show');
 
         isVoiceCallActive = true;
+        isMuted = false;
+        isAiSpeaking = false;
 
         var headerBtn = document.getElementById('aiHeaderCallBtn');
         var headerBtnText = document.getElementById('aiHeaderCallBtnText');
@@ -793,16 +577,159 @@
         }
         if (tagName) tagName.textContent = p.name + ' (' + p.price + ')';
 
-        startVoiceCallListening();
+        updateVoiceCallStatus('thinking', 'সংযোগ হচ্ছে...', 'মাইক্রোফোন সক্রিয় হচ্ছে...');
+
+        // 1. Open Physical Microphone ONCE at call start
+        try {
+            if (!liveStream) {
+                liveStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+            }
+        } catch (micErr) {
+            console.error('Microphone access failed:', micErr);
+            updateVoiceCallStatus('idle', 'মাইক্রোফোন বন্ধ', 'ব্রাউজার সেটিং থেকে মাইক্রোফোন Allow করুন');
+            alert('মাইক্রোফোন পারমিশন পাওয়া যায়নি। ব্রাউজারের অ্যাড্রেস বারের লক আইকন থেকে মাইক্রোফোন Allow করুন।');
+            return;
+        }
+
+        // 2. Set up Web Audio context for continuous 16kHz PCM streaming & wave animation
+        try {
+            var AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!liveInputCtx) liveInputCtx = new AudioCtx();
+            if (liveInputCtx.state === 'suspended') await liveInputCtx.resume();
+
+            var source = liveInputCtx.createMediaStreamSource(liveStream);
+            liveAnalyser = liveInputCtx.createAnalyser();
+            liveAnalyser.fftSize = 256;
+            source.connect(liveAnalyser);
+
+            // ScriptProcessorNode for real-time 16kHz downsampling
+            liveProcessor = liveInputCtx.createScriptProcessor(4096, 1, 1);
+            var muteGain = liveInputCtx.createGain();
+            muteGain.gain.value = 0; // Prevent local mic audio from echoing through speakers
+            liveProcessor.connect(muteGain);
+            muteGain.connect(liveInputCtx.destination);
+            source.connect(liveProcessor);
+
+            var freqData = new Uint8Array(liveAnalyser.frequencyBinCount);
+            var updateAnim = function () {
+                if (!isVoiceCallActive) return;
+                if (liveAnalyser) {
+                    liveAnalyser.getByteFrequencyData(freqData);
+                    var sum = 0;
+                    for (var i = 0; i < freqData.length; i++) sum += freqData[i];
+                    var avg = sum / freqData.length;
+                    animateWaveBars(Math.min(1, avg / 110));
+                }
+                liveAnimId = requestAnimationFrame(updateAnim);
+            };
+            liveAnimId = requestAnimationFrame(updateAnim);
+
+            liveProcessor.onaudioprocess = function (e) {
+                if (!isVoiceCallActive || isMuted || isAiSpeaking || !liveSession) return;
+                var inputFloats = e.inputBuffer.getChannelData(0);
+                var pcm16 = downsampleTo16kHz(inputFloats, liveInputCtx.sampleRate);
+                var b64 = arrayBufferToBase64(pcm16.buffer);
+                liveSession.sendAudioChunk(b64);
+            };
+        } catch (audioErr) {
+            console.warn('Web Audio input setup error:', audioErr);
+        }
+
+        // 3. Connect Native Audio Live WebSocket (gemini-2.5-flash-native-audio-preview-12-2025)
+        var storeName = (window.siteSettings && window.siteSettings.store_name) || (typeof CONFIG !== 'undefined' ? CONFIG.STORE_NAME : 'Store');
+        var systemInstruction = [
+            'You are a courteous, natural AI voice assistant for "' + storeName + '" on a live customer phone call.',
+            'Current Product: "' + p.name + '", Price: ' + p.price + (p.sku ? (', SKU: ' + p.sku) : '') + '.',
+            p.description ? ('Product Details: ' + p.description) : '',
+            'Customer is speaking live on the phone. Speak in friendly, clear Bengali (বাংলা).',
+            'Keep your responses conversational, direct, and concise (1-2 sentences) so it sounds like a real phone call.'
+        ].filter(Boolean).join('\n');
+
+        liveSession = window.AIConfig.createLiveCallSession({
+            systemInstruction: systemInstruction,
+            voiceName: 'Puck'
+        }, {
+            onReady: function (info) {
+                updateVoiceCallStatus('listening', 'কল সংযুক্ত হয়েছে', 'সরাসরি কথা বলুন, আমি শুনছি...');
+                var el = document.getElementById('aiLiveAiSpeech');
+                if (el) el.textContent = '📞 কল সংযুক্ত হয়েছে। পণ্যটি সম্পর্কে যা জানতে চান সরাসরি কথা বলুন।';
+            },
+            onAudioChunk: function (pcm24B64) {
+                isAiSpeaking = true;
+                updateVoiceCallStatus('speaking', 'AI কথা বলছে...', 'উত্তর শুনুন...');
+                playLivePcmChunk(pcm24B64);
+            },
+            onTranscript: function (text) {
+                var el = document.getElementById('aiLiveAiSpeech');
+                if (el) el.textContent = 'AI: ' + text;
+                // Add to history transcript
+                if (text && text.trim().length > 3) {
+                    chatHistory.push({ role: 'assistant', content: text.trim() });
+                }
+            },
+            onInterrupted: function () {
+                stopLiveAudioPlayback();
+                isAiSpeaking = false;
+                updateVoiceCallStatus('listening', 'আপনার কথা শুনছি...', 'বলুন...');
+            },
+            onTurnComplete: function () {
+                // Handled in playback onended
+            },
+            onError: function (err) {
+                console.error('Live call session error:', err);
+                updateVoiceCallStatus('idle', 'সংযোগ বিচ্ছিন্ন', err.message || 'পুনরায় কল করুন');
+            },
+            onClose: function () {
+                if (isVoiceCallActive) {
+                    updateVoiceCallStatus('idle', 'কল শেষ হয়েছে', 'পুনরায় কল করতে পারেন');
+                }
+            }
+        });
     }
 
     function endVoiceCall() {
         isVoiceCallActive = false;
-        MicEngine.stop();
+        isAiSpeaking = false;
 
-        if (activeAudioSource) {
-            try { activeAudioSource.stop(); } catch(e){}
-            activeAudioSource = null;
+        if (liveAnimId) {
+            cancelAnimationFrame(liveAnimId);
+            liveAnimId = null;
+        }
+
+        if (liveSession) {
+            try { liveSession.close(); } catch (e) {}
+            liveSession = null;
+        }
+
+        stopLiveAudioPlayback();
+
+        // Stop microphone stream tracks so hardware mic turns OFF
+        if (liveStream) {
+            try {
+                liveStream.getTracks().forEach(function (track) { track.stop(); });
+            } catch (e) {}
+            liveStream = null;
+        }
+
+        if (liveProcessor) {
+            try { liveProcessor.disconnect(); } catch (e) {}
+            liveProcessor = null;
+        }
+
+        if (liveInputCtx) {
+            try { liveInputCtx.close(); } catch (e) {}
+            liveInputCtx = null;
+        }
+
+        if (liveOutputCtx) {
+            try { liveOutputCtx.close(); } catch (e) {}
+            liveOutputCtx = null;
         }
 
         var headerBtn = document.getElementById('aiHeaderCallBtn');
@@ -811,6 +738,19 @@
         if (headerBtnText) headerBtnText.textContent = 'ভয়েস কল';
 
         showChatView();
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        var icon = document.getElementById('aiMuteIcon');
+        var text = document.getElementById('aiMuteText');
+        if (icon) icon.textContent = isMuted ? '🔊' : '🔇';
+        if (text) text.textContent = isMuted ? 'আনমিউট' : 'মিউট';
+
+        var descEl = document.getElementById('aiVoiceStatusDesc');
+        if (descEl) {
+            descEl.textContent = isMuted ? '(মাইক্রোফোন মিউট করা আছে)' : 'সরাসরি কথা বলুন, আমি শুনছি...';
+        }
     }
 
     function showChatView() {
@@ -837,56 +777,67 @@
         }
     }
 
-    function toggleVoiceCallMic() {
-        if (MicEngine.isRecording) {
-            finishVoiceCallListeningAndSend();
-        } else {
-            startVoiceCallListening();
-        }
-    }
-
-    // ─── Input Bar Microphone Dictation ────────────────────────────
-    async function toggleInputDictation() {
-        var btn = document.getElementById('aiDictateBtn');
-        var input = document.getElementById('aiInputField');
-
-        if (isDictating || MicEngine.isRecording) {
-            isDictating = false;
-            if (btn) btn.classList.remove('recording');
-            if (input) input.placeholder = 'পণ্য সম্পর্কে প্রশ্ন লিখুন...';
-
-            var recorded = await MicEngine.stop();
-            if (!recorded) return;
-
-            var userQuery = (recorded.transcript || '').trim();
-            if (userQuery) {
-                if (input) input.value = userQuery;
-                handleUserQuestion(userQuery, null, false);
-            } else if (recorded.base64) {
-                // Send recorded audio directly
-                if (input) input.value = '';
-                handleUserQuestion('', recorded, false);
-            }
+    // ─── Input Bar Dictation (One-touch Voice Note) ────────────────
+    var dictationRec = null;
+    function toggleInputDictation() {
+        var SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRec) {
+            alert('ভয়েস টাইপিংয়ের জন্য Chrome বা Edge ব্রাউজার ব্যবহার করুন, অথবা সরাসরি "📞 ভয়েস কল" করুন।');
             return;
         }
 
-        try {
-            isDictating = true;
-            if (btn) btn.classList.add('recording');
-            if (input) input.placeholder = '🎙️ কথা বলুন, শুনছি... (শেষ করতে আবার চাপুন)';
+        var btn = document.getElementById('aiDictateBtn');
+        var input = document.getElementById('aiInputField');
 
-            await MicEngine.start({
-                onTranscript: function (transcript) {
-                    if (input && transcript) {
-                        input.value = transcript;
-                    }
-                }
-            });
-        } catch (err) {
-            isDictating = false;
+        if (dictationRec) {
+            try { dictationRec.stop(); } catch(e){}
+            dictationRec = null;
             if (btn) btn.classList.remove('recording');
             if (input) input.placeholder = 'পণ্য সম্পর্কে প্রশ্ন লিখুন...';
-            alert(err.message);
+            return;
+        }
+
+        dictationRec = new SpeechRec();
+        dictationRec.lang = 'bn-BD';
+        dictationRec.continuous = false;
+        dictationRec.interimResults = false;
+
+        dictationRec.onstart = function () {
+            if (btn) btn.classList.add('recording');
+            if (input) input.placeholder = '🎙️ কথা বলুন, শুনছি...';
+        };
+
+        dictationRec.onresult = function (event) {
+            dictationRec = null;
+            if (btn) btn.classList.remove('recording');
+            if (input) input.placeholder = 'পণ্য সম্পর্কে প্রশ্ন লিখুন...';
+
+            var transcript = '';
+            if (event.results && event.results[0] && event.results[0][0]) {
+                transcript = event.results[0][0].transcript;
+            }
+            if (transcript && transcript.trim()) {
+                if (input) input.value = transcript.trim();
+                handleUserQuestion(transcript.trim());
+            }
+        };
+
+        dictationRec.onerror = function () {
+            dictationRec = null;
+            if (btn) btn.classList.remove('recording');
+            if (input) input.placeholder = 'পণ্য সম্পর্কে প্রশ্ন লিখুন...';
+        };
+
+        dictationRec.onend = function () {
+            dictationRec = null;
+            if (btn) btn.classList.remove('recording');
+            if (input) input.placeholder = 'পণ্য সম্পর্কে প্রশ্ন লিখুন...';
+        };
+
+        try {
+            dictationRec.start();
+        } catch (e) {
+            dictationRec = null;
         }
     }
 
@@ -914,7 +865,7 @@
             var container = document.getElementById('aiChatMessages');
             if (container && !chatHistory.length) {
                 container.innerHTML = '';
-                appendMessage('assistant', 'হ্যালো! আমি আপনার স্মার্ট শপিং অ্যাসিস্ট্যান্ট। "' + (currentProduct.name || 'এই পণ্যটি') + '" সম্পর্কে যেকোনো প্রশ্ন করতে পারেন অথবা সরাসরি "📞 ভয়েস কল" বাটনে ক্লিক করে কথা বলতে পারেন।', []);
+                appendMessage('assistant', 'হ্যালো! আমি আপনার স্মার্ট শপিং সহকারী। "' + (currentProduct.name || 'এই পণ্যটি') + '" সম্পর্কে যেকোনো প্রশ্ন লিখতে পারেন, অথবা উপরে "📞 ভয়েস কল" বাটনে ক্লিক করে সরাসরি কথা বলতে পারেন।', []);
             }
 
             showChatView();
@@ -931,26 +882,19 @@
             if (isVoiceCallActive) {
                 endVoiceCall();
             }
-            MicEngine.stop();
-
             var backdrop = document.getElementById('aiChatBackdrop');
             if (backdrop) backdrop.classList.remove('active');
             var bubble = document.getElementById('aiFloatingBubble');
             if (bubble) bubble.classList.remove('show');
 
-            if (activeAudioSource) {
-                try { activeAudioSource.stop(); } catch(e){}
-                activeAudioSource = null;
+            if (textAudioSource) {
+                try { textAudioSource.stop(); } catch(e){}
+                textAudioSource = null;
             }
             if (window.speechSynthesis) window.speechSynthesis.cancel();
         },
 
         minimize: function () {
-            if (isVoiceCallActive) {
-                endVoiceCall();
-            }
-            MicEngine.stop();
-
             var backdrop = document.getElementById('aiChatBackdrop');
             if (backdrop) backdrop.classList.remove('active');
             var bubble = document.getElementById('aiFloatingBubble');
@@ -970,23 +914,23 @@
             var val = input.value.trim();
             if (!val) return;
             input.value = '';
-            handleUserQuestion(val, null, false);
+            handleUserQuestion(val);
         },
 
         sendChip: function (chipText) {
-            handleUserQuestion(chipText, null, false);
+            handleUserQuestion(chipText);
         },
 
         toggleInputDictation: toggleInputDictation,
         startVoiceCall: startVoiceCall,
         endVoiceCall: endVoiceCall,
         toggleVoiceCall: toggleVoiceCall,
-        toggleVoiceCallMic: toggleVoiceCallMic,
+        toggleMute: toggleMute,
         showChatView: showChatView,
 
         playAudio: function (msgId, btnEl) {
             var chunks = audioChunksStore[msgId] || [];
-            playPcmAudio(chunks, msgId, btnEl);
+            playChatAudio(chunks, msgId, btnEl);
         }
     };
 
