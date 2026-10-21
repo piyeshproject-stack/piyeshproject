@@ -158,12 +158,26 @@ app.post('/api/admin-query', authenticateAdmin, async (req, res) => {
 app.post('/api/add-product', authenticateAdmin, async (req, res) => {
     try {
         const p = req.body;
+        // Auto-migrate SEO columns if missing
+        const prodCols = [
+            'tags TEXT DEFAULT ""',
+            'seo_keywords TEXT DEFAULT ""',
+            'seo_title TEXT DEFAULT ""',
+            'seo_description TEXT DEFAULT ""',
+            'slug TEXT DEFAULT ""'
+        ];
+        for (const col of prodCols) {
+            try { await queryD1(`ALTER TABLE products ADD COLUMN ${col}`, [], true); } catch(e) {}
+        }
+
         const sql = `
             INSERT INTO products (
                 id, name, description, category_id, base_price, flash_sale_price,
                 stock_status, gallery_images, video_url, variants,
-                is_active, is_featured, is_add_once, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                is_active, is_featured, is_add_once,
+                tags, seo_keywords, seo_title, seo_description, slug,
+                created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         `;
         const params = [
             p.id, p.name, p.description || '', p.category_id || '',
@@ -171,7 +185,8 @@ app.post('/api/add-product', authenticateAdmin, async (req, res) => {
             typeof p.gallery_images === 'string' ? p.gallery_images : JSON.stringify(p.gallery_images || []),
             p.video_url || '',
             typeof p.variants === 'string' ? p.variants : JSON.stringify(p.variants || []),
-            p.is_active ? 1 : 0, p.is_featured ? 1 : 0, p.is_add_once ? 1 : 0
+            p.is_active ? 1 : 0, p.is_featured ? 1 : 0, p.is_add_once ? 1 : 0,
+            p.tags || '', p.seo_keywords || p.tags || '', p.seo_title || null, p.seo_description || null, p.slug || null
         ];
         const data = await queryD1(sql, params, true);
         res.json(data);
@@ -184,11 +199,24 @@ app.post('/api/add-product', authenticateAdmin, async (req, res) => {
 app.post('/api/update-product', authenticateAdmin, async (req, res) => {
     try {
         const p = req.body;
+        // Auto-migrate SEO columns if missing
+        const prodCols = [
+            'tags TEXT DEFAULT ""',
+            'seo_keywords TEXT DEFAULT ""',
+            'seo_title TEXT DEFAULT ""',
+            'seo_description TEXT DEFAULT ""',
+            'slug TEXT DEFAULT ""'
+        ];
+        for (const col of prodCols) {
+            try { await queryD1(`ALTER TABLE products ADD COLUMN ${col}`, [], true); } catch(e) {}
+        }
+
         const sql = `
             UPDATE products SET
                 name=?, description=?, category_id=?, base_price=?, flash_sale_price=?,
                 stock_status=?, gallery_images=?, video_url=?, variants=?,
-                is_active=?, is_featured=?, is_add_once=?
+                is_active=?, is_featured=?, is_add_once=?,
+                tags=?, seo_keywords=?, seo_title=?, seo_description=?, slug=?
             WHERE id=?
         `;
         const params = [
@@ -198,6 +226,7 @@ app.post('/api/update-product', authenticateAdmin, async (req, res) => {
             p.video_url || '',
             typeof p.variants === 'string' ? p.variants : JSON.stringify(p.variants || []),
             p.is_active ? 1 : 0, p.is_featured ? 1 : 0, p.is_add_once ? 1 : 0,
+            p.tags || '', p.seo_keywords || p.tags || '', p.seo_title || null, p.seo_description || null, p.slug || null,
             p.id
         ];
         const data = await queryD1(sql, params, true);

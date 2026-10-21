@@ -87,7 +87,17 @@ window.ImageSeoInjector = (function() {
 
         var tagSet = new Set();
 
-        // 1. Product Name keywords
+        // 1. Custom Product Tags (from admin product form - HIGHEST PRIORITY)
+        if (opts.productTags) {
+            var rawTags = typeof opts.productTags === 'string' ? opts.productTags.split(',') : opts.productTags;
+            if (Array.isArray(rawTags)) {
+                rawTags.forEach(function(t) {
+                    if (t && t.trim()) tagSet.add(t.trim());
+                });
+            }
+        }
+
+        // 2. Product Name keywords
         if (opts.productName) {
             tagSet.add(opts.productName.trim());
             // Add individual significant words if product name has multiple words
@@ -96,7 +106,7 @@ window.ImageSeoInjector = (function() {
             });
         }
 
-        // 2. Categories
+        // 3. Categories
         if (Array.isArray(opts.categoryNames)) {
             opts.categoryNames.forEach(function(c) {
                 if (c && typeof c === 'string' && c.trim()) tagSet.add(c.trim());
@@ -107,21 +117,11 @@ window.ImageSeoInjector = (function() {
             });
         }
 
-        // 3. Variant / Color
+        // 4. Variant / Color
         if (opts.variantName && typeof opts.variantName === 'string' && opts.variantName.trim()) {
             tagSet.add(opts.variantName.trim());
             if (opts.productName) {
                 tagSet.add(opts.productName.trim() + ' ' + opts.variantName.trim());
-            }
-        }
-
-        // 4. Custom Product Tags (from admin product form)
-        if (opts.productTags) {
-            var rawTags = typeof opts.productTags === 'string' ? opts.productTags.split(',') : opts.productTags;
-            if (Array.isArray(rawTags)) {
-                rawTags.forEach(function(t) {
-                    if (t && t.trim()) tagSet.add(t.trim());
-                });
             }
         }
 

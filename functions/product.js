@@ -18,11 +18,14 @@ export async function onRequestGet(context) {
 
         const origin = (settings?.site_url || env.SITE_URL || url.origin).replace(/\/+$/, '');
         const storeName = settings?.store_name || "Online Store";
-        const title = `${product.name} — ${storeName}`;
+        const title = (product.seo_title && product.seo_title.trim())
+            ? `${product.seo_title.trim()} — ${storeName}`
+            : `${product.name} — ${storeName}`;
 
-        let rawDesc = (product.description || settings?.seo_description || "").replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
+        let rawDesc = (product.seo_description || product.description || settings?.seo_description || "").replace(/<[^>]*>?/gm, '').replace(/\s+/g, ' ').trim();
         if (rawDesc.length > 160) rawDesc = rawDesc.substring(0, 157) + '...';
         const description = rawDesc || `Buy ${product.name} at best price from ${storeName}. Order online with Cash on Delivery!`;
+        const keywords = product.tags || product.seo_keywords || settings?.seo_keywords || "";
 
         let imgUrl = "";
         try {
@@ -79,6 +82,7 @@ export async function onRequestGet(context) {
     <meta property="og:site_name" content="${escapeAttr(storeName)}">
     <meta property="og:title" content="${escapeAttr(title)}">
     <meta property="og:description" content="${escapeAttr(description)}">
+    <meta name="keywords" content="${escapeAttr(keywords)}">
     <meta property="og:image" content="${escapeAttr(imgUrl)}">
     <meta property="og:url" content="${escapeAttr(canonicalUrl)}">
     <meta property="product:price:amount" content="${finalPrice}">
