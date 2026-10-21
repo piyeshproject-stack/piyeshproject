@@ -382,115 +382,276 @@
 }
 
 /* ── Voice Mode View inside Chat Window ── */
+.ai-btn-header-call {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff !important;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    white-space: nowrap;
+}
+
+.ai-btn-header-call:hover {
+    transform: translateY(-1px) scale(1.03);
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
+}
+
+.ai-btn-header-call.active-call {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.45) !important;
+    animation: micPulseAnim 1.2s infinite alternate;
+}
+
 .ai-voice-panel {
     display: none;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 40px 24px;
+    justify-content: space-between;
+    padding: 24px 20px 20px;
     text-align: center;
-    background: radial-gradient(circle at center, #2e1065 0%, #0f172a 100%);
+    background: radial-gradient(circle at center top, #1e0b38 0%, #0d1117 80%);
     color: #fff;
     flex: 1;
     position: relative;
-    overflow: hidden;
+    overflow-y: auto;
+    z-index: 5;
+    animation: aiMsgFadeIn 0.3s ease-out;
 }
 
 .ai-voice-panel.active {
     display: flex;
 }
 
+.ai-voice-product-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 6px 14px;
+    border-radius: 20px;
+    max-width: 90%;
+    margin-bottom: 8px;
+    font-size: 12px;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ai-voice-product-tag img {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
 .ai-voice-orb {
-    width: 120px;
-    height: 120px;
+    width: 105px;
+    height: 105px;
     border-radius: 50%;
     background: radial-gradient(circle at 30% 30%, #ec4899, #8b5cf6, #3b82f6);
-    box-shadow: 0 0 50px rgba(139, 92, 246, 0.7);
-    margin-bottom: 28px;
+    box-shadow: 0 0 45px rgba(139, 92, 246, 0.65);
+    margin: 10px 0 16px;
     position: relative;
     animation: orbPulse 3s infinite ease-in-out;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    user-select: none;
 }
 
 @keyframes orbPulse {
     0%, 100% { transform: scale(1); box-shadow: 0 0 40px rgba(139, 92, 246, 0.6); }
-    50% { transform: scale(1.12); box-shadow: 0 0 70px rgba(236, 72, 153, 0.8); }
+    50% { transform: scale(1.1); box-shadow: 0 0 65px rgba(236, 72, 153, 0.8); }
 }
 
 .ai-voice-orb.listening {
-    animation: orbListening 1s infinite alternate ease-in-out;
+    animation: orbListening 0.8s infinite alternate ease-in-out;
+    box-shadow: 0 0 65px rgba(59, 130, 246, 0.85), 0 0 110px rgba(236, 72, 153, 0.55);
 }
 
 @keyframes orbListening {
     from { transform: scale(1.05); filter: hue-rotate(0deg); }
-    to { transform: scale(1.22); filter: hue-rotate(90deg); }
+    to { transform: scale(1.22); filter: hue-rotate(75deg); }
+}
+
+.ai-voice-orb.thinking {
+    animation: orbRotate 2s infinite linear;
+    background: conic-gradient(from 0deg, #8b5cf6, #ec4899, #3b82f6, #8b5cf6);
+    box-shadow: 0 0 60px rgba(236, 72, 153, 0.8);
+}
+
+@keyframes orbRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.ai-voice-orb.speaking {
+    animation: orbSpeaking 0.5s infinite alternate ease-in-out;
+    box-shadow: 0 0 75px rgba(16, 185, 129, 0.9);
+    background: radial-gradient(circle at 30% 30%, #34d399, #059669, #0284c7);
+}
+
+@keyframes orbSpeaking {
+    0% { transform: scale(1.02); }
+    100% { transform: scale(1.2); }
 }
 
 .ai-voice-status-title {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 800;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
+    color: #ffffff;
+    letter-spacing: -0.2px;
 }
 
 .ai-voice-status-desc {
-    font-size: 13px;
+    font-size: 12.5px;
     color: #cbd5e1;
     max-width: 320px;
-    line-height: 1.5;
-    margin-bottom: 24px;
+    line-height: 1.4;
+    margin-bottom: 14px;
 }
 
 /* ── Visualizer Waves ── */
 .ai-sound-waves {
     display: flex;
     align-items: center;
-    gap: 4px;
-    height: 40px;
-    margin-bottom: 28px;
+    justify-content: center;
+    gap: 6px;
+    height: 38px;
+    margin-bottom: 14px;
 }
 
 .ai-wave-bar {
-    width: 4px;
-    height: 10px;
-    background: #a855f7;
+    width: 5px;
+    height: 8px;
+    background: linear-gradient(to top, #8b5cf6, #ec4899);
     border-radius: 4px;
-    animation: soundWaveAnim 1.2s infinite ease-in-out;
+    transition: height 0.08s ease, background 0.2s;
+    min-height: 6px;
 }
 
-.ai-sound-waves.active .ai-wave-bar:nth-child(1) { animation-delay: 0.1s; height: 28px; }
-.ai-sound-waves.active .ai-wave-bar:nth-child(2) { animation-delay: 0.3s; height: 38px; }
-.ai-sound-waves.active .ai-wave-bar:nth-child(3) { animation-delay: 0.2s; height: 20px; }
-.ai-sound-waves.active .ai-wave-bar:nth-child(4) { animation-delay: 0.4s; height: 35px; }
-.ai-sound-waves.active .ai-wave-bar:nth-child(5) { animation-delay: 0.15s; height: 26px; }
+.ai-sound-waves.active .ai-wave-bar {
+    background: linear-gradient(to top, #10b981, #38bdf8);
+}
 
-@keyframes soundWaveAnim {
-    0%, 100% { height: 10px; }
-    50% { height: 36px; }
+/* ── Live Transcript Box ── */
+.ai-voice-transcript {
+    width: 100%;
+    max-width: 380px;
+    min-height: 56px;
+    max-height: 100px;
+    overflow-y: auto;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: #f1f5f9;
+    line-height: 1.45;
+    text-align: left;
+    margin-bottom: 16px;
+    scrollbar-width: thin;
+}
+
+.ai-voice-transcript .ai-live-user-speech {
+    color: #93c5fd;
+    font-weight: 600;
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+.ai-voice-transcript .ai-live-ai-speech {
+    color: #a7f3d0;
+    font-weight: 500;
+    word-break: break-word;
 }
 
 .ai-voice-actions {
     display: flex;
     align-items: center;
-    gap: 16px;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.ai-btn-voice-talk {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 28px;
+    border: none;
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    transition: all 0.2s;
+}
+
+.ai-btn-voice-talk:hover {
+    transform: translateY(-1px) scale(1.02);
+}
+
+.ai-btn-voice-talk.recording {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+    box-shadow: 0 4px 18px rgba(239, 68, 68, 0.55) !important;
+    animation: micPulseAnim 1s infinite alternate;
+}
+
+.ai-btn-voice-toggle {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 10px 16px;
+    border-radius: 24px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.ai-btn-voice-toggle:hover {
+    background: rgba(255, 255, 255, 0.22);
 }
 
 .ai-btn-call-end {
     background: #ef4444;
     color: #fff;
-    padding: 12px 24px;
-    border-radius: 30px;
+    padding: 10px 20px;
+    border-radius: 28px;
     border: none;
     font-weight: 700;
-    font-size: 14px;
+    font-size: 13.5px;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
     transition: transform 0.2s;
 }
 
 .ai-btn-call-end:hover {
-    transform: scale(1.05);
+    transform: scale(1.04);
 }
 
 /* ── Footer Input Area ── */

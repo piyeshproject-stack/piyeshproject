@@ -66,12 +66,83 @@
         return clean;
     }
 
+    /**
+     * Build clean, alternating conversation turns for Gemini (WebSocket & REST)
+     * Strictly enforces user -> model -> user -> model alternation and avoids duplicate turns.
+     */
+    function buildConversationTurns(history, prompt, audio) {
+        var turns = [];
+        if (history && Array.isArray(history)) {
+            for (var i = 0; i < history.length; i++) {
+                var item = history[i];
+                var role = (item.role === 'assistant' || item.role === 'model') ? 'model' : 'user';
+                var txt = (item.text || item.content || '').trim();
+                if (!txt) continue;
+
+                // Merge consecutive identical roles to comply with Gemini requirements
+                if (turns.length > 0 && turns[turns.length - 1].role === role) {
+                    var prevText = turns[turns.length - 1].parts[0].text || '';
+                    if (!prevText.includes(txt)) {
+                        turns[turns.length - 1].parts[0].text = prevText + '\n' + txt;
+                    }
+                } else {
+                    turns.push({
+                        role: role,
+                        parts: [{ text: txt }]
+                    });
+                }
+            }
+        }
+
+        // Prepare current user turn parts (Text + Audio if present)
+        var currentParts = [];
+        if (audio && audio.base64) {
+            currentParts.push({
+                inlineData: {
+                    mimeType: audio.mimeType || 'audio/webm',
+                    data: audio.base64
+                }
+            });
+        }
+        if (prompt && prompt.trim()) {
+            currentParts.push({ text: prompt.trim() });
+        }
+
+        if (currentParts.length > 0) {
+            // If turns already end with a user turn, replace or merge to prevent consecutive user turns
+            if (turns.length > 0 && turns[turns.length - 1].role === 'user') {
+                turns[turns.length - 1].parts = currentParts;
+            } else {
+                turns.push({
+                    role: 'user',
+                    parts: currentParts
+                });
+            }
+        }
+
+        // Gemini requires the conversation to start with a 'user' turn
+        while (turns.length > 0 && turns[0].role !== 'user') {
+            turns.shift();
+        }
+
+        // If somehow empty, provide minimal fallback user prompt
+        if (turns.length === 0) {
+            turns.push({
+                role: 'user',
+                parts: [{ text: (prompt && prompt.trim()) || 'হ্যালো' }]
+            });
+        }
+
+        return turns;
+    }
+
     var AIConfig = {
         MODELS: AI_MODELS,
         USER_MODEL: PERMANENT_USER_MODEL,
         AUDIO_MODEL: PERMANENT_USER_MODEL,
         PRIMARY_REST_MODEL: PRIMARY_REST_MODEL,
         normalizeModelId: normalizeModelId,
+        buildConversationTurns: buildConversationTurns,
 
         getConfig: function () {
             var saved = {};
@@ -239,17 +310,13 @@
                             var rawText = event.data instanceof Blob ? await event.data.text() : event.data;
                             var msg = JSON.parse(rawText);
 
-                            // Setup complete -> Send user query
+                            // Setup complete -> Send user query with full conversation history context
                             if (msg.setupComplete !== undefined) {
                                 setupAccepted = true;
+                                var turns = buildConversationTurns(opts.history, opts.prompt, opts.audio);
                                 var clientContentPayload = {
                                     clientContent: {
-                                        turns: [
-                                            {
-                                                role: 'user',
-                                                parts: [{ text: opts.prompt }]
-                                            }
-                                        ],
+                                        turns: turns,
                                         turnComplete: true
                                     }
                                 };
@@ -364,17 +431,7 @@
 
             var chosenModel = normalizeModelId(opts.model || (opts.isAdmin ? config.admin_model : PRIMARY_REST_MODEL));
 
-            var contents = [];
-            if (opts.history && Array.isArray(opts.history)) {
-                opts.history.forEach(function (msg) {
-                    contents.push({
-                        role: msg.role === 'assistant' ? 'model' : 'user',
-                        parts: [{ text: msg.text || msg.content || '' }]
-                    });
-                });
-            }
-            contents.push({ role: 'user', parts: [{ text: opts.prompt }] });
-
+            var contents = buildConversationTurns(opts.history, opts.prompt, opts.audio);
             var payload = { contents: contents };
             if (opts.systemInstruction) {
                 payload.systemInstruction = { parts: [{ text: opts.systemInstruction }] };
