@@ -17,6 +17,10 @@
     <script src="https://cdn.jsdelivr.net/npm/appwrite@16"></script>
     <script src="assets/js/appwrite-init.js"></script>
     <script src="assets/js/cf-db.js"></script>
+    <link rel="stylesheet" href="assets/css/ai-components.css?v=3.9.2">
+    <script src="assets/js/ai-config.js?v=3.9.2"></script>
+    <script src="assets/js/ai-product-chat.js?v=3.9.2"></script>
+    <script src="assets/js/ai-compare.js?v=3.9.2"></script>
     <style>
         .product-page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; padding: 24px 0; width: 100%; max-width: 100%; box-sizing: border-box; }
         .product-gallery-col { width: 100%; max-width: 100%; min-width: 0; display: flex; flex-direction: column; }
@@ -27,7 +31,7 @@
             aspect-ratio: 1;
             border-radius: var(--radius-lg);
             overflow: hidden;
-            background: var(--bg-light);
+            background: #f8fafc;
             border: 1px solid var(--border-light);
             display: flex;
             align-items: center;
@@ -100,19 +104,18 @@
             min-width: 68px;
             max-width: 68px;
             flex-shrink: 0;
+            background: #f8fafc;
             border-radius: 12px;
             overflow: hidden;
-            background: var(--bg-light, #f8fafc);
-            border: 1.5px solid var(--border-light);
             display: flex;
             align-items: center;
             justify-content: center;
+            border: 1.5px solid var(--border-light);
             box-sizing: border-box;
         }
         .gallery-thumb {
             width: 100%;
             height: 100%;
-            border-radius: 10px;
             object-fit: contain;
             cursor: pointer;
             border: 2px solid transparent;
@@ -217,7 +220,7 @@
             <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:16px;">
                 <span class="price-tag" id="currentPrice">৳0</span>
                 <span class="price-old" id="priceOld"></span>
-                <span id="saleLabel" style="display:none;font-size:12px;background:var(--primary);color:#fff;padding:3px 8px;border-radius:20px;font-weight:700;margin-left:6px;">SALE</span>
+                <span id="saleLabel" style="display:none;font-size:12px;background:var(--primary);color:#fff;padding:3px 10px;border-radius:20px;font-weight:700;margin-left:6px;white-space:nowrap;letter-spacing:0.2px;"></span>
             </div>
 
             <!-- Reviews summary -->
@@ -262,12 +265,18 @@
                     </button>
                 </div>
                 <button class="btn btn-outline btn-full" onclick="directOrder()">⚡ Buy Now</button>
-                <button class="btn btn-full" id="msgOrderBtn" style="display:none;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-weight:700;border:none;" onclick="openMsgSheet()">
-                    💬 Order by Message
+                <button type="button" class="btn-ai-ask" id="askAiBtn" onclick="openProductAiChat()">
+                    <span class="ai-sparkle-icon">✨</span>
+                    <span>Ask with AI (পণ্য সম্পর্কে জানুন &amp; ভয়েস কল)</span>
                 </button>
-                <button class="btn btn-full" id="pickupBtn" style="display:none;background:linear-gradient(135deg,#FF9500,#FF6B00);color:#fff;font-weight:700;border:none;" onclick="pickupOrder()">
-                    🚶 Pickup from Store
-                </button>
+                <div id="secondaryOrderBtnsRow" style="display:none;gap:10px;width:100%;align-items:stretch;">
+                    <button class="btn" id="msgOrderBtn" style="display:none;flex:1;min-width:0;width:50%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-weight:700;border:none;justify-content:center;align-items:center;padding:12px 6px;font-size:13px;white-space:nowrap;border-radius:12px;" onclick="openMsgSheet()">
+                        💬 Order by Message
+                    </button>
+                    <button class="btn" id="pickupBtn" style="display:none;flex:1;min-width:0;width:50%;background:linear-gradient(135deg,#FF9500,#FF6B00);color:#fff;font-weight:700;border:none;justify-content:center;align-items:center;padding:12px 6px;font-size:13px;white-space:nowrap;border-radius:12px;" onclick="pickupOrder()">
+                        🚶 Pickup from Store
+                    </button>
+                </div>
             </div>
 
             <!-- Product Meta -->
@@ -554,6 +563,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     Promise.all([p1, p2, p3, p4, p5, p6]).then(function(results) {
         settings = results[0].data || {};
+        window.siteSettings = settings;
         try { if (typeof settings.messaging_apps === 'string') settings.messaging_apps = JSON.parse(settings.messaging_apps); } catch(e){}
         product  = results[1].data;
         var ratings = results[2].data || [];
@@ -645,13 +655,15 @@ document.addEventListener('DOMContentLoaded', function() {
         try { setupReviewUpload(); } catch(e) {}
         try { loadRelatedProducts(); } catch(e) { console.error('related error:', e); }
 
-        if ((settings.allow_whatsapp_order || settings.allow_msg_order) && settings.messaging_apps) {
-            document.getElementById('msgOrderBtn').style.display = 'flex';
-        }
+        var showMsg = !!((settings.allow_whatsapp_order || settings.allow_msg_order) && settings.messaging_apps);
+        var showPickup = !!settings.allow_pickup;
+        var msgBtn = document.getElementById('msgOrderBtn');
+        var pickupBtn = document.getElementById('pickupBtn');
+        var secRow = document.getElementById('secondaryOrderBtnsRow');
 
-        if (settings.allow_pickup) {
-            document.getElementById('pickupBtn').style.display = 'flex';
-        }
+        if (msgBtn) msgBtn.style.display = showMsg ? 'flex' : 'none';
+        if (pickupBtn) pickupBtn.style.display = showPickup ? 'flex' : 'none';
+        if (secRow) secRow.style.display = (showMsg || showPickup) ? 'flex' : 'none';
 
         document.getElementById('pageLoader').style.display = 'none';
         document.getElementById('productPage').style.display = 'grid';
@@ -698,7 +710,8 @@ function productCardHtml(p) {
     else if (p.gallery_images && p.gallery_images.length) imgUrl = p.gallery_images[0];
     var price = p.flash_sale_price > 0 ? p.base_price - p.flash_sale_price : p.base_price;
     var origPrice = p.flash_sale_price > 0 ? '<del style="font-size:12px;color:#999;">৳' + p.base_price + '</del>' : '';
-    var badge = p.flash_sale_price > 0 ? '<div style="position:absolute;top:8px;left:8px;background:#ff4444;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;">৳' + p.flash_sale_price + ' OFF</div>' : '';
+    var pct = (p.base_price > 0 && p.flash_sale_price > 0) ? Math.round((p.flash_sale_price / p.base_price) * 100) : 0;
+    var badge = p.flash_sale_price > 0 ? '<div style="position:absolute;top:8px;left:8px;background:var(--primary,#ff4444);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.15);letter-spacing:0.2px;">৳' + p.flash_sale_price + ' ছাড় (-' + pct + '%)</div>' : '';
     return '<a href="product.html?id=' + p.id + '" style="text-decoration:none;color:inherit;">' +
         '<div class="product-card" style="cursor:pointer;">' +
             '<div class="product-img-wrap" style="position:relative;">' +
@@ -930,8 +943,12 @@ function renderProduct(p) {
     document.getElementById('thumbsRow').innerHTML = thumbsHtml;
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
-    if (allMedia.length > 0) setMedia(defaultIndex);
-    else document.getElementById('mediaContainer').innerHTML = '';
+    if (allMedia.length > 0) {
+        setMedia(defaultIndex);
+        initGalleryGestures();
+    } else {
+        document.getElementById('mediaContainer').innerHTML = '';
+    }
 
     // Colors
     if (variants.length) {
@@ -1041,11 +1058,18 @@ function updatePrice(size) {
     document.getElementById('currentPrice').textContent = '৳' + finalPrice;
 
     if (flashDiscount > 0) {
-        document.getElementById('priceOld').textContent = '৳' + (base + extra);
-        document.getElementById('saleLabel').style.display = 'inline-flex';
+        var oldPrice = base + extra;
+        var pct = oldPrice > 0 ? Math.round((flashDiscount / oldPrice) * 100) : 0;
+        document.getElementById('priceOld').textContent = '৳' + oldPrice;
+        var saleEl = document.getElementById('saleLabel');
+        if (saleEl) {
+            saleEl.textContent = '৳' + flashDiscount + ' ছাড় (-' + pct + '%)';
+            saleEl.style.display = 'inline-flex';
+        }
     } else {
         document.getElementById('priceOld').textContent = '';
-        document.getElementById('saleLabel').style.display = 'none';
+        var saleEl = document.getElementById('saleLabel');
+        if (saleEl) saleEl.style.display = 'none';
     }
 
     var stickyPrice = document.getElementById('stickyPrice');
@@ -1058,6 +1082,11 @@ function setMedia(index) {
     var m = window.productMedia[index];
     var container = document.getElementById('mediaContainer');
     
+    if (container) {
+        container.style.transition = 'none';
+        container.style.transform = 'translateX(0)';
+    }
+
     var codeBadge = m.code ? '<div style="position:absolute;top:12px;left:12px;background:rgba(0,0,0,0.7);color:#fff;padding:4px 12px;border-radius:8px;font-weight:800;font-size:14px;letter-spacing:1px;z-index:20;backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,0.2);">' + m.code + '</div>' : '';
 
     if (m.type === 'image') {
@@ -1066,7 +1095,7 @@ function setMedia(index) {
         var codeLabel = m.code ? ' (' + m.code + ')' : '';
         var imgAlt = (product ? product.name : 'Product') + colorLabel + codeLabel + ' — ' + storeName;
         var imgTitle = (product ? product.name : 'Product') + colorLabel + codeLabel;
-        container.innerHTML = '<img id="mainImg" src="' + m.src + '" alt="' + escHtmlP(imgAlt) + '" title="' + escHtmlP(imgTitle) + '" loading="lazy" style="width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center;display:block;">' + codeBadge;
+        container.innerHTML = '<img id="mainImg" src="' + m.src + '" alt="' + escHtmlP(imgAlt) + '" title="' + escHtmlP(imgTitle) + '" loading="lazy" style="width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center;display:block;cursor:zoom-in;">' + codeBadge;
     } else if (m.embed === 'video') {
         container.innerHTML = '<video src="' + m.src + '" controls playsinline style="width:100%;height:100%;background:#000;object-fit:contain;"></video>';
     } else {
@@ -1090,6 +1119,343 @@ function changeMedia(delta) {
     var newIdx = (window.currentMediaIndex + delta + len) % len;
     setMedia(newIdx);
 }
+
+// ── Gallery Gestures (Swipe & Desktop Hover Zoom) ─────────────
+var galleryGestureBound = false;
+function initGalleryGestures() {
+    if (galleryGestureBound) return;
+    var galleryMain = document.getElementById('galleryMain');
+    var mediaContainer = document.getElementById('mediaContainer');
+    if (!galleryMain || !mediaContainer) return;
+    galleryGestureBound = true;
+
+    // 1. Desktop Hover Zoom
+    galleryMain.addEventListener('mousemove', function(e) {
+        if (window.innerWidth <= 768) return;
+        var img = document.getElementById('mainImg');
+        if (!img) return;
+        var rect = galleryMain.getBoundingClientRect();
+        var x = ((e.clientX - rect.left) / rect.width) * 100;
+        var y = ((e.clientY - rect.top) / rect.height) * 100;
+        img.style.transformOrigin = x + '% ' + y + '%';
+        img.style.transform = 'scale(2.2)';
+    });
+
+    galleryMain.addEventListener('mouseleave', function() {
+        var img = document.getElementById('mainImg');
+        if (img) {
+            img.style.transform = 'scale(1)';
+            img.style.transformOrigin = 'center center';
+        }
+    });
+
+    // 2. Touch & Pointer Drag / Swipe
+    var isDragging = false;
+    var startX = 0, startY = 0, deltaX = 0;
+    var startTime = 0;
+    var isHorizontal = null;
+
+    galleryMain.style.touchAction = 'pan-y';
+
+    function onStart(e) {
+        if (e.target.closest && e.target.closest('.gallery-btn')) return;
+        if (e.button && e.button !== 0) return;
+        var p = e.touches ? e.touches[0] : e;
+        isDragging = true;
+        startX = p.clientX;
+        startY = p.clientY;
+        deltaX = 0;
+        startTime = Date.now();
+        isHorizontal = null;
+        mediaContainer.style.transition = 'none';
+    }
+
+    function onMove(e) {
+        if (!isDragging) return;
+        var p = e.touches ? e.touches[0] : e;
+        var dx = p.clientX - startX;
+        var dy = p.clientY - startY;
+
+        if (isHorizontal === null) {
+            if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+                isHorizontal = Math.abs(dx) >= Math.abs(dy);
+            }
+        }
+
+        if (!isHorizontal) return;
+
+        if (e.cancelable && e.touches) e.preventDefault();
+
+        var len = (window.productMedia || []).length;
+        if (len <= 1) {
+            dx = dx * 0.2;
+        }
+
+        deltaX = dx;
+        mediaContainer.style.transform = 'translateX(' + dx + 'px)';
+    }
+
+    function onEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+
+        var len = (window.productMedia || []).length;
+        var elapsed = Math.max(1, Date.now() - startTime);
+        var velocity = deltaX / elapsed;
+
+        if (isHorizontal && len > 1) {
+            if (deltaX < -45 || velocity < -0.3) {
+                mediaContainer.style.transition = 'transform 0.25s ease-out';
+                mediaContainer.style.transform = 'translateX(-100%)';
+                setTimeout(function() {
+                    changeMedia(1);
+                    mediaContainer.style.transition = 'none';
+                    mediaContainer.style.transform = 'translateX(0)';
+                }, 220);
+                return;
+            } else if (deltaX > 45 || velocity > 0.3) {
+                mediaContainer.style.transition = 'transform 0.25s ease-out';
+                mediaContainer.style.transform = 'translateX(100%)';
+                setTimeout(function() {
+                    changeMedia(-1);
+                    mediaContainer.style.transition = 'none';
+                    mediaContainer.style.transform = 'translateX(0)';
+                }, 220);
+                return;
+            }
+        }
+
+        // Tap detected (movement < 8px)
+        if (Math.abs(deltaX) < 8) {
+            var curMedia = window.productMedia && window.productMedia[window.currentMediaIndex];
+            if (curMedia && curMedia.type === 'image') {
+                openZoomModal();
+                return;
+            }
+        }
+
+        // Snap back
+        mediaContainer.style.transition = 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        mediaContainer.style.transform = 'translateX(0)';
+    }
+
+    galleryMain.addEventListener('touchstart', onStart, { passive: true });
+    galleryMain.addEventListener('touchmove', onMove, { passive: false });
+    galleryMain.addEventListener('touchend', onEnd);
+    galleryMain.addEventListener('touchcancel', onEnd);
+
+    galleryMain.addEventListener('mousedown', onStart);
+    window.addEventListener('mousemove', function(e) { if (isDragging) onMove(e); });
+    window.addEventListener('mouseup', function(e) { if (isDragging) onEnd(e); });
+}
+
+// ── Interactive Fullscreen Photo Zoom Lightbox ───────────────
+var zoomScale = 1;
+var zoomPanX = 0, zoomPanY = 0;
+var zoomIsPanning = false;
+var zoomPanStartX = 0, zoomPanStartY = 0;
+var zoomLastTap = 0;
+var zoomInitialPinchDist = 0;
+var zoomStartScale = 1;
+
+function openZoomModal() {
+    var curIdx = window.currentMediaIndex || 0;
+    var media = window.productMedia || [];
+    if (!media.length) return;
+
+    var modal = document.getElementById('imageZoomModal');
+    if (!modal) return;
+
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    updateZoomView(curIdx);
+    renderZoomThumbs();
+}
+
+function closeZoomModal() {
+    var modal = document.getElementById('imageZoomModal');
+    if (!modal) return;
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+    resetZoom();
+}
+
+function updateZoomView(idx) {
+    if (!window.productMedia || !window.productMedia.length) return;
+    window.currentMediaIndex = idx;
+    setMedia(idx);
+
+    var m = window.productMedia[idx];
+    var zoomImg = document.getElementById('zoomImg');
+    var zoomTitle = document.getElementById('zoomTitle');
+    var zoomCounter = document.getElementById('zoomCounter');
+
+    if (m && m.src) {
+        zoomImg.src = m.src;
+    }
+    if (zoomTitle) {
+        zoomTitle.textContent = (product ? product.name : 'Product');
+    }
+    if (zoomCounter) {
+        zoomCounter.textContent = (idx + 1) + ' / ' + window.productMedia.length;
+    }
+    resetZoom();
+
+    // Active thumb in zoom
+    document.querySelectorAll('.zoom-thumb').forEach(function(t, i) {
+        t.style.border = (i === idx) ? '2px solid #fff' : '2px solid transparent';
+        t.style.opacity = (i === idx) ? '1' : '0.6';
+    });
+}
+
+function renderZoomThumbs() {
+    var row = document.getElementById('zoomThumbsRow');
+    if (!row) return;
+    var media = window.productMedia || [];
+    if (media.length <= 1) {
+        row.style.display = 'none';
+        return;
+    }
+    row.style.display = 'flex';
+    row.innerHTML = media.map(function(m, i) {
+        var active = i === window.currentMediaIndex;
+        return '<img class="zoom-thumb" src="' + m.src + '" onclick="updateZoomView(' + i + ')" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0;opacity:' + (active?'1':'0.6') + ';border:' + (active?'2px solid #fff':'2px solid transparent') + ';">';
+    }).join('');
+}
+
+function applyZoomTransform() {
+    var img = document.getElementById('zoomImg');
+    if (!img) return;
+    img.style.transform = 'translate(' + zoomPanX + 'px, ' + zoomPanY + 'px) scale(' + zoomScale + ')';
+}
+
+function zoomIn() {
+    zoomScale = Math.min(4.5, zoomScale * 1.4);
+    applyZoomTransform();
+}
+
+function zoomOut() {
+    zoomScale = Math.max(1, zoomScale / 1.4);
+    if (zoomScale === 1) {
+        zoomPanX = 0; zoomPanY = 0;
+    }
+    applyZoomTransform();
+}
+
+function resetZoom() {
+    zoomScale = 1;
+    zoomPanX = 0;
+    zoomPanY = 0;
+    var img = document.getElementById('zoomImg');
+    if (img) {
+        img.style.transition = 'transform 0.2s ease-out';
+        applyZoomTransform();
+        setTimeout(function() { if (img) img.style.transition = ''; }, 220);
+    }
+}
+
+function zoomNext() {
+    var len = (window.productMedia || []).length;
+    if (len <= 1) return;
+    var nextIdx = (window.currentMediaIndex + 1) % len;
+    updateZoomView(nextIdx);
+}
+
+function zoomPrev() {
+    var len = (window.productMedia || []).length;
+    if (len <= 1) return;
+    var prevIdx = (window.currentMediaIndex - 1 + len) % len;
+    updateZoomView(prevIdx);
+}
+
+// Attach zoom viewport gesture handlers
+document.addEventListener('DOMContentLoaded', function() {
+    var vp = document.getElementById('zoomViewport');
+    if (!vp) return;
+
+    // Double tap to zoom
+    vp.addEventListener('click', function(e) {
+        if (e.target.closest && e.target.closest('button')) return;
+        var now = Date.now();
+        if (now - zoomLastTap < 300) {
+            // Double tap!
+            if (zoomScale > 1.2) {
+                resetZoom();
+            } else {
+                zoomScale = 2.5;
+                applyZoomTransform();
+            }
+        }
+        zoomLastTap = now;
+    });
+
+    // Touch pinch and pan
+    vp.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 2) {
+            var dx = e.touches[0].clientX - e.touches[1].clientX;
+            var dy = e.touches[0].clientY - e.touches[1].clientY;
+            zoomInitialPinchDist = Math.hypot(dx, dy);
+            zoomStartScale = zoomScale;
+        } else if (e.touches.length === 1) {
+            zoomIsPanning = true;
+            zoomPanStartX = e.touches[0].clientX - zoomPanX;
+            zoomPanStartY = e.touches[0].clientY - zoomPanY;
+        }
+    }, { passive: true });
+
+    vp.addEventListener('touchmove', function(e) {
+        if (e.touches.length === 2 && zoomInitialPinchDist > 0) {
+            e.preventDefault();
+            var dx = e.touches[0].clientX - e.touches[1].clientX;
+            var dy = e.touches[0].clientY - e.touches[1].clientY;
+            var dist = Math.hypot(dx, dy);
+            zoomScale = Math.max(1, Math.min(4.5, zoomStartScale * (dist / zoomInitialPinchDist)));
+            applyZoomTransform();
+        } else if (e.touches.length === 1 && zoomIsPanning) {
+            if (zoomScale > 1) {
+                e.preventDefault();
+                zoomPanX = e.touches[0].clientX - zoomPanStartX;
+                zoomPanY = e.touches[0].clientY - zoomPanStartY;
+                applyZoomTransform();
+            }
+        }
+    }, { passive: false });
+
+    vp.addEventListener('touchend', function(e) {
+        if (e.touches.length < 2) {
+            zoomInitialPinchDist = 0;
+        }
+        if (e.touches.length === 0) {
+            zoomIsPanning = false;
+            if (zoomScale <= 1) {
+                resetZoom();
+            }
+        }
+    });
+
+    // Mouse drag pan when zoomed in
+    vp.addEventListener('mousedown', function(e) {
+        if (e.button !== 0 || zoomScale <= 1) return;
+        zoomIsPanning = true;
+        zoomPanStartX = e.clientX - zoomPanX;
+        zoomPanStartY = e.clientY - zoomPanY;
+        vp.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!zoomIsPanning || zoomScale <= 1) return;
+        zoomPanX = e.clientX - zoomPanStartX;
+        zoomPanY = e.clientY - zoomPanStartY;
+        applyZoomTransform();
+    });
+
+    window.addEventListener('mouseup', function() {
+        if (zoomIsPanning) {
+            zoomIsPanning = false;
+            vp.style.cursor = 'grab';
+        }
+    });
+});
 
 function changeQty(delta) {
     var max = selectedSize ? selectedSize.stock : 999;
@@ -1514,10 +1880,32 @@ function updateCartBadge() {
 }
 
 function scrollToOrder() {
-    var el = document.getElementById('colorSection') || document.getElementById('mainOrderButtons');
-    if(el) {
-        var y = el.getBoundingClientRect().top + window.scrollY - 80; // offset for nav
-        window.scrollTo({top: y, behavior: 'smooth'});
+    var target = null;
+    var colorSec = document.getElementById('colorSection');
+    var sizeSec = document.getElementById('sizeSection');
+    var mainBtns = document.getElementById('mainOrderButtons');
+    
+    // Pick the first visible purchase section (colors, sizes, or action buttons)
+    if (colorSec && colorSec.offsetParent !== null) {
+        target = colorSec;
+    } else if (sizeSec && sizeSec.offsetParent !== null) {
+        target = sizeSec;
+    } else if (mainBtns && mainBtns.offsetParent !== null) {
+        target = mainBtns;
+    } else {
+        target = document.getElementById('productPage') || document.body;
+    }
+
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (mainBtns) {
+            mainBtns.style.transition = 'box-shadow 0.3s ease, transform 0.3s ease';
+            mainBtns.style.boxShadow = '0 0 0 3px rgba(139,26,26,0.3), 0 8px 24px rgba(0,0,0,0.08)';
+            mainBtns.style.borderRadius = '16px';
+            setTimeout(function() {
+                mainBtns.style.boxShadow = '';
+            }, 1600);
+        }
     }
 }
 
@@ -1547,6 +1935,35 @@ document.addEventListener('scroll', function() {
     <!-- Shared Custom Right Click / Long-Press Menu -->
     <script src="assets/js/context-menu.js"></script>
 <script src="assets/js/tracking.js"></script>
+<!-- Interactive Fullscreen Photo Zoom Panel -->
+<div id="imageZoomModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:9999999;flex-direction:column;backdrop-filter:blur(8px);user-select:none;-webkit-user-select:none;">
+    <!-- Zoom Top Bar -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;color:#fff;background:rgba(0,0,0,0.5);z-index:10;">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <span id="zoomCounter" style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.12);padding:3px 10px;border-radius:12px;">1 / 1</span>
+            <span id="zoomTitle" style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" onclick="zoomIn()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" title="Zoom In">+</button>
+            <button type="button" onclick="zoomOut()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" title="Zoom Out">−</button>
+            <button type="button" onclick="resetZoom()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" title="Reset Zoom">↺</button>
+            <button type="button" onclick="closeZoomModal()" style="width:36px;height:36px;border-radius:50%;background:#ff3b30;border:none;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:4px;" title="Close">✕</button>
+        </div>
+    </div>
+
+    <!-- Zoom Viewport -->
+    <div id="zoomViewport" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab;">
+        <img id="zoomImg" src="" style="max-width:92%;max-height:86%;object-fit:contain;transition:transform 0.15s ease-out;pointer-events:none;" alt="">
+        
+        <!-- Prev & Next Overlay Buttons -->
+        <button id="zoomPrevBtn" onclick="zoomPrev()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:5;">‹</button>
+        <button id="zoomNextBtn" onclick="zoomNext()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:5;">›</button>
+    </div>
+
+    <!-- Bottom Thumbnails -->
+    <div id="zoomThumbsRow" style="display:flex;gap:8px;padding:12px 16px;background:rgba(0,0,0,0.6);overflow-x:auto;justify-content:center;align-items:center;min-height:64px;"></div>
+</div>
+
 </body>
 </html>
 

@@ -20,6 +20,10 @@
     <script src="assets/js/supabase-init.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/appwrite@14"></script>
     <script src="assets/js/appwrite-init.js"></script>
+    <link rel="stylesheet" href="assets/css/ai-components.css?v=3.9.2">
+    <script src="assets/js/ai-config.js?v=3.9.2"></script>
+    <script src="assets/js/ai-product-chat.js?v=3.9.2"></script>
+    <script src="assets/js/ai-compare.js?v=3.9.2"></script>
     <link rel="stylesheet" href="assets/css/premium-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" type="module"></script>
@@ -43,8 +47,7 @@
     </div>
     <div id="mMenuCats"></div>
     <hr style="margin:16px 0;border-color:#eee;">
-    <a href="track.html" style="display:flex;align-items:center;gap:10px;padding:10px;font-weight:600;color:#444;border-radius:10px;background:#f5f5f5;margin-bottom:8px;"><i data-lucide="package" class="lucide-icon icon-bounce"></i> Track Order</a>
-    <a href="admin/index.html" style="display:flex;align-items:center;gap:10px;padding:10px;font-weight:600;color:#444;border-radius:10px;background:#f5f5f5;"><i data-lucide="lock" class="lucide-icon"></i> Admin Panel</a>
+    <a href="track.html" style="display:flex;align-items:center;gap:10px;padding:10px;font-weight:600;color:#444;border-radius:10px;background:#f5f5f5;"><i data-lucide="package" class="lucide-icon icon-bounce"></i> Track Order</a>
 </div>
 
 <!-- Navbar -->
@@ -522,18 +525,25 @@ function renderHero(banners) {
 
 
 
-    if (banners.length > 1) startSlider(banners.length);
+    if (banners.length > 1) {
+        startSlider(banners.length);
+        initHeroSwipe(banners.length);
+    }
 }
 
 var slideIdx = 0;
 var slideTimer;
 function startSlider(count) {
     clearInterval(slideTimer);
-    slideTimer = setInterval(function() { nextSlide(count); }, 4000);
+    slideTimer = setInterval(function() { nextSlide(count); }, 4500);
 }
 function goSlide(i) {
     slideIdx = i;
-    document.getElementById('sliderTrack').style.transform = 'translateX(-' + (i * 100) + '%)';
+    var track = document.getElementById('sliderTrack');
+    if (track) {
+        track.style.transition = 'transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        track.style.transform = 'translateX(-' + (i * 100) + '%)';
+    }
     document.querySelectorAll('.dot').forEach(function(d, j) { d.classList.toggle('active', j===i); });
 }
 function nextSlide(count) {
@@ -543,6 +553,97 @@ function nextSlide(count) {
 function prevSlide() {
     var total = document.querySelectorAll('.slide').length;
     goSlide((slideIdx - 1 + total) % total);
+}
+
+function initHeroSwipe(total) {
+    var slider = document.querySelector('.hero-slider');
+    var track = document.getElementById('sliderTrack');
+    if (!slider || !track || total <= 1) return;
+
+    var isDragging = false;
+    var startX = 0, startY = 0, deltaX = 0;
+    var startTime = 0;
+    var isHorizontal = null;
+
+    slider.style.touchAction = 'pan-y';
+    slider.style.userSelect = 'none';
+
+    function onPointerDown(e) {
+        if (e.button && e.button !== 0) return;
+        isDragging = true;
+        var p = e.touches ? e.touches[0] : e;
+        startX = p.clientX;
+        startY = p.clientY;
+        deltaX = 0;
+        startTime = Date.now();
+        isHorizontal = null;
+        clearInterval(slideTimer);
+        track.style.transition = 'none';
+        slider.style.cursor = 'grabbing';
+    }
+
+    function onPointerMove(e) {
+        if (!isDragging) return;
+        var p = e.touches ? e.touches[0] : e;
+        var dx = p.clientX - startX;
+        var dy = p.clientY - startY;
+
+        if (isHorizontal === null) {
+            if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+                isHorizontal = Math.abs(dx) >= Math.abs(dy);
+            }
+        }
+
+        if (!isHorizontal) return;
+
+        if (e.cancelable && e.touches) {
+            e.preventDefault();
+        }
+
+        if ((slideIdx === 0 && dx > 0) || (slideIdx === total - 1 && dx < 0)) {
+            dx = dx * 0.35;
+        }
+
+        deltaX = dx;
+        var sliderWidth = slider.clientWidth || 1;
+        var currentPx = -(slideIdx * sliderWidth) + dx;
+        track.style.transform = 'translateX(' + currentPx + 'px)';
+    }
+
+    function onPointerUp() {
+        if (!isDragging) return;
+        isDragging = false;
+        slider.style.cursor = '';
+        track.style.transition = 'transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
+        if (isHorizontal) {
+            var sliderWidth = slider.clientWidth || 1;
+            var elapsed = Math.max(1, Date.now() - startTime);
+            var velocity = deltaX / elapsed;
+            var ratio = deltaX / sliderWidth;
+
+            if (ratio < -0.18 || velocity < -0.32) {
+                nextSlide(total);
+            } else if (ratio > 0.18 || velocity > 0.32) {
+                prevSlide();
+            } else {
+                goSlide(slideIdx);
+            }
+        } else {
+            goSlide(slideIdx);
+        }
+
+        startSlider(total);
+    }
+
+    slider.addEventListener('touchstart', onPointerDown, { passive: true });
+    slider.addEventListener('touchmove', onPointerMove, { passive: false });
+    slider.addEventListener('touchend', onPointerUp);
+    slider.addEventListener('touchcancel', onPointerUp);
+
+    slider.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('mousemove', function(e) { if (isDragging) onPointerMove(e); });
+    window.addEventListener('mouseup', function(e) { if (isDragging) onPointerUp(e); });
 }
 
 function renderCategories(cats) {
@@ -577,10 +678,9 @@ function renderCategories(cats) {
         html += '<a href="shop.html?cat=' + c.id + '" style="display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--text-dark);min-width:60px;flex-shrink:0; text-align:center;">' +
             iconHtml + '<span style="font-size:12px;font-weight:600;line-height:1.2;">' + c.name + '</span></a>';
             
-        // Keep mobile menu as is
-        var mmIcon = iconUrl.startsWith('<') ? '<span style="width:20px;height:20px;display:inline-block;">'+iconUrl+'</span>' : (iconUrl ? '<img src="'+iconUrl+'" style="width:20px;height:20px;object-fit:cover;border-radius:4px;">' : '📁');
-        mmHtml += '<a href="shop.html?cat=' + c.id + '" style="display:flex;align-items:center;gap:8px;padding:10px;font-weight:600;color:#444;border-radius:10px;margin-bottom:4px;">' +
-            mmIcon + c.name + '</a>';
+        // Clean mobile menu category item with strictly bounded icon
+        var mmIcon = iconUrl.startsWith('<') ? '<span class="mmenu-cat-icon">' + iconUrl + '</span>' : (iconUrl ? '<span class="mmenu-cat-icon"><img src="' + iconUrl + '" alt=""></span>' : '<span class="mmenu-cat-icon">📁</span>');
+        mmHtml += '<a href="shop.html?cat=' + c.id + '">' + mmIcon + '<span>' + c.name + '</span></a>';
     });
 
     row.innerHTML = html;
@@ -692,16 +792,19 @@ function productCardHtml(p) {
 
     var finalPrice = p.base_price;
     var saleHtml = '';
+    var badgeSaleHtml = '';
     if (p.flash_sale_price > 0) {
         finalPrice = p.base_price - p.flash_sale_price;
         saleHtml = '<span class="product-old-price">৳' + p.base_price + '</span>';
+        var pct = p.base_price > 0 ? Math.round((p.flash_sale_price / p.base_price) * 100) : 0;
+        badgeSaleHtml = '<span class="product-badge badge-sale">৳' + p.flash_sale_price + ' ছাড় (-' + pct + '%)</span>';
     }
 
     return '<a href="product.html?id=' + p.id + '" class="product-card">' +
         '<div class="product-img-wrap">' +
             (img ? '<img src="' + img + '" alt="' + p.name + '" loading="lazy">' : '<div style="height:200px;background:linear-gradient(135deg,#f0f0f5,#e0e0ea);display:flex;align-items:center;justify-content:center;font-size:48px;"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i></div>') +
             '<div class="product-badges">' +
-                (p.flash_sale_price > 0 ? '<span class="product-badge badge-sale">SALE</span>' : '') +
+                badgeSaleHtml +
                 (isNewProduct(p.created_at) ? '<span class="product-badge badge-new">NEW</span>' : '') +
             '</div>' +
         '</div>' +

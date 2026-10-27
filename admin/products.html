@@ -16,50 +16,56 @@
     <script src="../assets/js/imgbb-uploader.js?v=1791100000002"></script>
     <script src="../assets/js/r2-uploader.js"></script>
     <script src="../assets/js/piexif.js"></script>
-    <script src="../assets/js/image-seo-injector.js"></script>
+    <script src="../assets/js/image-seo-injector.js?v=3.8.9"></script>
+    <script src="../assets/js/ai-config.js?v=3.8.9"></script>
     <style>
-        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
         .product-card {
-            background: var(--bg-secondary); border: 1px solid var(--border);
+            background: #FFFFFF; border: 1px solid var(--border);
             border-radius: var(--radius-md); overflow: hidden; transition: var(--transition);
+            box-shadow: var(--shadow-sm);
         }
-        .product-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
-        .product-img { width: 100%; height: 180px; object-fit: cover; background: var(--bg-card); display: block; }
-        .product-card-body { padding: 14px; }
-        .product-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .product-card:hover {
+            border-color: rgba(139, 26, 26, 0.3);
+            box-shadow: var(--shadow-card-hover);
+            transform: translateY(-2px);
+        }
+        .product-img { width: 100%; height: 180px; object-fit: cover; background: var(--bg-card-subtle); display: block; }
+        .product-card-body { padding: 14px 16px; }
+        .product-name { font-weight: 700; font-size: 14px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-primary); }
         .product-price { font-size: 16px; font-weight: 800; color: var(--accent); }
-        .product-old-price { font-size: 12px; color: var(--text-secondary); text-decoration: line-through; margin-left: 6px; }
-        .product-card-footer { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--border); }
+        .product-old-price { font-size: 12px; color: var(--text-muted); text-decoration: line-through; margin-left: 6px; }
+        .product-card-footer { display: flex; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--bg-card-subtle); }
 
         /* Variant Builder */
-        .variant-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 12px; }
+        .variant-item { background: var(--bg-card-subtle); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 12px; }
         .variant-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .color-preview { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.2); }
+        .color-preview { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(139, 26, 26, 0.2); }
         .size-item { display: grid; grid-template-columns: 80px 1fr 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px; }
         .gallery-url-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
 
         /* -- Rich Text Editor ---------------------------------- */
-        .rte-wrap { border: 1.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--bg-card); transition: border-color 0.2s; }
-        .rte-wrap:focus-within { border-color: var(--accent,#007AFF); box-shadow: 0 0 0 3px rgba(0,122,255,0.12); }
-        .rte-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 8px 10px; background: rgba(255,255,255,0.04); border-bottom: 1px solid var(--border); }
-        .rte-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary,#888); font-size: 13px; font-weight: 700; cursor: pointer; padding: 0 8px; transition: background 0.15s, color 0.15s; font-family: inherit; }
-        .rte-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-primary,#fff); }
+        .rte-wrap { border: 1.5px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: #FFFFFF; transition: var(--transition); }
+        .rte-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--border-focus-ring); }
+        .rte-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 8px 10px; background: var(--bg-card-subtle); border-bottom: 1px solid var(--border); }
+        .rte-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary); font-size: 13px; font-weight: 700; cursor: pointer; padding: 0 8px; transition: var(--transition); font-family: inherit; }
+        .rte-btn:hover { background: var(--bg-card-hover); color: var(--accent); }
         .rte-sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
-        .rte-select { height: 32px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card,#1c1c1e); color: var(--text-secondary,#888); font-size: 12px; padding: 0 6px; cursor: pointer; font-family: inherit; }
-        .rte-select option { background: var(--bg-card,#1c1c1e); }
-        .rte-editor { min-height: 130px; max-height: 300px; overflow-y: auto; padding: 12px 14px; font-size: 14px; line-height: 1.8; color: var(--text-primary,#fff); outline: none; }
-        .rte-editor:empty:before { content: attr(data-placeholder); color: var(--text-secondary,#888); pointer-events: none; }
+        .rte-select { height: 32px; border-radius: 6px; border: 1px solid var(--border); background: #FFFFFF; color: var(--text-primary); font-size: 12px; padding: 0 6px; cursor: pointer; font-family: inherit; }
+        .rte-select option { background: #FFFFFF; color: var(--text-primary); }
+        .rte-editor { min-height: 130px; max-height: 300px; overflow-y: auto; padding: 12px 14px; font-size: 14px; line-height: 1.8; color: var(--text-primary); outline: none; }
+        .rte-editor:empty:before { content: attr(data-placeholder); color: var(--text-muted); pointer-events: none; }
         .rte-editor b, .rte-editor strong { font-weight: 700; }
         .rte-editor i, .rte-editor em { font-style: italic; }
         .rte-editor u { text-decoration: underline; }
         .rte-editor s { text-decoration: line-through; }
         .rte-editor ul { list-style: disc; padding-left: 22px; margin: 4px 0; }
         .rte-editor ol { list-style: decimal; padding-left: 22px; margin: 4px 0; }
-        .rte-editor h1 { font-size: 1.5em; font-weight: 800; margin: 6px 0 2px; }
-        .rte-editor h2 { font-size: 1.25em; font-weight: 700; margin: 6px 0 2px; }
-        .rte-editor h3 { font-size: 1.1em; font-weight: 700; margin: 4px 0 2px; }
-        .rte-editor blockquote { border-left: 3px solid var(--accent,#007AFF); padding-left: 12px; color: var(--text-secondary,#888); margin: 4px 0; font-style: italic; }
-        .rte-char-count { font-size: 11px; color: var(--text-secondary,#888); text-align: right; padding: 4px 12px 6px; }
+        .rte-editor h1 { font-size: 1.5em; font-weight: 800; margin: 6px 0 2px; color: var(--text-primary); }
+        .rte-editor h2 { font-size: 1.25em; font-weight: 700; margin: 6px 0 2px; color: var(--text-primary); }
+        .rte-editor h3 { font-size: 1.1em; font-weight: 700; margin: 4px 0 2px; color: var(--text-primary); }
+        .rte-editor blockquote { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--text-secondary); margin: 4px 0; font-style: italic; }
+        .rte-char-count { font-size: 11px; color: var(--text-muted); text-align: right; padding: 4px 12px 6px; }
     </style>
     <link rel="stylesheet" href="../assets/css/premium-icons.css">
 </head>
@@ -75,8 +81,11 @@
                     <div class="page-subtitle" id="prodCountSub">Loading...</div>
                 </div>
             </div>
-            <div class="header-right">
+            <div class="header-right" style="display:flex;gap:8px;align-items:center;">
                 <button class="btn btn-primary" onclick="openProductModal()">+ Add Product</button>
+                <button class="btn" onclick="openProductModal(); setTimeout(function(){ var inp = document.getElementById('importProductUrl'); if (inp) inp.focus(); }, 150);" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; border: none; font-weight: 700; box-shadow: 0 2px 6px rgba(79,70,229,0.3); display: inline-flex; align-items: center; gap: 6px;">
+                    <i data-lucide="link-2" class="lucide-icon" style="width:14px;height:14px;"></i> Import by URL
+                </button>
             </div>
         </header>
 
@@ -135,6 +144,32 @@
             </div>
 
             <div style="max-height:75vh;overflow-y:auto;padding-right:4px;">
+
+            <!-- Quick Import from URL Card (Partner / Same Site Auto-Scrape) -->
+            <div id="quickImportCard" style="background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.08)); border: 1.5px dashed rgba(99,102,241,0.4); border-radius: var(--radius-md); padding: 14px 16px; margin-bottom: 18px; box-shadow: 0 2px 8px rgba(99,102,241,0.06);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                    <div style="font-size: 13.5px; font-weight: 800; color: #4338ca; display: flex; align-items: center; gap: 7px;">
+                        <i data-lucide="link-2" class="lucide-icon" style="width: 17px; height: 17px; color: #6366f1;"></i> Auto Import Product by URL (Partner / Same Site)
+                    </div>
+                    <span style="font-size: 11px; font-weight: 700; color: #4f46e5; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.25); padding: 3px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px;">
+                        ⚡ 1-Click Auto Fill
+                    </span>
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px; line-height: 1.5;">
+                    পার্টনার শপ বা একই কোডবেজের সাইটের যেকোনো প্রডাক্ট পেজ লিংক দিন (যেমন: <code>https://royalpanjabi.shop/product.html?id=prod_8</code>)। স্বয়ংক্রিয়ভাবে প্রডাক্টের নাম, দাম, ছবি, ডেসক্রিপশন এবং কালার ও সাইজ ভ্যারিয়েন্ট লোড হয়ে ফর্মে বসে যাবে।
+                </div>
+                <div style="display: flex; gap: 8px; align-items: stretch; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 240px; position: relative;">
+                        <input class="form-input" id="importProductUrl" placeholder="https://partner-shop.com/product.html?id=prod_..." style="padding-left: 36px; font-size: 13px;" onkeydown="if(event.key==='Enter'){event.preventDefault();importProductFromUrl();}">
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #6366f1; pointer-events: none; font-size: 14px;">🔗</span>
+                    </div>
+                    <button type="button" id="importProductBtn" class="btn" onclick="importProductFromUrl()" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; font-weight: 700; font-size: 13px; padding: 0 18px; border: none; border-radius: 8px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 6px rgba(79,70,229,0.3);">
+                        <i data-lucide="download-cloud" class="lucide-icon" style="width: 15px; height: 15px;"></i> Fetch &amp; Fill
+                    </button>
+                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('importProductUrl').value='';document.getElementById('importUrlStatus').style.display='none';" title="Clear" style="padding: 0 10px; font-size: 12px;">Clear</button>
+                </div>
+                <div id="importUrlStatus" style="display: none; margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; line-height: 1.4;"></div>
+            </div>
 
             <!-- Basic Info -->
             <div class="form-row">
@@ -245,14 +280,29 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 10px;">
-                    <label class="form-label">🏷️ Product Focus Tags / Keywords</label>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                        <label class="form-label" style="margin-bottom:0;">🏷️ Product Focus Tags / Keywords</label>
+                        <div style="display:flex;gap:6px;align-items:center;">
+                            <button type="button" class="btn btn-sm" onclick="appendAutoTagsToField()" style="background: rgba(0,122,255,0.12); color: var(--accent,#007AFF); border: 1px solid rgba(0,122,255,0.3); border-radius: 6px; padding: 3px 8px; font-weight: 600; font-size: 11px; cursor: pointer;" title="Append auto category/store tags into this input">
+                                <span>➕ Auto Tags</span>
+                            </button>
+                            <button type="button" class="btn btn-sm" onclick="generateAISeoTags()" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; border-radius: 6px; padding: 3px 10px; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
+                                <span>✨ AI Generate Tags &amp; Title</span>
+                            </button>
+                        </div>
+                    </div>
                     <input class="form-input" id="pTags" placeholder="e.g. leather wallet, cowhide, slim wallet, gents gift (কমা দিয়ে লিখো)" oninput="updateSeoTagPreview()">
                 </div>
 
                 <!-- Live Tag Preview -->
                 <div style="margin-bottom: 12px; padding: 8px 12px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border);">
-                    <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        📸 Active Photo Metadata Tags Preview (ছবির ভেতরে যাবে):
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <div style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">
+                            📸 Active Photo &amp; SEO Tags (Auto + Manual একত্র):
+                        </div>
+                        <div style="font-size: 10.5px; color: var(--text-muted);">
+                            <span style="color:#28a745;font-weight:700;">✍️ Manual</span> | <span style="color:var(--accent,#007AFF);font-weight:700;">🏷️ Auto</span>
+                        </div>
                     </div>
                     <div id="photoTagPreviewBadge" style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center; min-height: 24px;">
                         <span style="color: #8E8E93; font-size: 11px;">প্রোডাক্টের নাম বা ট্যাগ লিখলে এখানে দেখাবে...</span>
@@ -617,16 +667,46 @@
             categoryNames: cats,
             productTags: pTags
         });
+        var manualList = pTags.toLowerCase().split(',').map(function(s){ return s.trim(); }).filter(Boolean);
         var badgeWrap = document.getElementById('photoTagPreviewBadge');
         if (badgeWrap) {
             if (merged.length) {
-                badgeWrap.innerHTML = merged.slice(0, 12).map(function(t) {
-                    return '<span class="tag-chip" style="display:inline-block;background:rgba(0,122,255,0.12);color:var(--accent,#007AFF);border:1px solid rgba(0,122,255,0.25);border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;margin:2px 3px 2px 0;">🏷️ ' + t + '</span>';
-                }).join('') + (merged.length > 12 ? '<span style="font-size:11px;color:#8E8E93;">+' + (merged.length - 12) + ' more</span>' : '');
+                badgeWrap.innerHTML = merged.slice(0, 24).map(function(t) {
+                    var isManual = manualList.includes(t.toLowerCase());
+                    var bg = isManual ? 'rgba(52,199,89,0.14)' : 'rgba(0,122,255,0.12)';
+                    var border = isManual ? 'rgba(52,199,89,0.35)' : 'rgba(0,122,255,0.25)';
+                    var color = isManual ? '#28a745' : 'var(--accent,#007AFF)';
+                    var icon = isManual ? '✍️ ' : '🏷️ ';
+                    var tooltip = isManual ? 'Manual Tag' : 'Auto Tag';
+                    return '<span class="tag-chip" style="display:inline-block;background:' + bg + ';color:' + color + ';border:1px solid ' + border + ';border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600;margin:2px 3px 2px 0;" title="' + tooltip + '">' + icon + t + '</span>';
+                }).join('') + (merged.length > 24 ? '<span style="font-size:11px;color:#8E8E93;">+' + (merged.length - 24) + ' more</span>' : '');
             } else {
                 badgeWrap.innerHTML = '<span style="color:#8E8E93;font-size:11px;">প্রোডাক্টের নাম বা ট্যাগ লিখলে এখানে দেখাবে...</span>';
             }
         }
+    }
+
+    function appendAutoTagsToField() {
+        if (typeof ImageSeoInjector === 'undefined') return;
+        var pName = document.getElementById('pName') ? document.getElementById('pName').value.trim() : '';
+        var cats = getSelectedCategoryNames();
+        var curVal = document.getElementById('pTags') ? document.getElementById('pTags').value.trim() : '';
+        var autoOnly = ImageSeoInjector.buildMergedTags({
+            productName: pName,
+            categoryNames: cats,
+            productTags: ''
+        });
+        if (!autoOnly.length) {
+            showToast('No auto tags available yet. Select category or enter product name.', 'info');
+            return;
+        }
+        var curList = curVal ? curVal.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+        var tagSet = new Set(curList);
+        autoOnly.forEach(function(t) { tagSet.add(t); });
+        var merged = Array.from(tagSet).join(', ');
+        document.getElementById('pTags').value = merged;
+        updateSeoTagPreview();
+        showToast('Auto tags merged into keywords field!', 'success');
     }
 
     // ── Product Modal ────────────────────────────────────────
@@ -635,6 +715,13 @@
         galleryUrls = [''];
         variants    = [];
         document.getElementById('productModalTitle').textContent = 'Add New Product';
+        
+        // Reset import URL inputs
+        var importInp = document.getElementById('importProductUrl');
+        if (importInp) importInp.value = '';
+        var importStatus = document.getElementById('importUrlStatus');
+        if (importStatus) { importStatus.style.display = 'none'; importStatus.innerHTML = ''; }
+
         document.getElementById('pName').value      = '';
         document.getElementById('pSku').value       = '';
         document.getElementById('pDesc').innerHTML  = ''; document.getElementById('rteCharCount').textContent = '0 chars';
@@ -657,6 +744,355 @@
         document.getElementById('productModal').classList.add('show');
     }
 
+    // ── Quick Import Product from URL ─────────────────────────
+    async function importProductFromUrl() {
+        var urlInput = document.getElementById('importProductUrl');
+        var btn = document.getElementById('importProductBtn');
+        var statusEl = document.getElementById('importUrlStatus');
+        if (!urlInput || !btn) return;
+
+        var rawUrl = urlInput.value.trim();
+        if (!rawUrl) {
+            showToast('দয়া করে একটি প্রোডাক্ট URL পেস্ট করুন', 'error');
+            urlInput.focus();
+            return;
+        }
+
+        if (!/^https?:\/\//i.test(rawUrl)) {
+            rawUrl = 'https://' + rawUrl;
+        }
+
+        var parsedUrl;
+        try {
+            parsedUrl = new URL(rawUrl);
+        } catch (e) {
+            showToast('ভুল URL ফরম্যাট! সঠিক ওয়েবসাইট লিঙ্ক দিন', 'error');
+            return;
+        }
+
+        var originalBtnText = btn.innerHTML;
+        btn.innerHTML = '⏳ Fetching...';
+        btn.disabled = true;
+
+        function setStatus(msg, type) {
+            if (!statusEl) return;
+            statusEl.style.display = 'block';
+            if (type === 'success') {
+                statusEl.style.background = 'rgba(52, 199, 89, 0.12)';
+                statusEl.style.color = '#28a745';
+                statusEl.style.border = '1px solid rgba(52, 199, 89, 0.3)';
+            } else if (type === 'info') {
+                statusEl.style.background = 'rgba(0, 122, 255, 0.1)';
+                statusEl.style.color = '#007AFF';
+                statusEl.style.border = '1px solid rgba(0, 122, 255, 0.25)';
+            } else {
+                statusEl.style.background = 'rgba(255, 59, 48, 0.12)';
+                statusEl.style.color = '#d32f2f';
+                statusEl.style.border = '1px solid rgba(255, 59, 48, 0.3)';
+            }
+            statusEl.innerHTML = msg;
+        }
+
+        setStatus('🔍 প্রডাক্ট ডাটা খোঁজা হচ্ছে...', 'info');
+
+        try {
+            // Detect product ID from search params or pathname
+            var productId = parsedUrl.searchParams.get('id') ||
+                            parsedUrl.searchParams.get('product_id') ||
+                            parsedUrl.searchParams.get('pid') ||
+                            parsedUrl.searchParams.get('p');
+
+            if (!productId) {
+                var pathMatch = parsedUrl.pathname.match(/\/product(?:s)?\/([a-zA-Z0-9_\-]+)/i) ||
+                                parsedUrl.pathname.match(/\/p\/([a-zA-Z0-9_\-]+)/i);
+                if (pathMatch && pathMatch[1]) {
+                    productId = pathMatch[1].replace(/\.html$/i, '');
+                }
+            }
+
+            var origin = parsedUrl.origin;
+            var productData = null;
+
+            async function fetchWithTimeout(url, timeoutMs) {
+                var controller = new AbortController();
+                var timer = setTimeout(function() { controller.abort(); }, timeoutMs || 8000);
+                try {
+                    var res = await fetch(url, { signal: controller.signal });
+                    clearTimeout(timer);
+                    return res;
+                } catch (err) {
+                    clearTimeout(timer);
+                    throw err;
+                }
+            }
+
+            async function tryFetchJson(url) {
+                try {
+                    var res = await fetchWithTimeout(url, 7000);
+                    if (res.ok) {
+                        var data = await res.json();
+                        return data;
+                    }
+                } catch (e) {}
+                return null;
+            }
+
+            // 1. Direct endpoint lookup if productId is present
+            if (productId) {
+                setStatus('⚡ সাইট API থেকে প্রোডাক্ট সংগ্রহ করা হচ্ছে (' + productId + ')...', 'info');
+                var apiDirect = origin + '/api/public-data?product_id=' + encodeURIComponent(productId);
+                var resJson = await tryFetchJson(apiDirect);
+                if (resJson && resJson.product) {
+                    productData = resJson.product;
+                }
+
+                // If direct failed (CORS block on external domain), try via CORS proxy
+                if (!productData) {
+                    var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(apiDirect);
+                    var proxyJson = await tryFetchJson(proxyUrl);
+                    if (proxyJson && proxyJson.product) {
+                        productData = proxyJson.product;
+                    }
+                }
+
+                if (!productData) {
+                    var proxyUrl2 = 'https://corsproxy.io/?' + encodeURIComponent(apiDirect);
+                    var proxyJson2 = await tryFetchJson(proxyUrl2);
+                    if (proxyJson2 && proxyJson2.product) {
+                        productData = proxyJson2.product;
+                    }
+                }
+            }
+
+            // 2. Try fetching /api/public-data catalog
+            if (!productData) {
+                setStatus('🔍 সাইটের ক্যাটালগ লিস্ট স্ক্যান করা হচ্ছে...', 'info');
+                var listUrls = [
+                    origin + '/api/public-data',
+                    origin + '/api/public-data?all=1'
+                ];
+                for (var i = 0; i < listUrls.length; i++) {
+                    var u = listUrls[i];
+                    var listRes = await tryFetchJson(u);
+                    if (!listRes) {
+                        listRes = await tryFetchJson('https://api.allorigins.win/raw?url=' + encodeURIComponent(u));
+                    }
+                    if (listRes) {
+                        var list = (listRes.data && listRes.data.products) ? listRes.data.products : (listRes.products || []);
+                        if (Array.isArray(list) && list.length) {
+                            if (productId) {
+                                productData = list.find(function(p) { return String(p.id) === String(productId) || p.slug === productId; });
+                            }
+                            if (!productData) {
+                                var slugCandidate = parsedUrl.searchParams.get('slug') || parsedUrl.pathname.split('/').pop().replace(/\.html$/i, '');
+                                if (slugCandidate) {
+                                    productData = list.find(function(p) {
+                                        return (p.slug && p.slug === slugCandidate) || (p.name && p.name.toLowerCase().includes(slugCandidate.toLowerCase().replace(/[-_]/g, ' ')));
+                                    });
+                                }
+                            }
+                            if (productData) break;
+                        }
+                    }
+                }
+            }
+
+            // 3. Fallback: Fetch original web page HTML and scrape via DOM & JSON-LD
+            if (!productData) {
+                setStatus('🌐 ওয়েব পেজ কনটেন্ট স্ক্র্যাপ করা হচ্ছে...', 'info');
+                var htmlText = null;
+                try {
+                    var pageRes = await fetchWithTimeout('https://api.allorigins.win/raw?url=' + encodeURIComponent(rawUrl), 9000);
+                    if (pageRes.ok) htmlText = await pageRes.text();
+                } catch (e) {}
+
+                if (!htmlText) {
+                    try {
+                        var pageRes2 = await fetchWithTimeout('https://corsproxy.io/?' + encodeURIComponent(rawUrl), 9000);
+                        if (pageRes2.ok) htmlText = await pageRes2.text();
+                    } catch (e) {}
+                }
+
+                if (htmlText) {
+                    var doc = new DOMParser().parseFromString(htmlText, 'text/html');
+
+                    // Check script tags for embedded product JSON
+                    var scripts = doc.querySelectorAll('script');
+                    for (var s = 0; s < scripts.length; s++) {
+                        var content = scripts[s].textContent || '';
+                        if (content.includes('gallery_images') || content.includes('variants') || content.includes('flash_sale_price')) {
+                            var match = content.match(/product\s*=\s*(\{[\s\S]*?\});/i) ||
+                                        content.match(/allProducts\s*=\s*(\[[\s\S]*?\]);/i);
+                            if (match && match[1]) {
+                                try {
+                                    var parsed = JSON.parse(match[1]);
+                                    if (Array.isArray(parsed) && parsed.length) {
+                                        productData = (productId ? parsed.find(function(p){ return String(p.id) === String(productId); }) : parsed[0]) || parsed[0];
+                                    } else if (parsed && (parsed.name || parsed.base_price)) {
+                                        productData = parsed;
+                                    }
+                                } catch (pe) {}
+                            }
+                        }
+                        if (scripts[s].type === 'application/ld+json' && !productData) {
+                            try {
+                                var ld = JSON.parse(content);
+                                var item = ld['@type'] === 'Product' ? ld : (Array.isArray(ld['@graph']) ? ld['@graph'].find(function(x){return x['@type']==='Product';}) : null);
+                                if (item) {
+                                    productData = {
+                                        name: item.name,
+                                        description: item.description,
+                                        base_price: item.offers ? (item.offers.price || item.offers.highPrice || item.offers.lowPrice) : null,
+                                        gallery_images: Array.isArray(item.image) ? item.image : (item.image ? [item.image] : []),
+                                        sku: item.sku || null
+                                    };
+                                }
+                            } catch (le) {}
+                        }
+                        if (productData) break;
+                    }
+
+                    // Scrape DOM fallback
+                    if (!productData) {
+                        var ogTitle = (doc.querySelector('meta[property="og:title"]') || {}).content || doc.title || '';
+                        var ogDesc = (doc.querySelector('meta[property="og:description"]') || doc.querySelector('meta[name="description"]') || {}).content || '';
+                        var ogImage = (doc.querySelector('meta[property="og:image"]') || {}).content || '';
+                        var priceEl = doc.querySelector('.price-tag, .product-price, .current-price, [data-price]');
+                        var priceText = priceEl ? priceEl.textContent : '';
+                        var parsedPrice = parseInt((priceText.replace(/[^0-9]/g, '')) || '0', 10);
+
+                        var scrapedImgs = [];
+                        if (ogImage) scrapedImgs.push(ogImage);
+                        doc.querySelectorAll('.gallery-thumb, .gallery-main img, .product-gallery img').forEach(function(img) {
+                            var src = img.getAttribute('src') || img.getAttribute('data-src');
+                            if (src && !scrapedImgs.includes(src) && !src.includes('avatar') && !src.includes('logo')) {
+                                if (!src.startsWith('http')) {
+                                    try { src = new URL(src, origin).href; } catch(e){}
+                                }
+                                scrapedImgs.push(src);
+                            }
+                        });
+
+                        var titleClean = ogTitle.split('—')[0].split('-')[0].split('|')[0].trim();
+                        if (titleClean) {
+                            productData = {
+                                name: titleClean,
+                                description: ogDesc,
+                                base_price: parsedPrice || null,
+                                gallery_images: scrapedImgs
+                            };
+                        }
+                    }
+                }
+            }
+
+            if (!productData || (!productData.name && !productData.title)) {
+                setStatus('❌ প্রোডাক্ট ডাটা পাওয়া যায়নি! লিংকটি সঠিক কিনা বা সাইটটি অ্যাক্সেসযোগ্য কিনা যাচাই করুন।', 'error');
+                showToast('প্রোডাক্ট ডাটা পাওয়া যায়নি', 'error');
+                return;
+            }
+
+            // Fill all form fields from productData!
+            var prodName = productData.name || productData.title || '';
+            document.getElementById('pName').value = prodName;
+            document.getElementById('pSku').value = productData.sku || '';
+
+            // Description
+            var descHtml = productData.description || '';
+            document.getElementById('pDesc').innerHTML = descHtml;
+            var charCount = document.getElementById('pDesc').innerText.trim().length;
+            document.getElementById('rteCharCount').textContent = charCount + ' chars';
+
+            // Prices
+            if (productData.base_price !== undefined && productData.base_price !== null) {
+                document.getElementById('pBasePrice').value = productData.base_price;
+            }
+            if (productData.flash_sale_price !== undefined && productData.flash_sale_price !== null) {
+                document.getElementById('pFlashPrice').value = productData.flash_sale_price;
+            }
+            if (productData.flash_sale_end) {
+                document.getElementById('pFlashEnd').value = productData.flash_sale_end.substring(0, 16);
+            }
+
+            // Video
+            if (productData.video_url) {
+                document.getElementById('pVideoUrl').value = productData.video_url;
+            }
+            if (productData.video_type) {
+                document.getElementById('pVideoType').value = productData.video_type;
+            }
+
+            // Gallery Images
+            var gImages = productData.gallery_images;
+            if (typeof gImages === 'string') {
+                try { gImages = JSON.parse(gImages); } catch (e) { gImages = [gImages]; }
+            }
+            if (Array.isArray(gImages) && gImages.length) {
+                galleryUrls = gImages.filter(Boolean);
+            } else if (productData.image) {
+                galleryUrls = [productData.image];
+            } else {
+                galleryUrls = [''];
+            }
+            renderGallery();
+
+            // Variants
+            var vData = productData.variants;
+            if (typeof vData === 'string') {
+                try { vData = JSON.parse(vData); } catch (e) { vData = []; }
+            }
+            if (Array.isArray(vData) && vData.length) {
+                variants = JSON.parse(JSON.stringify(vData));
+            } else {
+                variants = [];
+            }
+            renderVariants();
+
+            // SEO and Tags
+            if (document.getElementById('pTags')) {
+                document.getElementById('pTags').value = productData.tags || productData.seo_keywords || '';
+            }
+            if (document.getElementById('pSeoTitle')) {
+                document.getElementById('pSeoTitle').value = productData.seo_title || prodName;
+            }
+            if (document.getElementById('pSeoSlug')) {
+                document.getElementById('pSeoSlug').value = productData.slug || productData.seo_slug || '';
+            }
+            if (document.getElementById('pSeoDesc')) {
+                document.getElementById('pSeoDesc').value = productData.seo_description || '';
+            }
+            if (typeof updateSeoTagPreview === 'function') {
+                updateSeoTagPreview();
+            }
+
+            // Active toggle
+            if (productData.is_active !== undefined) {
+                setToggle('pActive', Boolean(productData.is_active));
+            }
+            if (productData.is_featured !== undefined) {
+                setToggle('pFeatured', Boolean(productData.is_featured));
+            }
+            if (productData.is_add_once !== undefined) {
+                setToggle('pAddOnce', Boolean(productData.is_add_once));
+            }
+
+            var successMsg = '✅ <b>' + (prodName || 'Product') + '</b> সফলভাবে ইম্পোর্ট হয়েছে! (' + galleryUrls.length + 'টি ছবি, ' + variants.length + 'টি ভ্যারিয়েন্ট লোড হয়েছে)';
+            setStatus(successMsg, 'success');
+            showToast('✅ প্রোডাক্ট সফলভাবে ইম্পোর্ট হয়েছে!', 'success');
+
+        } catch (err) {
+            console.error('Import product error:', err);
+            setStatus('❌ ইম্পোর্টে ত্রুটি: ' + (err.message || 'নেটওয়ার্ক সমস্যা'), 'error');
+            showToast('ইম্পোর্ট ফেইল্ড: ' + err.message, 'error');
+        } finally {
+            btn.innerHTML = originalBtnText;
+            btn.disabled = false;
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+        }
+    }
+
     function editProduct(id) {
         var p = allProducts.find(function(x) { return x.id === id; });
         if (!p) return;
@@ -677,7 +1113,7 @@
         document.getElementById('pVideoType').value  = p.video_type || 'auto';
         if (document.getElementById('pTags')) document.getElementById('pTags').value = p.tags || p.seo_keywords || '';
         if (document.getElementById('pSeoTitle')) document.getElementById('pSeoTitle').value = p.seo_title || '';
-        if (document.getElementById('pSeoSlug')) document.getElementById('pSeoSlug').value = p.slug || '';
+        if (document.getElementById('pSeoSlug')) document.getElementById('pSeoSlug').value = p.slug || p.seo_slug || '';
         if (document.getElementById('pSeoDesc')) document.getElementById('pSeoDesc').value = p.seo_description || '';
         
         // Fetch categories for this product
@@ -1048,7 +1484,7 @@
             selectedCats.push(cb.value);
         });
 
-        var tagsVal = document.getElementById('pTags') ? document.getElementById('pTags').value.trim() : '';
+        var manualTags = document.getElementById('pTags') ? document.getElementById('pTags').value.trim() : '';
         var seoTitleVal = document.getElementById('pSeoTitle') ? document.getElementById('pSeoTitle').value.trim() : '';
         var seoSlugVal = document.getElementById('pSeoSlug') ? document.getElementById('pSeoSlug').value.trim() : '';
         var seoDescVal = document.getElementById('pSeoDesc') ? document.getElementById('pSeoDesc').value.trim() : '';
@@ -1056,6 +1492,20 @@
         if (!seoSlugVal && typeof ImageSeoInjector !== 'undefined') {
             seoSlugVal = ImageSeoInjector.slugify(name);
         }
+
+        // Always preserve both manual tags and automatic tags so nothing is lost!
+        var selectedCatNames = getSelectedCategoryNames();
+        var mergedTagArray = [];
+        if (typeof ImageSeoInjector !== 'undefined') {
+            mergedTagArray = ImageSeoInjector.buildMergedTags({
+                productName: name,
+                categoryNames: selectedCatNames,
+                productTags: manualTags
+            });
+        } else {
+            mergedTagArray = manualTags ? manualTags.split(',').map(function(s){return s.trim();}).filter(Boolean) : [];
+        }
+        var combinedTagsVal = mergedTagArray.length ? mergedTagArray.join(', ') : (manualTags || '');
 
         var payload = {
             name:             name,
@@ -1069,8 +1519,8 @@
             is_active:        document.getElementById('pActive').classList.contains('on'),
             is_featured:      document.getElementById('pFeatured').classList.contains('on'),
             is_add_once:      document.getElementById('pAddOnce').classList.contains('on'),
-            tags:             tagsVal || null,
-            seo_keywords:     tagsVal || null,
+            tags:             combinedTagsVal || null,
+            seo_keywords:     combinedTagsVal || null,
             seo_title:        seoTitleVal || null,
             seo_description:  seoDescVal || null,
             slug:             seoSlugVal || null,
@@ -1153,6 +1603,11 @@
                 is_active:        payload.is_active,
                 is_featured:      payload.is_featured,
                 is_add_once:      payload.is_add_once,
+                tags:             payload.tags,
+                seo_keywords:     payload.seo_keywords,
+                seo_title:        payload.seo_title,
+                seo_description:  payload.seo_description,
+                slug:             payload.slug,
                 gallery_images:   payload.gallery_images,
                 variants:         JSON.stringify(payload.variants) // Complex object হলে JSON string
             };
@@ -1378,42 +1833,133 @@
     })();
     function closeModal(id) { document.getElementById(id).classList.remove('show'); }
     
-    // AI Description Generator
+    // AI Description Generator (Google AI Studio / Gemini Integration)
     async function generateAIDesc() {
         const productName = document.getElementById('pName').value.trim();
+        const basePrice = document.getElementById('pBasePrice').value.trim();
         if (!productName) {
-            alert('Please enter a Product Name first before generating a description.');
+            showToast('⚠️ Please enter a Product Name first', 'warning');
             document.getElementById('pName').focus();
             return;
         }
 
         const ed = document.getElementById('pDesc');
         const oldContent = ed.innerHTML;
-        ed.innerHTML = '<span style="color:#8E8E93;"><i class="lucide-icon" data-lucide="loader-2"></i> AI is thinking... Please wait...</span>';
+        const existingText = ed.innerText.trim();
+
+        ed.innerHTML = '<span style="color:#7c3aed;font-weight:600;"><i class="lucide-icon" data-lucide="loader-2"></i> ✨ Gemini AI বিস্তারিত ও প্রফেশনাল ডেসক্রিপশন তৈরি করছে...</span>';
         if(typeof lucide !== 'undefined') lucide.createIcons();
 
+        var promptParts = [
+            'পণ্যটির নাম: "' + productName + '"' + (basePrice ? ' (মূল্য: ৳' + basePrice + ')' : '')
+        ];
+
+        if (existingText && existingText.length > 5 && !existingText.includes('Gemini AI')) {
+            promptParts.push('ব্যবহারকারী/মার্চেন্ট পণ্যটির নিচের তথ্য ও মূল ফিচারসমূহ উল্লেখ করেছেন:');
+            promptParts.push('"""\n' + existingText + '\n"""');
+            promptParts.push('নির্দেশনা:');
+            promptParts.push('১. উপরে মার্চেন্টের দেওয়া প্রতিটি ফিচার, সুবিধা এবং স্পেসিফিকেশন অবশ্যই বজায় রাখতে হবে এবং সেগুলোকে আরও আকর্ষণীয়ভাবে উপস্থাপন করতে হবে।');
+            promptParts.push('২. শুধুমাত্র ২ লাইন নয়, বরং একটি পূর্ণাঙ্গ, তথ্যবহুল ও আকর্ষণীয় প্রিমিয়াম ই-কমার্স ডেসক্রিপশন বাংলায় (বাংলা ভাষায়) লিখুন।');
+        } else {
+            promptParts.push('নির্দেশনা:');
+            promptParts.push('এই পণ্যটির জন্য একটি আকর্ষণীয়, তথ্যবহুল ও প্রিমিয়াম ই-কমার্স প্রোডাক্ট ডেসক্রিপশন বাংলায় লিখুন (শুধুমাত্র ২ লাইন নয়, পূর্ণাঙ্গ ও আকর্ষণীয় ডেসক্রিপশন হতে হবে)।');
+        }
+
+        promptParts.push('ডেসক্রিপশনের কাঠামো এমন রাখুন:');
+        promptParts.push('- সুন্দর আকর্ষণীয় পরিচিতি প্যারাগ্রাফ (<p>)');
+        promptParts.push('- প্রধান প্রধান আকর্ষণীয় ফিচার ও সুবিধাসমূহ (বুলেট পয়েন্ট সহ <ul>, <li>, <strong>)');
+        promptParts.push('- টেকনিক্যাল স্পেসিফিকেশন ও ব্যবহারের নিয়ম (প্রযোজ্য ক্ষেত্রে)');
+        promptParts.push('- কেন এই পণ্যটি কিনবেন / প্যাকেজে কী থাকছে');
+        promptParts.push('শুধুমাত্র পরিচ্ছন্ন HTML ট্যাগ (<p>, <ul>, <li>, <strong>, <br>) ব্যবহার করে রিটার্ন দিন। কোনো প্রকার ব্যাকটিক (```html) ব্যবহার করবেন না।');
+
+        var prompt = promptParts.join('\n');
+
         try {
+            // First try client-side Google AI Studio configured key
+            if (typeof AIConfig !== 'undefined') {
+                const res = await AIConfig.generateText({
+                    isAdmin: true,
+                    prompt: prompt,
+                    systemInstruction: 'You are an expert e-commerce copywriter. Write a persuasive, detailed, and high-converting product description in Bengali. Always retain and expand on user-provided feature notes. Format with clean HTML (<p>, <ul>, <li>, <strong>) without markdown code blocks.'
+                });
+                if (res && res.text) {
+                    ed.innerHTML = res.text.replace(/```html/gi, '').replace(/```/g, '').trim();
+                    updateRteCharCount();
+                    showToast('✅ Description generated with Gemini AI (' + res.modelUsed + ')!', 'success');
+                    return;
+                }
+            }
+
+            // Fallback to server endpoint
             const token = localStorage.getItem('adminToken');
             const response = await fetch('/api/ai-generate', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token
-                },
-                body: JSON.stringify({ prompt: "Write an attractive product description for: " + productName })
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ prompt: prompt })
             });
             const data = await response.json();
-
             if (data.success && data.result) {
-                ed.innerHTML = data.result;
+                ed.innerHTML = data.result.replace(/```html/gi, '').replace(/```/g, '').trim();
                 updateRteCharCount();
+                showToast('✅ Description generated!', 'success');
             } else {
-                alert('AI Generation Failed: ' + (data.error || 'Unknown error'));
+                showToast('❌ AI Generation Failed: ' + (data.error || 'Check AI settings'), 'error');
                 ed.innerHTML = oldContent;
             }
         } catch (e) {
-            alert('Error calling AI: ' + e.message);
+            showToast('❌ AI Error: ' + e.message, 'error');
             ed.innerHTML = oldContent;
+        }
+    }
+
+    // AI SEO Tags & Title Generator
+    async function generateAISeoTags() {
+        const productName = document.getElementById('pName').value.trim();
+        if (!productName) {
+            showToast('⚠️ Please enter a Product Name first', 'warning');
+            document.getElementById('pName').focus();
+            return;
+        }
+
+        showToast('⏳ Generating SEO tags & keywords with Gemini AI...', 'info');
+
+        try {
+            if (typeof AIConfig !== 'undefined') {
+                const prompt = 'Analyze this product and generate 8-10 high-search-volume SEO focus tags (comma-separated) and an optimized SEO Title for Google search in Bangladesh: "' + productName + '". Return JSON: {"tags": "tag1, tag2, tag3, tag4", "seo_title": "SEO Optimized Title"}';
+                const res = await AIConfig.generateText({
+                    isAdmin: true,
+                    prompt: prompt,
+                    systemInstruction: 'You are an expert e-commerce SEO specialist. Return ONLY valid JSON format.'
+                });
+
+                var cleaned = (res.text || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+                var jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    var parsed = JSON.parse(jsonMatch[0]);
+                    if (parsed.tags && document.getElementById('pTags')) {
+                        var existing = document.getElementById('pTags').value.trim();
+                        if (existing) {
+                            var tagSet = new Set(existing.split(',').map(function(s){ return s.trim(); }).filter(Boolean));
+                            parsed.tags.split(',').forEach(function(s){
+                                var t = s.trim();
+                                if (t) tagSet.add(t);
+                            });
+                            document.getElementById('pTags').value = Array.from(tagSet).join(', ');
+                        } else {
+                            document.getElementById('pTags').value = parsed.tags;
+                        }
+                        if (typeof updateSeoTagPreview === 'function') updateSeoTagPreview();
+                    }
+                    if (parsed.seo_title && document.getElementById('pSeoTitle')) {
+                        document.getElementById('pSeoTitle').value = parsed.seo_title;
+                    }
+                    showToast('✅ SEO Tags & Title generated with ' + res.modelUsed + '!', 'success');
+                    return;
+                }
+            }
+            showToast('⚠️ AI Key not configured in Settings.', 'warning');
+        } catch (e) {
+            showToast('❌ SEO Generator Error: ' + e.message, 'error');
         }
     }
     </script>
