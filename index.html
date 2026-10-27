@@ -525,18 +525,25 @@ function renderHero(banners) {
 
 
 
-    if (banners.length > 1) startSlider(banners.length);
+    if (banners.length > 1) {
+        startSlider(banners.length);
+        initHeroSwipe(banners.length);
+    }
 }
 
 var slideIdx = 0;
 var slideTimer;
 function startSlider(count) {
     clearInterval(slideTimer);
-    slideTimer = setInterval(function() { nextSlide(count); }, 4000);
+    slideTimer = setInterval(function() { nextSlide(count); }, 4500);
 }
 function goSlide(i) {
     slideIdx = i;
-    document.getElementById('sliderTrack').style.transform = 'translateX(-' + (i * 100) + '%)';
+    var track = document.getElementById('sliderTrack');
+    if (track) {
+        track.style.transition = 'transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        track.style.transform = 'translateX(-' + (i * 100) + '%)';
+    }
     document.querySelectorAll('.dot').forEach(function(d, j) { d.classList.toggle('active', j===i); });
 }
 function nextSlide(count) {
@@ -546,6 +553,97 @@ function nextSlide(count) {
 function prevSlide() {
     var total = document.querySelectorAll('.slide').length;
     goSlide((slideIdx - 1 + total) % total);
+}
+
+function initHeroSwipe(total) {
+    var slider = document.querySelector('.hero-slider');
+    var track = document.getElementById('sliderTrack');
+    if (!slider || !track || total <= 1) return;
+
+    var isDragging = false;
+    var startX = 0, startY = 0, deltaX = 0;
+    var startTime = 0;
+    var isHorizontal = null;
+
+    slider.style.touchAction = 'pan-y';
+    slider.style.userSelect = 'none';
+
+    function onPointerDown(e) {
+        if (e.button && e.button !== 0) return;
+        isDragging = true;
+        var p = e.touches ? e.touches[0] : e;
+        startX = p.clientX;
+        startY = p.clientY;
+        deltaX = 0;
+        startTime = Date.now();
+        isHorizontal = null;
+        clearInterval(slideTimer);
+        track.style.transition = 'none';
+        slider.style.cursor = 'grabbing';
+    }
+
+    function onPointerMove(e) {
+        if (!isDragging) return;
+        var p = e.touches ? e.touches[0] : e;
+        var dx = p.clientX - startX;
+        var dy = p.clientY - startY;
+
+        if (isHorizontal === null) {
+            if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+                isHorizontal = Math.abs(dx) >= Math.abs(dy);
+            }
+        }
+
+        if (!isHorizontal) return;
+
+        if (e.cancelable && e.touches) {
+            e.preventDefault();
+        }
+
+        if ((slideIdx === 0 && dx > 0) || (slideIdx === total - 1 && dx < 0)) {
+            dx = dx * 0.35;
+        }
+
+        deltaX = dx;
+        var sliderWidth = slider.clientWidth || 1;
+        var currentPx = -(slideIdx * sliderWidth) + dx;
+        track.style.transform = 'translateX(' + currentPx + 'px)';
+    }
+
+    function onPointerUp() {
+        if (!isDragging) return;
+        isDragging = false;
+        slider.style.cursor = '';
+        track.style.transition = 'transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+
+        if (isHorizontal) {
+            var sliderWidth = slider.clientWidth || 1;
+            var elapsed = Math.max(1, Date.now() - startTime);
+            var velocity = deltaX / elapsed;
+            var ratio = deltaX / sliderWidth;
+
+            if (ratio < -0.18 || velocity < -0.32) {
+                nextSlide(total);
+            } else if (ratio > 0.18 || velocity > 0.32) {
+                prevSlide();
+            } else {
+                goSlide(slideIdx);
+            }
+        } else {
+            goSlide(slideIdx);
+        }
+
+        startSlider(total);
+    }
+
+    slider.addEventListener('touchstart', onPointerDown, { passive: true });
+    slider.addEventListener('touchmove', onPointerMove, { passive: false });
+    slider.addEventListener('touchend', onPointerUp);
+    slider.addEventListener('touchcancel', onPointerUp);
+
+    slider.addEventListener('mousedown', onPointerDown);
+    window.addEventListener('mousemove', function(e) { if (isDragging) onPointerMove(e); });
+    window.addEventListener('mouseup', function(e) { if (isDragging) onPointerUp(e); });
 }
 
 function renderCategories(cats) {
