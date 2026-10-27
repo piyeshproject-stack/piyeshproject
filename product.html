@@ -1258,6 +1258,19 @@ var zoomLastTap = 0;
 var zoomInitialPinchDist = 0;
 var zoomStartScale = 1;
 
+// ── Interactive Fullscreen Photo Zoom Lightbox ───────────────
+var zoomScale = 1;
+var zoomPanX = 0, zoomPanY = 0;
+var zoomIsPanning = false;
+var zoomPanStartX = 0, zoomPanStartY = 0;
+var zoomLastTap = 0;
+var zoomTapTimer = null;
+var zoomInitialPinchDist = 0;
+var zoomStartScale = 1;
+var zoomTouchStartY = 0, zoomTouchStartX = 0;
+var zoomIsSwipingDown = false;
+var zoomTotalMoveDistance = 0;
+
 function openZoomModal() {
     var curIdx = window.currentMediaIndex || 0;
     var media = window.productMedia || [];
@@ -1267,17 +1280,39 @@ function openZoomModal() {
     if (!modal) return;
 
     modal.style.display = 'flex';
+    modal.style.transform = '';
+    modal.style.opacity = '1';
     document.body.style.overflow = 'hidden';
     updateZoomView(curIdx);
     renderZoomThumbs();
+
+    // Push history state so mobile browser/hardware back button closes the zoom modal
+    try {
+        if (!window._zoomHistoryPushed) {
+            window.history.pushState({ imageZoomOpen: true }, '');
+            window._zoomHistoryPushed = true;
+        }
+    } catch(e){}
 }
 
-function closeZoomModal() {
+function closeZoomModal(fromHistory) {
     var modal = document.getElementById('imageZoomModal');
     if (!modal) return;
     modal.style.display = 'none';
+    modal.style.transform = '';
+    modal.style.opacity = '';
     document.body.style.overflow = '';
+    if (zoomTapTimer) { clearTimeout(zoomTapTimer); zoomTapTimer = null; }
     resetZoom();
+
+    if (!fromHistory && window._zoomHistoryPushed) {
+        window._zoomHistoryPushed = false;
+        try {
+            if (window.history.state && window.history.state.imageZoomOpen) {
+                window.history.back();
+            }
+        } catch(e){}
+    }
 }
 
 function updateZoomView(idx) {
@@ -1319,7 +1354,7 @@ function renderZoomThumbs() {
     row.style.display = 'flex';
     row.innerHTML = media.map(function(m, i) {
         var active = i === window.currentMediaIndex;
-        return '<img class="zoom-thumb" src="' + m.src + '" onclick="updateZoomView(' + i + ')" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0;opacity:' + (active?'1':'0.6') + ';border:' + (active?'2px solid #fff':'2px solid transparent') + ';">';
+        return '<img class="zoom-thumb" src="' + m.src + '" onclick="event.stopPropagation();updateZoomView(' + i + ')" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer;flex-shrink:0;opacity:' + (active?'1':'0.6') + ';border:' + (active?'2px solid #fff':'2px solid transparent') + ';">';
     }).join('');
 }
 
@@ -1336,10 +1371,11 @@ function zoomIn() {
 
 function zoomOut() {
     zoomScale = Math.max(1, zoomScale / 1.4);
-    if (zoomScale === 1) {
-        zoomPanX = 0; zoomPanY = 0;
+    if (zoomScale <= 1.05) {
+        resetZoom();
+    } else {
+        applyZoomTransform();
     }
-    applyZoomTransform();
 }
 
 function resetZoom() {
@@ -1368,29 +1404,63 @@ function zoomPrev() {
     updateZoomView(prevIdx);
 }
 
+// Global modal exit triggers (Back button and Escape key)
+window.addEventListener('popstate', function(e) {
+    var modal = document.getElementById('imageZoomModal');
+    if (modal && modal.style.display === 'flex') {
+        closeZoomModal(true);
+    }
+});
+
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+        closeZoomModal();
+    }
+});
+
 // Attach zoom viewport gesture handlers
 document.addEventListener('DOMContentLoaded', function() {
     var vp = document.getElementById('zoomViewport');
-    if (!vp) return;
+    var modal = document.getElementById('imageZoomModal');
+    if (!vp || !modal) return;
 
-    // Double tap to zoom
+    // Single-click / Tap on empty space or image to close (unless double-tapping to zoom)
     vp.addEventListener('click', function(e) {
         if (e.target.closest && e.target.closest('button')) return;
+        if (zoomTotalMoveDistance > 10) return; // was a drag/pan, not a click
+
         var now = Date.now();
-        if (now - zoomLastTap < 300) {
-            // Double tap!
+        var timeSinceLast = now - zoomLastTap;
+        zoomLastTap = now;
+
+        if (timeSinceLast < 280) {
+            // Double tap detected! Cancel single-tap close timer and toggle zoom
+            if (zoomTapTimer) { clearTimeout(zoomTapTimer); zoomTapTimer = null; }
             if (zoomScale > 1.2) {
                 resetZoom();
             } else {
                 zoomScale = 2.5;
                 applyZoomTransform();
             }
+        } else {
+            // Single tap on empty space or image!
+            // Wait 280ms to ensure it's not a double-tap:
+            zoomTapTimer = setTimeout(function() {
+                zoomTapTimer = null;
+                if (zoomScale > 1.2) {
+                    // Zoomed in -> single tap resets back to 1x
+                    resetZoom();
+                } else {
+                    // Normal view -> single tap closes the modal!
+                    closeZoomModal();
+                }
+            }, 280);
         }
-        zoomLastTap = now;
     });
 
-    // Touch pinch and pan
+    // Touch pinch, pan, and swipe-down to dismiss
     vp.addEventListener('touchstart', function(e) {
+        zoomTotalMoveDistance = 0;
         if (e.touches.length === 2) {
             var dx = e.touches[0].clientX - e.touches[1].clientX;
             var dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -1400,6 +1470,9 @@ document.addEventListener('DOMContentLoaded', function() {
             zoomIsPanning = true;
             zoomPanStartX = e.touches[0].clientX - zoomPanX;
             zoomPanStartY = e.touches[0].clientY - zoomPanY;
+            zoomTouchStartY = e.touches[0].clientY;
+            zoomTouchStartX = e.touches[0].clientX;
+            zoomIsSwipingDown = false;
         }
     }, { passive: true });
 
@@ -1412,11 +1485,24 @@ document.addEventListener('DOMContentLoaded', function() {
             zoomScale = Math.max(1, Math.min(4.5, zoomStartScale * (dist / zoomInitialPinchDist)));
             applyZoomTransform();
         } else if (e.touches.length === 1 && zoomIsPanning) {
+            var moveDistX = Math.abs(e.touches[0].clientX - zoomTouchStartX);
+            var moveDistY = Math.abs(e.touches[0].clientY - zoomTouchStartY);
+            zoomTotalMoveDistance = Math.max(zoomTotalMoveDistance, moveDistX + moveDistY);
+
             if (zoomScale > 1) {
                 e.preventDefault();
                 zoomPanX = e.touches[0].clientX - zoomPanStartX;
                 zoomPanY = e.touches[0].clientY - zoomPanStartY;
                 applyZoomTransform();
+            } else {
+                // Swipe down to dismiss on mobile when at 1x
+                var dy = e.touches[0].clientY - zoomTouchStartY;
+                var dx = e.touches[0].clientX - zoomTouchStartX;
+                if (dy > 10 && dy > Math.abs(dx)) {
+                    zoomIsSwipingDown = true;
+                    modal.style.transform = 'translateY(' + dy + 'px)';
+                    modal.style.opacity = Math.max(0.4, 1 - (dy / 350));
+                }
             }
         }
     }, { passive: false });
@@ -1427,7 +1513,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (e.touches.length === 0) {
             zoomIsPanning = false;
-            if (zoomScale <= 1) {
+            if (zoomIsSwipingDown) {
+                zoomIsSwipingDown = false;
+                var dy = (e.changedTouches && e.changedTouches[0]) ? (e.changedTouches[0].clientY - zoomTouchStartY) : 0;
+                if (dy > 70) {
+                    closeZoomModal();
+                } else {
+                    modal.style.transition = 'transform 0.2s, opacity 0.2s';
+                    modal.style.transform = '';
+                    modal.style.opacity = '1';
+                    setTimeout(function() { if (modal) modal.style.transition = ''; }, 220);
+                }
+            } else if (zoomScale <= 1) {
                 resetZoom();
             }
         }
@@ -1437,13 +1534,17 @@ document.addEventListener('DOMContentLoaded', function() {
     vp.addEventListener('mousedown', function(e) {
         if (e.button !== 0 || zoomScale <= 1) return;
         zoomIsPanning = true;
+        zoomTotalMoveDistance = 0;
         zoomPanStartX = e.clientX - zoomPanX;
         zoomPanStartY = e.clientY - zoomPanY;
+        zoomTouchStartX = e.clientX;
+        zoomTouchStartY = e.clientY;
         vp.style.cursor = 'grabbing';
     });
 
     window.addEventListener('mousemove', function(e) {
         if (!zoomIsPanning || zoomScale <= 1) return;
+        zoomTotalMoveDistance += Math.abs(e.movementX || 0) + Math.abs(e.movementY || 0);
         zoomPanX = e.clientX - zoomPanStartX;
         zoomPanY = e.clientY - zoomPanStartY;
         applyZoomTransform();
@@ -1452,7 +1553,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('mouseup', function() {
         if (zoomIsPanning) {
             zoomIsPanning = false;
-            vp.style.cursor = 'grab';
+            vp.style.cursor = 'zoom-out';
         }
     });
 });
@@ -1936,32 +2037,45 @@ document.addEventListener('scroll', function() {
     <script src="assets/js/context-menu.js"></script>
 <script src="assets/js/tracking.js"></script>
 <!-- Interactive Fullscreen Photo Zoom Panel -->
-<div id="imageZoomModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:9999999;flex-direction:column;backdrop-filter:blur(8px);user-select:none;-webkit-user-select:none;">
+<div id="imageZoomModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.96);z-index:9999999;flex-direction:column;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);user-select:none;-webkit-user-select:none;">
+    
+    <!-- Prominent Top Floating Close Button (ALWAYS VISIBLE ABOVE EVERYTHING) -->
+    <button type="button" class="zoom-main-close-btn" onclick="event.stopPropagation();closeZoomModal();" style="position:fixed;top:max(14px, env(safe-area-inset-top, 14px));right:14px;width:44px;height:44px;border-radius:50%;background:#ef4444;border:2.5px solid #ffffff;color:#ffffff;font-size:22px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10000005;box-shadow:0 4px 16px rgba(0,0,0,0.7);line-height:1;transition:transform 0.15s, background 0.15s;" title="Close Zoom">
+        ✕
+    </button>
+
     <!-- Zoom Top Bar -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;color:#fff;background:rgba(0,0,0,0.5);z-index:10;">
-        <div style="display:flex;align-items:center;gap:12px;">
-            <span id="zoomCounter" style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.12);padding:3px 10px;border-radius:12px;">1 / 1</span>
-            <span id="zoomTitle" style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;"></span>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:max(12px, env(safe-area-inset-top, 12px)) 16px 10px 16px;color:#fff;background:linear-gradient(to bottom, rgba(0,0,0,0.85), transparent);z-index:10000001;padding-right:68px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+            <button type="button" onclick="event.stopPropagation();closeZoomModal();" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.35);color:#fff;padding:6px 14px;border-radius:20px;font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:5px;cursor:pointer;">
+                ← Back
+            </button>
+            <span id="zoomCounter" style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.9);background:rgba(255,255,255,0.14);padding:4px 10px;border-radius:12px;">1 / 1</span>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;">
-            <button type="button" onclick="zoomIn()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" title="Zoom In">+</button>
-            <button type="button" onclick="zoomOut()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" title="Zoom Out">−</button>
-            <button type="button" onclick="resetZoom()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s;" title="Reset Zoom">↺</button>
-            <button type="button" onclick="closeZoomModal()" style="width:36px;height:36px;border-radius:50%;background:#ff3b30;border:none;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:4px;" title="Close">✕</button>
+        <!-- Zoom Controls -->
+        <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" onclick="event.stopPropagation();zoomIn();" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Zoom In">+</button>
+            <button type="button" onclick="event.stopPropagation();zoomOut();" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Zoom Out">−</button>
+            <button type="button" onclick="event.stopPropagation();resetZoom();" style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.18);border:none;color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Reset Zoom">↺</button>
         </div>
     </div>
 
     <!-- Zoom Viewport -->
-    <div id="zoomViewport" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab;">
-        <img id="zoomImg" src="" style="max-width:92%;max-height:86%;object-fit:contain;transition:transform 0.15s ease-out;pointer-events:none;" alt="">
+    <div id="zoomViewport" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:zoom-out;">
+        <img id="zoomImg" src="" style="max-width:92%;max-height:84%;object-fit:contain;transition:transform 0.15s ease-out;pointer-events:none;transform-origin:center center;" alt="">
         
         <!-- Prev & Next Overlay Buttons -->
-        <button id="zoomPrevBtn" onclick="zoomPrev()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:5;">‹</button>
-        <button id="zoomNextBtn" onclick="zoomNext()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:5;">›</button>
+        <button id="zoomPrevBtn" onclick="event.stopPropagation();zoomPrev()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.22);border:none;color:#fff;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:5;">‹</button>
+        <button id="zoomNextBtn" onclick="event.stopPropagation();zoomNext()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.22);border:none;color:#fff;font-size:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);z-index:5;">›</button>
+
+        <!-- Tap to close hint banner -->
+        <div onclick="event.stopPropagation();closeZoomModal();" style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.9);font-size:12px;font-weight:600;padding:5px 16px;border-radius:20px;cursor:pointer;white-space:nowrap;z-index:4;backdrop-filter:blur(4px);display:flex;align-items:center;gap:6px;">
+            ✕ বন্ধ করতে খালি জায়গায় ট্যাপ করুন
+        </div>
     </div>
 
     <!-- Bottom Thumbnails -->
-    <div id="zoomThumbsRow" style="display:flex;gap:8px;padding:12px 16px;background:rgba(0,0,0,0.6);overflow-x:auto;justify-content:center;align-items:center;min-height:64px;"></div>
+    <div id="zoomThumbsRow" style="display:flex;gap:8px;padding:10px 16px;background:rgba(0,0,0,0.7);overflow-x:auto;justify-content:center;align-items:center;min-height:60px;z-index:10;"></div>
 </div>
 
 </body>
