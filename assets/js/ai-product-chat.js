@@ -85,7 +85,7 @@
             '        <div class="ai-bot-avatar">✨</div>',
             '        <div>',
             '          <div class="ai-header-title">পণ্য সহকারী AI</div>',
-            '          <div class="ai-header-subtitle"><span class="ai-pulse-dot" style="display:inline-block;margin-right:2px;"></span> Online | Gemini 2.5 Live</div>',
+            '          <div class="ai-header-subtitle"><span class="ai-pulse-dot" style="display:inline-block;margin-right:2px;"></span> Online | Gemini 3.8 Live</div>',
             '        </div>',
             '      </div>',
             '      <div class="ai-header-actions">',

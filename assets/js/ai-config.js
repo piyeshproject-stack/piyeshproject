@@ -233,8 +233,8 @@
             }
 
             var candidateModels = [
-                'models/' + NATIVE_AUDIO_CALL_MODEL,
                 'models/' + PERMANENT_USER_MODEL,
+                'models/' + NATIVE_AUDIO_CALL_MODEL,
                 'models/gemini-2.0-flash-exp'
             ];
             var currentModelIdx = 0;
