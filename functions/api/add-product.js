@@ -82,6 +82,11 @@ export async function onRequestPost(context) {
         if (env.CLOUDFLARE_ZONE_ID && env.CLOUDFLARE_API_TOKEN) {
             const origin = new URL(request.url).origin;
             const filesToPurge = [
+                origin + "/",
+                origin + "/shop",
+                origin + "/product?id=" + encodeURIComponent(productId),
+                origin + "/sitemap.xml",
+                origin + "/api/public-data",
                 origin + "/api/get-products-list",
                 origin + "/api/get-single-product?id=" + productId
             ];

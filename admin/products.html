@@ -569,7 +569,7 @@
                     doc.variants = doc.variants || [];
                     if (typeof doc.gallery_images === 'string') { try { doc.gallery_images = JSON.parse(doc.gallery_images); } catch(e) { doc.gallery_images = []; } }
                     else { doc.gallery_images = doc.gallery_images || []; }
-                    doc.category_ids = pc.filter(function(x) { return x.product_id === doc.id; }).map(function(x) { return x.category_id; });
+                    doc.category_ids = pc.filter(function(x) { return String(x.product_id) === String(doc.id); }).map(function(x) { return String(x.category_id); });
                     return doc;
                 });
                 
@@ -1116,6 +1116,26 @@
         if (document.getElementById('pSeoSlug')) document.getElementById('pSeoSlug').value = p.slug || p.seo_slug || '';
         if (document.getElementById('pSeoDesc')) document.getElementById('pSeoDesc').value = p.seo_description || '';
         
+        // Always reset & apply this product's own category_ids immediately (prevents previous product's categories from sticking)
+        var initialCatIds = Array.isArray(p.category_ids) ? p.category_ids.map(String) : [];
+        if (p.category_id && !initialCatIds.includes(String(p.category_id))) initialCatIds.push(String(p.category_id));
+        document.querySelectorAll('input[name="pCat"]').forEach(function(cb) { cb.checked = initialCatIds.includes(String(cb.value)); });
+        if (CONFIG.DB_PROVIDER === 'cf_db') {
+            fetch((CONFIG.HF_API_BASE || '') + '/api/d1-query', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sql: "SELECT category_id FROM product_categories WHERE product_id = ?", params: [p.id] })
+            }).then(function(r) { return r.json(); }).then(function(d) {
+                if (d && d.success && d.result && d.result[0] && Array.isArray(d.result[0].results)) {
+                    var selectedIds = d.result[0].results.map(function(c) { return String(c.category_id); });
+                    p.category_ids = selectedIds;
+                    if (editingProductId === p.id) {
+                        document.querySelectorAll('input[name="pCat"]').forEach(function(cb) { cb.checked = selectedIds.includes(String(cb.value)); });
+                        updateSeoTagPreview();
+                    }
+                }
+            }).catch(function(err) { console.error('Category fetch error:', err.message); });
+        }
         // Fetch categories for this product
         if (CONFIG.DB_PROVIDER === 'supabase') {
             supabaseClient.from('product_categories').select('category_id').eq('product_id', p.id).then(function(catRes) {

@@ -70,7 +70,12 @@ export async function onRequestPost(context) {
             p.seo_keywords || '',
             p.seo_og_image || '',
             p.google_site_verification || '',
+<<<<<<< HEAD
             p.site_url || ''
+=======
+            (p.site_url && p.site_url.trim()) ? (p.site_url.trim().startsWith('http') ? p.site_url.trim().replace(/\/+$/, '') : 'https://' + p.site_url.trim().replace(/\/+$/, '')) : '',
+            typeof p.ai_config === 'string' ? p.ai_config : JSON.stringify(p.ai_config || {})
+>>>>>>> 1896ac2 (Fix dynamic SSR SEO, canonical URLs, clean sitemap URLs, and admin product category selection)
         ];
         
         const stmt = env.DB.prepare(sql);
