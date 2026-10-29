@@ -27,14 +27,15 @@ export async function onRequestPost(context) {
     try {
         const p = await request.json();
 
-        // Safe auto-migration for SEO columns in D1
+        // Safe auto-migration for SEO and AI columns in D1
         const seoCols = [
             'seo_title TEXT DEFAULT ""',
             'seo_description TEXT DEFAULT ""',
             'seo_keywords TEXT DEFAULT ""',
             'seo_og_image TEXT DEFAULT ""',
             'google_site_verification TEXT DEFAULT ""',
-            'site_url TEXT DEFAULT ""'
+            'site_url TEXT DEFAULT ""',
+            'ai_config TEXT DEFAULT ""'
         ];
         for (const col of seoCols) {
             try { await env.DB.prepare(`ALTER TABLE settings ADD COLUMN ${col}`).run(); } catch(e) {}
@@ -49,7 +50,8 @@ export async function onRequestPost(context) {
                 allow_pickup=?, store_address=?, store_map_link=?, pickup_bot_token=?, pickup_chat_id=?, binance_pay_uid=?, 
                 binance_proxy_url=?, binance_api_key=?, binance_api_secret=?, usd_to_bdt_rate=?, verify_mode=?, supabase_edge_url=?, 
                 hf_api_url=?, crypto_coins=?, review_imgbb_key=?,
-                seo_title=?, seo_description=?, seo_keywords=?, seo_og_image=?, google_site_verification=?, site_url=?
+                seo_title=?, seo_description=?, seo_keywords=?, seo_og_image=?, google_site_verification=?, site_url=?,
+                ai_config=?
             WHERE id=1
         `;
         const params = [
@@ -70,12 +72,8 @@ export async function onRequestPost(context) {
             p.seo_keywords || '',
             p.seo_og_image || '',
             p.google_site_verification || '',
-<<<<<<< HEAD
-            p.site_url || ''
-=======
             (p.site_url && p.site_url.trim()) ? (p.site_url.trim().startsWith('http') ? p.site_url.trim().replace(/\/+$/, '') : 'https://' + p.site_url.trim().replace(/\/+$/, '')) : '',
             typeof p.ai_config === 'string' ? p.ai_config : JSON.stringify(p.ai_config || {})
->>>>>>> 1896ac2 (Fix dynamic SSR SEO, canonical URLs, clean sitemap URLs, and admin product category selection)
         ];
         
         const stmt = env.DB.prepare(sql);
