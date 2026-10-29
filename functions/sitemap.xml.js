@@ -43,25 +43,25 @@ export async function onRequestGet(context) {
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>${siteUrl}/shop.html</loc>
+    <loc>${siteUrl}/shop</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>${siteUrl}/policies.html</loc>
+    <loc>${siteUrl}/policies</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>${siteUrl}/team.html</loc>
+    <loc>${siteUrl}/team</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>${siteUrl}/track.html</loc>
+    <loc>${siteUrl}/track</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
@@ -71,7 +71,7 @@ export async function onRequestGet(context) {
     for (const cat of categories) {
         xml += `
   <url>
-    <loc>${siteUrl}/shop.html?cat=${encodeURIComponent(cat.id)}</loc>
+    <loc>${siteUrl}/shop?cat=${encodeURIComponent(cat.id)}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -120,7 +120,7 @@ export async function onRequestGet(context) {
 
         xml += `
   <url>
-    <loc>${siteUrl}/product.html?id=${encodeURIComponent(prod.id)}</loc>
+    <loc>${siteUrl}/product?id=${encodeURIComponent(prod.id)}</loc>
     <lastmod>${prodDate}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>${imgTagsXml}
@@ -132,7 +132,7 @@ export async function onRequestGet(context) {
     return new Response(xml, {
         headers: {
             'Content-Type': 'application/xml; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+            'Cache-Control': 'public, max-age=300, s-maxage=300',
             'Access-Control-Allow-Origin': '*'
         }
     });

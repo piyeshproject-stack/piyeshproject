@@ -6,13 +6,18 @@
 window.SEO = (function() {
     // Determine the base site URL (dynamic fallback to current origin)
     function getSiteUrl(settings) {
+        var raw = '';
         if (settings && settings.site_url && settings.site_url.trim()) {
-            return settings.site_url.trim().replace(/\/+$/, '');
+            raw = settings.site_url.trim().replace(/\/+$/, '');
+        } else if (typeof CONFIG !== 'undefined' && CONFIG.SITE_URL && CONFIG.SITE_URL.trim()) {
+            raw = CONFIG.SITE_URL.trim().replace(/\/+$/, '');
+        } else {
+            raw = window.location.origin.replace(/\/+$/, '');
         }
-        if (typeof CONFIG !== 'undefined' && CONFIG.SITE_URL && CONFIG.SITE_URL.trim()) {
-            return CONFIG.SITE_URL.trim().replace(/\/+$/, '');
+        if (raw && !raw.startsWith('http://') && !raw.startsWith('https://')) {
+            raw = 'https://' + raw;
         }
-        return window.location.origin.replace(/\/+$/, '');
+        return raw;
     }
 
     // Set or create a <meta> tag
@@ -115,8 +120,12 @@ window.SEO = (function() {
             setMeta('google-site-verification', settings.google_site_verification);
         }
 
-        // 3. Canonical URL
-        var pageUrl = opts.url || (siteUrl + window.location.pathname + (window.location.search || ''));
+        // 3. Canonical URL (Always normalize clean URL without .html)
+        var cleanPath = window.location.pathname
+            .replace(/\/index\.html$/, '/')
+            .replace(/\.html$/, '');
+        var pageUrl = opts.url || (siteUrl + cleanPath + (window.location.search || ''));
+        pageUrl = pageUrl.replace(/\/index\.html(\?|$)/, '/$1').replace(/\.html(\?|$)/, '$1');
         setCanonical(pageUrl);
 
         // 4. Open Graph (Facebook, WhatsApp, LinkedIn, etc.)
@@ -181,7 +190,7 @@ window.SEO = (function() {
                             "@type": "SearchAction",
                             "target": {
                                 "@type": "EntryPoint",
-                                "urlTemplate": siteUrl + "/shop.html?search={search_term_string}"
+                                "urlTemplate": siteUrl + "/shop?search={search_term_string}"
                             },
                             "query-input": "required name=search_term_string"
                         }
@@ -255,7 +264,7 @@ window.SEO = (function() {
             img = siteUrl + (img.startsWith('/') ? '' : '/') + img;
         }
 
-        var prodUrl = siteUrl + '/product.html?id=' + encodeURIComponent(product.id);
+        var prodUrl = siteUrl + '/product?id=' + encodeURIComponent(product.id);
         var finalPrice = (product.flash_sale_price > 0) ? (product.base_price - product.flash_sale_price) : (product.base_price || 0);
 
         // Product Schema with Multiple Images and Offer
@@ -296,7 +305,7 @@ window.SEO = (function() {
                             "@type": "ListItem",
                             "position": 2,
                             "name": "Shop",
-                            "item": siteUrl + "/shop.html"
+                            "item": siteUrl + "/shop"
                         },
                         {
                             "@type": "ListItem",
@@ -356,7 +365,7 @@ window.SEO = (function() {
         else if (searchTerm) title = 'Search: ' + searchTerm + ' — ' + storeName;
 
         var desc = 'Browse our complete catalog of quality items on ' + storeName + '. Enjoy fast shipping and secure cash on delivery.';
-        var pageUrl = siteUrl + '/shop.html' + (window.location.search || '');
+        var pageUrl = siteUrl + '/shop' + (window.location.search || '');
 
         var jsonLd = {
             "@context": "https://schema.org",

@@ -72,7 +72,7 @@ export async function onRequestPost(context) {
             p.seo_keywords || '',
             p.seo_og_image || '',
             p.google_site_verification || '',
-            p.site_url || '',
+            (p.site_url && p.site_url.trim()) ? (p.site_url.trim().startsWith('http') ? p.site_url.trim().replace(/\/+$/, '') : 'https://' + p.site_url.trim().replace(/\/+$/, '')) : '',
             typeof p.ai_config === 'string' ? p.ai_config : JSON.stringify(p.ai_config || {})
         ];
         
