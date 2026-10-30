@@ -24,7 +24,9 @@ export async function onRequestPost(context) {
         if (!productId) {
             if (p.sku && p.sku.trim() !== '') {
                 // Clean the SKU to be URL-safe (e.g., lowercased, spaces to hyphens)
-                productId = p.sku.trim().replace(/\s+/g, '-').toLowerCase();
+                productId = p.sku.trim().replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase();
+                const existing = await env.DB.prepare("SELECT id FROM products WHERE id = ?").bind(productId).first().catch(() => null);
+                if (existing) productId = `${productId}-${Math.floor(100 + Math.random() * 900)}`;
             } else {
                 const maxRes = await env.DB.prepare("SELECT id FROM products WHERE id LIKE 'prod_%'").all();
                 let maxNum = 0;
