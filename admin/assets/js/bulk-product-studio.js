@@ -424,6 +424,32 @@
             rawSku = '';
         }
 
+        // Auto-generate initial tags from Name + Categories if missing
+        var initTags = (raw.tags || raw.seo_keywords || '').trim();
+        if (!initTags) {
+            var tagWords = prodName.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF\s]/g, ' ').split(/\s+/).filter(function(w){ return w.length > 2; });
+            var initSet = new Set(tagWords);
+            if (Array.isArray(matchedCatIds) && typeof allCategories !== 'undefined') {
+                var catSet = new Set(matchedCatIds.map(String));
+                allCategories.forEach(function(c) {
+                    if (catSet.has(String(c.id))) initSet.add(c.name.toLowerCase());
+                });
+            }
+            initSet.add('online shopping bd');
+            initSet.add('সেরা দাম');
+            initTags = Array.from(initSet).slice(0, 10).join(', ');
+        }
+
+        var initSlug = (raw.slug || '').trim();
+        if (!initSlug) {
+            initSlug = (typeof ImageSeoInjector !== 'undefined' && typeof ImageSeoInjector.slugify === 'function')
+                ? ImageSeoInjector.slugify(prodName)
+                : prodName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 70) || 'product';
+        }
+
+        var initTitle = (raw.seo_title || '').trim() || (prodName + ' — সেরা দামে কিনুন BD');
+        var initDesc  = (raw.seo_description || '').trim() || (prodName + ' কিনুন সবচেয়ে সাশ্রয়ী মূল্যে। ১০০% প্রিমিয়াম কোয়ালিটি ও আকর্ষণীয় ডিজাইন। সারা বাংলাদেশে দ্রুত ক্যাশ অন ডেলিভারি সুবিধা!');
+
         return {
             _uid: 'bulk_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
             selected: true,
@@ -438,10 +464,10 @@
             variants: JSON.parse(JSON.stringify(vData)),
             video_url: raw.video_url || '',
             video_type: raw.video_type || 'auto',
-            tags: raw.tags || raw.seo_keywords || '',
-            seo_title: raw.seo_title || '',
-            seo_description: raw.seo_description || '',
-            slug: raw.slug || '',
+            tags: initTags,
+            seo_title: initTitle,
+            seo_description: initDesc,
+            slug: initSlug,
             is_active: raw.is_active !== undefined ? Boolean(raw.is_active) : true,
             is_featured: Boolean(raw.is_featured),
             is_add_once: Boolean(raw.is_add_once),
@@ -584,11 +610,11 @@
                                         <input type="checkbox" id="bulkSelectAllCb" checked onchange="bulkToggleSelectAll(this.checked)" style="width:16px;height:16px;cursor:pointer;">
                                         <span>Select All (<span id="bulkSelectedCount">0</span>/<span id="bulkTotalCount">0</span>)</span>
                                     </label>
-                                    <button type="button" class="btn btn-sm" onclick="bulkRegenerateSkus(false)" style="background:rgba(79,70,229,0.12);color:#4f46e5;border:1px solid rgba(79,70,229,0.35);font-weight:800;font-size:11.5px;padding:5px 11px;border-radius:7px;cursor:pointer;" title="যেই প্রোডাক্টগুলোতে SKU খালি আছে সেগুলোতে স্থায়ী SKU (XX-1234) জেনারেট করুন">
-                                        ⚡ Auto Generate Missing SKUs
+                                    <button type="button" class="btn btn-sm" onclick="bulkRegenerateSkus(true)" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;font-weight:800;font-size:12px;padding:6px 13px;border-radius:7px;cursor:pointer;box-shadow:0 2px 6px rgba(16,185,129,0.25);display:inline-flex;align-items:center;gap:5px;" title="সব প্রোডাক্টের জন্য স্বয়ংক্রিয় স্থায়ী SKU (XX-1234) তৈরি করুন">
+                                        <span>⚡ Auto Generate All SKUs (XX-1234)</span>
                                     </button>
-                                    <button type="button" class="btn btn-sm" onclick="bulkRegenerateSkus(true)" style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:none;font-weight:800;font-size:11.5px;padding:5px 12px;border-radius:7px;cursor:pointer;box-shadow:0 2px 6px rgba(16,185,129,0.25);" title="সব সিলেক্টেড প্রোডাক্টের নাম থেকে ২ অক্ষর + '-' + ৩/৪ সংখ্যা দিয়ে স্থায়ী SKU (XX-1234) জেনারেট করুন">
-                                        🔄 Auto Generate All SKUs (XX-1234)
+                                    <button type="button" class="btn btn-sm" onclick="bulkBatchAutoGenerateTags()" style="background:rgba(0,122,255,0.12);color:#007AFF;border:1px solid rgba(0,122,255,0.3);font-weight:800;font-size:11.5px;padding:5px 11px;border-radius:7px;cursor:pointer;" title="সব প্রোডাক্টের নাম ও ক্যাটাগরি থেকে SEO Tags তৈরি করুন">
+                                        🏷️ Auto Generate All Tags
                                     </button>
                                 </div>
 
@@ -951,6 +977,17 @@
 
             var galleryText = (item.gallery_images || []).join('\n');
 
+            var itemTagsArr = (item.tags || '')
+                .split(',')
+                .map(function(s) { return s.trim(); })
+                .filter(Boolean);
+
+            var tagsBadgesHtml = itemTagsArr.length > 0
+                ? itemTagsArr.slice(0, 7).map(function(t) {
+                    return '<span style="font-size:10px;font-weight:700;background:rgba(79,70,229,0.08);color:#4338ca;padding:2px 7px;border-radius:12px;border:1px solid rgba(79,70,229,0.2);">' + escHtml(t) + '</span>';
+                }).join('') + (itemTagsArr.length > 7 ? '<span style="font-size:10px;color:#64748b;font-weight:700;padding:2px 5px;">+' + (itemTagsArr.length - 7) + ' more</span>' : '')
+                : '<span style="font-size:11px;color:#94a3b8;font-style:italic;">কোনো ট্যাগ নেই ("➕ Auto Tags" চাপুন)</span>';
+
             return `
                 <div class="bulk-item-card ${item.selected ? '' : 'unselected'}" id="bulk-card-${idx}">
                     <div class="bulk-item-grid">
@@ -1014,8 +1051,28 @@
 
                     <!-- Per-Product Isolated Category Selector -->
                     <div class="bulk-item-cats">
-                        <span style="font-size:11px;font-weight:800;color:#475569;margin-right:4px;">🏷️ Categories (${itemCatSet.size}):</span>
+                        <span style="font-size:11px;font-weight:800;color:#475569;margin-right:4px;">📂 Categories (${itemCatSet.size}):</span>
                         ${catPillsHtml}
+                    </div>
+
+                    <!-- Per-Product Live SEO Tags Preview & Quick Action Directly on Card -->
+                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;background:#fbfcfe;padding:8px 10px;border-radius:8px;">
+                        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;">
+                            <span style="font-size:11px;font-weight:800;color:#4f46e5;display:inline-flex;align-items:center;gap:4px;">
+                                🏷️ SEO Focus Tags (${itemTagsArr.length}):
+                            </span>
+                            <div id="bulk-tag-badges-${idx}" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;">
+                                ${tagsBadgesHtml}
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:5px;">
+                            <button type="button" onclick="bulkAutoGenerateTags(${idx})" style="background:rgba(0,122,255,0.12);color:#007AFF;border:1px solid rgba(0,122,255,0.3);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;cursor:pointer;" title="নাম ও ক্যাটাগরি থেকে ট্যাগ তৈরি করুন">
+                                ➕ Auto Tags
+                            </button>
+                            <button type="button" id="bulk-card-ai-btn-${idx}" onclick="bulkGenerateItemAISeo(${idx})" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(99,102,241,0.25);" title="এই প্রোডাক্টের সম্পূর্ণ এসইও AI দিয়ে তৈরি করুন">
+                                ✨ AI SEO
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Expandable Details Drawer (Description, Gallery Images, Tags, SEO) -->
@@ -1169,34 +1226,97 @@
         if (typeof showToast === 'function') showToast('✅ SKU Generated: ' + item.sku, 'success');
     };
 
-    /**
-     * Top toolbar "Auto Generate Missing SKUs" / "Auto Generate All SKUs" button click handler
-     */
-    window.bulkRegenerateSkus = function(overwriteAll) {
-        var used = new Set();
+    // ── Auto Generate Tags for Single Item (from Name + Categories) ──
+    window.bulkAutoGenerateTags = function(idx) {
+        var item = bulkStagedItems[idx];
+        if (!item) return;
+
+        var cats = [];
+        if (Array.isArray(item.category_ids) && typeof allCategories !== 'undefined') {
+            var catSet = new Set(item.category_ids.map(String));
+            allCategories.forEach(function(c) {
+                if (catSet.has(String(c.id))) cats.push(c.name);
+            });
+        }
+
+        var words = item.name.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF\s]/g, ' ').split(/\s+/).filter(function(w){ return w.length > 2; });
+        var tagSet = new Set(words);
+        cats.forEach(function(c){ tagSet.add(c.toLowerCase()); });
+        tagSet.add('online shopping bd');
+        tagSet.add('সেরা দাম');
+
+        item.tags = Array.from(tagSet).slice(0, 10).join(', ');
+        var tagsInp = document.getElementById('bulk-tags-' + idx);
+        if (tagsInp) tagsInp.value = item.tags;
+
+        renderBulkStagingList();
+        if (typeof showToast === 'function') showToast('✅ #' + (idx + 1) + ' এর জন্য Auto SEO Tags জেনারেট হয়েছে!', 'success');
+    };
+
+    // ── Batch Auto Generate Tags for All Items ──
+    window.bulkBatchAutoGenerateTags = function() {
         var count = 0;
-        bulkStagedItems.forEach(function(item) {
-            if (!item.selected) {
-                if (item.sku) used.add(item.sku.toUpperCase());
-                return;
+        bulkStagedItems.forEach(function(item, idx) {
+            var cats = [];
+            if (Array.isArray(item.category_ids) && typeof allCategories !== 'undefined') {
+                var catSet = new Set(item.category_ids.map(String));
+                allCategories.forEach(function(c) {
+                    if (catSet.has(String(c.id))) cats.push(c.name);
+                });
             }
-            if (overwriteAll || !item.sku || !item.sku.trim()) {
+            var words = item.name.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF\s]/g, ' ').split(/\s+/).filter(function(w){ return w.length > 2; });
+            var tagSet = new Set(words);
+            cats.forEach(function(c){ tagSet.add(c.toLowerCase()); });
+            tagSet.add('online shopping bd');
+            tagSet.add('সেরা দাম');
+
+            item.tags = Array.from(tagSet).slice(0, 10).join(', ');
+            count++;
+        });
+
+        renderBulkStagingList();
+        if (typeof showToast === 'function') showToast('✅ ' + count + 'টি প্রোডাক্টের সবগুলোতেই Auto SEO Tags তৈরি হয়েছে!', 'success');
+    };
+
+    /**
+     * Top toolbar "Auto Generate All SKUs (XX-1234)" handler.
+     * Guarantees fresh, permanent XX-1234 format SKUs for EVERY product!
+     */
+    window.bulkRegenerateSkus = function(forceAll) {
+        var used = new Set();
+
+        // 1. Existing SKUs from current shop products
+        if (typeof allProducts !== 'undefined' && Array.isArray(allProducts)) {
+            allProducts.forEach(function(p) {
+                if (p && p.sku) used.add(String(p.sku).trim().toUpperCase());
+            });
+        }
+
+        // Determine target items: if any are selected, generate for selected; if none selected, generate for ALL!
+        var hasSelection = bulkStagedItems.some(function(x) { return x.selected; });
+        var count = 0;
+
+        bulkStagedItems.forEach(function(item, idx) {
+            var isTarget = hasSelection ? item.selected : true;
+            if (isTarget) {
                 item.sku = '';
                 var fresh = window.generateAutoSku(item.name, used);
                 item.sku = fresh;
                 used.add(fresh.toUpperCase());
                 count++;
+
+                // Direct DOM update for instant reaction
+                var el = document.getElementById('bulk-sku-' + idx);
+                if (el) el.value = fresh;
             } else {
-                used.add(item.sku.toUpperCase());
+                if (item.sku) used.add(String(item.sku).trim().toUpperCase());
             }
         });
+
         renderBulkStagingList();
+
         if (typeof showToast === 'function') {
-            if (count > 0) {
-                showToast('✅ ' + count + 'টি প্রোডাক্টে স্থায়ী Auto-SKU (XX-1234) জেনারেট হয়েছে!', 'success');
-            } else {
-                showToast('সব প্রোডাক্টেই ইতিমধ্যে SKU আছে। সব নতুন করতে চাইলে "Auto Generate All SKUs" চাপুন।', 'info');
-            }
+            showToast('✅ সফলভাবে ' + count + 'টি প্রোডাক্টে নতুন স্থায়ী SKU (XX-1234) জেনারেট হয়েছে!', 'success');
         }
     };
 
