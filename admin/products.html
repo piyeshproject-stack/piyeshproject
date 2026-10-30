@@ -281,14 +281,21 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 10px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
                         <label class="form-label" style="margin-bottom:0;">🏷️ Product Focus Tags / Keywords</label>
-                        <div style="display:flex;gap:6px;align-items:center;">
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                            <div style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:2px 7px;">
+                                <span style="font-size:11px;font-weight:700;color:#64748b;">🌐 AI Lang:</span>
+                                <select id="aiSeoLang" style="border:none;background:transparent;font-size:11.5px;font-weight:700;color:#1e293b;outline:none;cursor:pointer;">
+                                    <option value="bn" selected>🇧🇩 বাংলা (ডিফল্ট)</option>
+                                    <option value="en">🇬🇧 English</option>
+                                </select>
+                            </div>
                             <button type="button" class="btn btn-sm" onclick="appendAutoTagsToField()" style="background: rgba(0,122,255,0.12); color: var(--accent,#007AFF); border: 1px solid rgba(0,122,255,0.3); border-radius: 6px; padding: 3px 8px; font-weight: 600; font-size: 11px; cursor: pointer;" title="Append auto category/store tags into this input">
                                 <span>➕ Auto Tags</span>
                             </button>
-                            <button type="button" class="btn btn-sm" onclick="generateAISeoTags()" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; border-radius: 6px; padding: 3px 10px; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer;">
-                                <span>✨ AI Generate Tags &amp; Title</span>
+                            <button type="button" id="btnAiGenerateFullSeo" class="btn btn-sm" onclick="generateAISeoTags()" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; border-radius: 6px; padding: 3px 11px; font-weight: 700; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; cursor: pointer; box-shadow: 0 2px 6px rgba(99,102,241,0.25);" title="প্রোডাক্টের নাম ও বিবরণী বিশ্লেষণ করে AI দ্বারা Tags, SEO Title, Slug ও Meta Description একসাথে পূরণ করুন">
+                                <span>✨ AI Generate Full SEO</span>
                             </button>
                         </div>
                     </div>
@@ -1933,54 +1940,159 @@
         }
     }
 
-    // AI SEO Tags & Title Generator
+    // ── Universal AI SEO Metadata Generator (Tags, Title, Slug, Description) ──
+    window.generateProductSeoMetadata = async function(opts) {
+        opts = opts || {};
+        var name = (opts.name || '').trim();
+        if (!name) {
+            throw new Error('Please enter a Product Name first');
+        }
+        if (typeof AIConfig === 'undefined') {
+            throw new Error('AI Config module is not loaded.');
+        }
+
+        var lang = (opts.lang || 'bn') === 'en' ? 'en' : 'bn';
+        var desc = (opts.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 500);
+        var categories = Array.isArray(opts.categories) ? opts.categories.join(', ') : (opts.categories || '');
+
+        var prompt;
+        if (lang === 'bn') {
+            prompt = 'You are an elite e-commerce SEO specialist in Bangladesh. Analyze this product and create complete SEO metadata optimized for Google Search rankings and social sharing in Bangladesh.\n' +
+                'Product Name: "' + name + '"\n' +
+                (categories ? 'Categories: ' + categories + '\n' : '') +
+                (desc ? 'Description: ' + desc + '\n' : '') +
+                '\nRequirements:\n' +
+                '1. "tags": 8-12 high search-volume comma-separated keywords combining popular Bangla customer searches (e.g. ছেলেদের পাঞ্জাবি, পাঞ্জাবি কালেকশন) and popular English/Banglish terms (e.g. panjabi for men, stylish panjabi bd).\n' +
+                '2. "seo_title": High-converting Google Search Title in Bengali/English (under 65 chars) with buyer intent keywords (e.g. সেরা দামে কিনুন / নতুন কালেকশন).\n' +
+                '3. "slug": Clean URL slug strictly in LOWERCASE English/Latin letters and hyphens ONLY (e.g. "mens-cotton-panjabi-blue"). NEVER use Bengali script in slug so URLs stay short, clean, and shareable without percent-encoding!\n' +
+                '4. "seo_description": Engaging meta description in Bengali (140-160 chars) highlighting quality, comfort, and purchase CTA like সারা বাংলাদেশে ক্যাশ অন ডেলিভারি / দ্রুত ডেলিভারি।\n\n' +
+                'Return ONLY a valid JSON object in this schema without any markdown formatting:\n' +
+                '{"tags": "...", "seo_title": "...", "slug": "...", "seo_description": "..."}';
+        } else {
+            prompt = 'You are an elite e-commerce SEO specialist. Analyze this product and create complete SEO metadata optimized for Google Search.\n' +
+                'Product Name: "' + name + '"\n' +
+                (categories ? 'Categories: ' + categories + '\n' : '') +
+                (desc ? 'Description: ' + desc + '\n' : '') +
+                '\nRequirements:\n' +
+                '1. "tags": 8-12 high search-volume comma-separated English keywords.\n' +
+                '2. "seo_title": High-converting Google Search Title in English (under 65 chars).\n' +
+                '3. "slug": Clean URL slug strictly in LOWERCASE English/Latin letters and hyphens ONLY (e.g. "mens-leather-wallet-brown").\n' +
+                '4. "seo_description": Engaging meta description in English (140-160 chars) with a clear call-to-action.\n\n' +
+                'Return ONLY a valid JSON object in this schema without any markdown formatting:\n' +
+                '{"tags": "...", "seo_title": "...", "slug": "...", "seo_description": "..."}';
+        }
+
+        var res = await AIConfig.generateText({
+            isAdmin: true,
+            prompt: prompt,
+            systemInstruction: 'You are an elite e-commerce SEO specialist. You MUST return ONLY valid JSON format without markdown code fences or extra text.'
+        });
+
+        var cleaned = (res.text || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+        var jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+            throw new Error('AI response did not contain valid JSON metadata.');
+        }
+
+        var parsed = JSON.parse(jsonMatch[0]);
+
+        // Clean slug ensuring 100% Latin URL safety
+        var safeSlug = (parsed.slug || '').toString().toLowerCase().trim()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, 70);
+
+        if (!safeSlug) {
+            if (typeof ImageSeoInjector !== 'undefined' && typeof ImageSeoInjector.slugify === 'function') {
+                safeSlug = ImageSeoInjector.slugify(name);
+            } else {
+                safeSlug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 70) || 'product';
+            }
+        }
+
+        return {
+            tags: (parsed.tags || '').trim(),
+            seo_title: (parsed.seo_title || '').trim(),
+            slug: safeSlug,
+            seo_description: (parsed.seo_description || '').trim(),
+            modelUsed: res.modelUsed || 'Gemini AI'
+        };
+    };
+
+    // AI SEO Generator for Single Product Modal (fills pTags, pSeoTitle, pSeoSlug, pSeoDesc)
     async function generateAISeoTags() {
-        const productName = document.getElementById('pName').value.trim();
+        var pNameEl = document.getElementById('pName');
+        var productName = pNameEl ? pNameEl.value.trim() : '';
         if (!productName) {
             showToast('⚠️ Please enter a Product Name first', 'warning');
-            document.getElementById('pName').focus();
+            if (pNameEl) pNameEl.focus();
             return;
         }
 
-        showToast('⏳ Generating SEO tags & keywords with Gemini AI...', 'info');
+        var langEl = document.getElementById('aiSeoLang');
+        var selectedLang = langEl ? langEl.value : 'bn';
+
+        var pDescEl = document.getElementById('pDesc');
+        var productDesc = pDescEl ? pDescEl.innerText.trim() : '';
+
+        var cats = typeof getSelectedCategoryNames === 'function' ? getSelectedCategoryNames() : [];
+
+        var btn = document.getElementById('btnAiGenerateFullSeo');
+        var origHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span>⏳ Generating Full SEO...</span>';
+        }
+
+        showToast('⏳ Generating complete SEO metadata with Gemini AI (' + (selectedLang === 'bn' ? 'বাংলা' : 'English') + ')...', 'info');
 
         try {
-            if (typeof AIConfig !== 'undefined') {
-                const prompt = 'Analyze this product and generate 8-10 high-search-volume SEO focus tags (comma-separated) and an optimized SEO Title for Google search in Bangladesh: "' + productName + '". Return JSON: {"tags": "tag1, tag2, tag3, tag4", "seo_title": "SEO Optimized Title"}';
-                const res = await AIConfig.generateText({
-                    isAdmin: true,
-                    prompt: prompt,
-                    systemInstruction: 'You are an expert e-commerce SEO specialist. Return ONLY valid JSON format.'
-                });
+            var data = await window.generateProductSeoMetadata({
+                name: productName,
+                description: productDesc,
+                categories: cats,
+                lang: selectedLang
+            });
 
-                var cleaned = (res.text || '').replace(/```json/gi, '').replace(/```/g, '').trim();
-                var jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    var parsed = JSON.parse(jsonMatch[0]);
-                    if (parsed.tags && document.getElementById('pTags')) {
-                        var existing = document.getElementById('pTags').value.trim();
-                        if (existing) {
-                            var tagSet = new Set(existing.split(',').map(function(s){ return s.trim(); }).filter(Boolean));
-                            parsed.tags.split(',').forEach(function(s){
-                                var t = s.trim();
-                                if (t) tagSet.add(t);
-                            });
-                            document.getElementById('pTags').value = Array.from(tagSet).join(', ');
-                        } else {
-                            document.getElementById('pTags').value = parsed.tags;
-                        }
-                        if (typeof updateSeoTagPreview === 'function') updateSeoTagPreview();
-                    }
-                    if (parsed.seo_title && document.getElementById('pSeoTitle')) {
-                        document.getElementById('pSeoTitle').value = parsed.seo_title;
-                    }
-                    showToast('✅ SEO Tags & Title generated with ' + res.modelUsed + '!', 'success');
-                    return;
+            // 1. Tags
+            if (data.tags && document.getElementById('pTags')) {
+                var existing = document.getElementById('pTags').value.trim();
+                if (existing) {
+                    var tagSet = new Set(existing.split(',').map(function(s){ return s.trim(); }).filter(Boolean));
+                    data.tags.split(',').forEach(function(s){
+                        var t = s.trim();
+                        if (t) tagSet.add(t);
+                    });
+                    document.getElementById('pTags').value = Array.from(tagSet).join(', ');
+                } else {
+                    document.getElementById('pTags').value = data.tags;
                 }
+                if (typeof updateSeoTagPreview === 'function') updateSeoTagPreview();
             }
-            showToast('⚠️ AI Key not configured in Settings.', 'warning');
+
+            // 2. SEO Title
+            if (data.seo_title && document.getElementById('pSeoTitle')) {
+                document.getElementById('pSeoTitle').value = data.seo_title;
+            }
+
+            // 3. SEO Slug
+            if (data.slug && document.getElementById('pSeoSlug')) {
+                document.getElementById('pSeoSlug').value = data.slug;
+            }
+
+            // 4. SEO Meta Description
+            if (data.seo_description && document.getElementById('pSeoDesc')) {
+                document.getElementById('pSeoDesc').value = data.seo_description;
+            }
+
+            showToast('✅ Full SEO (Tags, Title, Slug, Description) generated with ' + data.modelUsed + '!', 'success');
         } catch (e) {
             showToast('❌ SEO Generator Error: ' + e.message, 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+            }
         }
     }
     </script>

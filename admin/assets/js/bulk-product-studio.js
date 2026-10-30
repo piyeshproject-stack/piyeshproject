@@ -605,6 +605,18 @@
                                     <input type="number" id="bulkPriceVal" class="bulk-inp" placeholder="Amount" style="width:85px;padding:4px 8px;font-size:12px;">
                                     <button type="button" class="btn btn-primary btn-sm" onclick="bulkApplyPriceChange()" style="padding:4px 10px;font-size:11.5px;">Apply</button>
                                 </div>
+
+                                <!-- Bulk AI SEO Generator -->
+                                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:#fff;padding:5px 10px;border-radius:8px;border:1px solid #e2e8f0;">
+                                    <span style="font-size:11.5px;font-weight:700;color:#475569;">✨ AI SEO:</span>
+                                    <select id="bulkAiSeoLang" class="bulk-inp" style="width:auto;padding:4px 8px;font-size:12px;font-weight:700;">
+                                        <option value="bn" selected>🇧🇩 বাংলা (ডিফল্ট)</option>
+                                        <option value="en">🇬🇧 English</option>
+                                    </select>
+                                    <button type="button" class="btn btn-sm" id="bulkBatchAiSeoBtn" onclick="bulkBatchGenerateAISeo()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;font-weight:700;font-size:11.5px;padding:5px 11px;border-radius:7px;cursor:pointer;box-shadow:0 2px 6px rgba(99,102,241,0.25);" title="সব সিলেক্টেড প্রোডাক্টের জন্য AI দিয়ে Tags, SEO Title, Slug ও Meta Description তৈরি করুন">
+                                        ✨ Batch AI SEO Generate
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Bulk Category Assigner -->
@@ -1005,34 +1017,67 @@
                         ${catPillsHtml}
                     </div>
 
-                    <!-- Expandable Details Drawer (Description, Gallery Images, Tags) -->
+                    <!-- Expandable Details Drawer (Description, Gallery Images, Tags, SEO) -->
                     <div class="bulk-drawer ${item.expanded ? 'open' : ''}" id="bulk-drawer-${idx}">
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                             <div>
                                 <label class="bulk-mini-label">Description (HTML / Text)</label>
-                                <textarea class="bulk-inp" rows="4" oninput="bulkUpdateField(${idx}, 'description', this.value)" style="resize:vertical;">${escHtml(item.description || '')}</textarea>
+                                <textarea class="bulk-inp" id="bulk-desc-${idx}" rows="4" oninput="bulkUpdateField(${idx}, 'description', this.value)" style="resize:vertical;">${escHtml(item.description || '')}</textarea>
                             </div>
                             <div>
                                 <label class="bulk-mini-label">Gallery Image URLs (প্রতি লাইনে ১টি ছবির লিংক)</label>
                                 <textarea class="bulk-inp" rows="4" oninput="bulkUpdateGalleryText(${idx}, this.value)" style="resize:vertical;">${escHtml(galleryText)}</textarea>
                             </div>
                         </div>
-                        <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:10px;">
-                            <div style="flex:1;min-width:220px;">
-                                <label class="bulk-mini-label">SEO Focus Tags / Keywords (কমা দিয়ে)</label>
-                                <input type="text" class="bulk-inp" value="${escAttr(item.tags || '')}" oninput="bulkUpdateField(${idx}, 'tags', this.value)" placeholder="e.g. luxury watch, mens fashion, waterproof">
+
+                        <!-- Complete Product SEO & Meta Section -->
+                        <div style="margin-top:12px;padding:10px 12px;background:#fff;border-radius:8px;border:1px solid #e2e8f0;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+                                <div style="font-size:12px;font-weight:800;color:#4f46e5;display:flex;align-items:center;gap:5px;">
+                                    <span>✨ Product SEO &amp; Meta Metadata</span>
+                                </div>
+                                <div style="display:flex;gap:6px;align-items:center;">
+                                    <select id="bulk-item-lang-${idx}" class="bulk-inp" style="width:auto;padding:3px 7px;font-size:11px;font-weight:700;">
+                                        <option value="bn" selected>🇧🇩 বাংলা</option>
+                                        <option value="en">🇬🇧 English</option>
+                                    </select>
+                                    <button type="button" id="bulk-ai-btn-${idx}" onclick="bulkGenerateItemAISeo(${idx})" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(99,102,241,0.2);" title="এই প্রোডাক্টের বিবরণ অনুযায়ী AI দিয়ে SEO Title, Slug, Tags ও Meta Description পূরণ করুন">
+                                        ✨ AI Generate SEO
+                                    </button>
+                                </div>
                             </div>
-                            <div style="display:flex;gap:14px;align-items:center;padding-top:14px;">
-                                <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;">
-                                    <input type="checkbox" ${item.is_active ? 'checked' : ''} onchange="bulkUpdateField(${idx}, 'is_active', this.checked)"> Active
-                                </label>
-                                <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;">
-                                    <input type="checkbox" ${item.is_featured ? 'checked' : ''} onchange="bulkUpdateField(${idx}, 'is_featured', this.checked)"> Featured
-                                </label>
-                                <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;">
-                                    <input type="checkbox" ${item.is_add_once ? 'checked' : ''} onchange="bulkUpdateField(${idx}, 'is_add_once', this.checked)"> Add-Once
-                                </label>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;">
+                                <div>
+                                    <label class="bulk-mini-label">Custom SEO Title</label>
+                                    <input type="text" class="bulk-inp" id="bulk-seo-title-${idx}" value="${escAttr(item.seo_title || '')}" oninput="bulkUpdateField(${idx}, 'seo_title', this.value)" placeholder="e.g. Premium Popcorn Panjabi for Men">
+                                </div>
+                                <div>
+                                    <label class="bulk-mini-label">Custom SEO Slug (Latin URL)</label>
+                                    <input type="text" class="bulk-inp" id="bulk-seo-slug-${idx}" value="${escAttr(item.slug || '')}" oninput="bulkUpdateField(${idx}, 'slug', this.value)" placeholder="e.g. premium-popcorn-panjabi-men">
+                                </div>
                             </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                                <div>
+                                    <label class="bulk-mini-label">SEO Focus Tags / Keywords (কমা দিয়ে)</label>
+                                    <input type="text" class="bulk-inp" id="bulk-tags-${idx}" value="${escAttr(item.tags || '')}" oninput="bulkUpdateField(${idx}, 'tags', this.value)" placeholder="e.g. panjabi, popcorn panjabi, gents wear">
+                                </div>
+                                <div>
+                                    <label class="bulk-mini-label">SEO Meta Description</label>
+                                    <textarea class="bulk-inp" rows="2" id="bulk-seo-desc-${idx}" oninput="bulkUpdateField(${idx}, 'seo_description', this.value)" placeholder="140-160 characters summary for Google..." style="resize:vertical;">${escHtml(item.seo_description || '')}</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:14px;align-items:center;justify-content:flex-end;margin-top:10px;padding-top:8px;border-top:1px dashed #e2e8f0;">
+                            <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;">
+                                <input type="checkbox" ${item.is_active ? 'checked' : ''} onchange="bulkUpdateField(${idx}, 'is_active', this.checked)"> Active
+                            </label>
+                            <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;">
+                                <input type="checkbox" ${item.is_featured ? 'checked' : ''} onchange="bulkUpdateField(${idx}, 'is_featured', this.checked)"> Featured
+                            </label>
+                            <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;cursor:pointer;">
+                                <input type="checkbox" ${item.is_add_once ? 'checked' : ''} onchange="bulkUpdateField(${idx}, 'is_add_once', this.checked)"> Add-Once
+                            </label>
                         </div>
                     </div>
                 </div>
@@ -1178,6 +1223,175 @@
         });
         renderBulkStagingList();
         if (typeof showToast === 'function') showToast('💰 ' + count + 'টি প্রোডাক্টের দাম আপডেট করা হয়েছে!', 'success');
+    };
+
+    // ── AI SEO Generators for Bulk Studio ───────────────────────────────────
+    window.bulkGenerateItemAISeo = async function(idx) {
+        var item = bulkStagedItems[idx];
+        if (!item) return;
+
+        var name = (item.name || '').trim();
+        if (!name) {
+            if (typeof showToast === 'function') showToast('প্রথমে প্রোডাক্টের নাম লিখুন', 'warning');
+            return;
+        }
+
+        var langSel = document.getElementById('bulk-item-lang-' + idx);
+        var lang = langSel ? langSel.value : 'bn';
+
+        var btn = document.getElementById('bulk-ai-btn-' + idx);
+        var origBtnHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ AI...';
+        }
+
+        var cats = [];
+        if (Array.isArray(item.category_ids) && typeof allCategories !== 'undefined') {
+            var catSet = new Set(item.category_ids.map(String));
+            allCategories.forEach(function(c) {
+                if (catSet.has(String(c.id))) cats.push(c.name);
+            });
+        }
+
+        try {
+            if (typeof window.generateProductSeoMetadata !== 'function') {
+                throw new Error('AI SEO Generator helper not found');
+            }
+
+            var seo = await window.generateProductSeoMetadata({
+                name: name,
+                description: item.description || '',
+                categories: cats,
+                lang: lang
+            });
+
+            item.tags = seo.tags;
+            item.seo_title = seo.seo_title;
+            item.slug = seo.slug;
+            item.seo_description = seo.seo_description;
+
+            // Direct update inputs in DOM
+            var tagsInp = document.getElementById('bulk-tags-' + idx);
+            if (tagsInp) tagsInp.value = seo.tags;
+
+            var titleInp = document.getElementById('bulk-seo-title-' + idx);
+            if (titleInp) titleInp.value = seo.seo_title;
+
+            var slugInp = document.getElementById('bulk-seo-slug-' + idx);
+            if (slugInp) slugInp.value = seo.slug;
+
+            var descInp = document.getElementById('bulk-seo-desc-' + idx);
+            if (descInp) descInp.value = seo.seo_description;
+
+            if (typeof showToast === 'function') {
+                showToast('✅ #' + (idx + 1) + ' SEO জেনারেট সম্পন্ন (' + (lang === 'bn' ? 'বাংলা' : 'English') + ')!', 'success');
+            }
+        } catch (err) {
+            console.error('AI SEO error:', err);
+            if (typeof showToast === 'function') showToast('❌ SEO Error: ' + err.message, 'error');
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = origBtnHtml;
+            }
+        }
+    };
+
+    window.bulkBatchGenerateAISeo = async function() {
+        var selectedEntries = [];
+        bulkStagedItems.forEach(function(item, idx) {
+            if (item.selected) selectedEntries.push({ item: item, idx: idx });
+        });
+
+        if (!selectedEntries.length) {
+            if (typeof showToast === 'function') showToast('SEO তৈরি করতে অন্তত ১টি প্রোডাক্ট সিলেক্ট করুন', 'warning');
+            return;
+        }
+
+        var langSel = document.getElementById('bulkAiSeoLang');
+        var lang = langSel ? langSel.value : 'bn';
+
+        var btn = document.getElementById('bulkBatchAiSeoBtn');
+        var origBtnHtml = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Generating (' + selectedEntries.length + ')...';
+        }
+
+        var successCount = 0;
+        var failCount = 0;
+
+        for (var i = 0; i < selectedEntries.length; i++) {
+            var entry = selectedEntries[i];
+            var it = entry.item;
+            var idx = entry.idx;
+
+            if (btn) {
+                btn.innerHTML = '⏳ SEO (' + (i + 1) + '/' + selectedEntries.length + ')...';
+            }
+
+            var cats = [];
+            if (Array.isArray(it.category_ids) && typeof allCategories !== 'undefined') {
+                var catSet = new Set(it.category_ids.map(String));
+                allCategories.forEach(function(c) {
+                    if (catSet.has(String(c.id))) cats.push(c.name);
+                });
+            }
+
+            try {
+                if (typeof window.generateProductSeoMetadata !== 'function') {
+                    throw new Error('AI SEO Generator helper not found');
+                }
+
+                var seo = await window.generateProductSeoMetadata({
+                    name: it.name,
+                    description: it.description || '',
+                    categories: cats,
+                    lang: lang
+                });
+
+                it.tags = seo.tags;
+                it.seo_title = seo.seo_title;
+                it.slug = seo.slug;
+                it.seo_description = seo.seo_description;
+
+                // Sync DOM if open
+                var tagsInp = document.getElementById('bulk-tags-' + idx);
+                if (tagsInp) tagsInp.value = seo.tags;
+                var titleInp = document.getElementById('bulk-seo-title-' + idx);
+                if (titleInp) titleInp.value = seo.seo_title;
+                var slugInp = document.getElementById('bulk-seo-slug-' + idx);
+                if (slugInp) slugInp.value = seo.slug;
+                var descInp = document.getElementById('bulk-seo-desc-' + idx);
+                if (descInp) descInp.value = seo.seo_description;
+
+                successCount++;
+            } catch (e) {
+                console.error('Batch SEO failed for', it.name, e);
+                failCount++;
+            }
+
+            // Respect API rate limits with 300ms pause
+            if (i < selectedEntries.length - 1) {
+                await new Promise(function(resolve) { setTimeout(resolve, 300); });
+            }
+        }
+
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origBtnHtml;
+        }
+
+        if (successCount > 0) {
+            if (typeof showToast === 'function') {
+                showToast('✅ ' + successCount + 'টি প্রোডাক্টে সম্পূর্ণ AI SEO তৈরি হয়েছে!' + (failCount ? ' (' + failCount + 'টি ব্যর্থ)' : ''), 'success');
+            }
+        } else {
+            if (typeof showToast === 'function') {
+                showToast('❌ SEO জেনারেট ব্যর্থ হয়েছে। AI Key চেক করুন।', 'error');
+            }
+        }
     };
 
     // ── Save Single Staged Item to Active DB Provider ────────────────────────
