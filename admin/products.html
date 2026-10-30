@@ -18,7 +18,7 @@
     <script src="../assets/js/piexif.js"></script>
     <script src="../assets/js/image-seo-injector.js?v=3.8.9"></script>
     <script src="../assets/js/ai-config.js?v=3.8.9"></script>
-    <script src="assets/js/bulk-product-studio.js?v=1.0.1"></script>
+    <script src="assets/js/bulk-product-studio.js?v=1.1.0"></script>
     <style>
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
         .product-card {
@@ -180,7 +180,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Product SKU (Optional)</label>
-                    <input class="form-input" id="pSku" placeholder="e.g. ITEM-123">
+                    <div style="display:flex;gap:6px;align-items:stretch;"><input class="form-input" id="pSku" placeholder="e.g. MB-1042" style="flex:1;"><button type="button" id="singleAutoSkuBtn" onclick="fillSingleProductAutoSku(true)" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:8px;padding:0 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;box-shadow:0 2px 6px rgba(79,70,229,0.25);" title="প্রোডাক্টের নাম থেকে স্থায়ী SKU (XX-1234) তৈরি করুন">⚡ Auto Generate</button></div>
                 </div>
             </div>
             <div class="form-group">
@@ -996,8 +996,7 @@
             // Fill all form fields from productData!
             var prodName = productData.name || productData.title || '';
             document.getElementById('pName').value = prodName;
-            var rawImpSku = (productData.sku || '').trim();
-            document.getElementById('pSku').value = (rawImpSku && !/^sku[-_]/i.test(rawImpSku) && !/^prod[-_]/i.test(rawImpSku)) ? rawImpSku : (typeof generateAutoSku === 'function' ? generateAutoSku(prodName) : rawImpSku);
+            document.getElementById('pSku').value = (productData.sku || '').trim();
 
             // Description
             var descHtml = productData.description || '';
@@ -1531,7 +1530,7 @@
 
         var payload = {
             name:             name,
-            sku:              document.getElementById('pSku').value.trim() || (typeof generateAutoSku === 'function' ? generateAutoSku(name) : null),
+            sku:              document.getElementById('pSku').value.trim() || null,
             description:      document.getElementById('pDesc').innerHTML.trim(),
             base_price:       parseInt(document.getElementById('pBasePrice').value) || 0,
             flash_sale_price: parseInt(document.getElementById('pFlashPrice').value) || 0,
