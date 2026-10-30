@@ -610,7 +610,8 @@
                                 <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;background:#fff;padding:5px 10px;border-radius:8px;border:1px solid #e2e8f0;">
                                     <span style="font-size:11.5px;font-weight:700;color:#475569;">✨ AI SEO:</span>
                                     <select id="bulkAiSeoLang" class="bulk-inp" style="width:auto;padding:4px 8px;font-size:12px;font-weight:700;">
-                                        <option value="bn" selected>🇧🇩 বাংলা (ডিফল্ট)</option>
+                                        <option value="hybrid" selected>🌐 মিশ্র (Eng Name + বাংলা বিবরণী) [ডিফল্ট]</option>
+                                        <option value="bn">🇧🇩 সম্পূর্ণ বাংলা</option>
                                         <option value="en">🇬🇧 English</option>
                                     </select>
                                     <button type="button" class="btn btn-sm" id="bulkBatchAiSeoBtn" onclick="bulkBatchGenerateAISeo()" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;font-weight:700;font-size:11.5px;padding:5px 11px;border-radius:7px;cursor:pointer;box-shadow:0 2px 6px rgba(99,102,241,0.25);" title="সব সিলেক্টেড প্রোডাক্টের জন্য AI দিয়ে Tags, SEO Title, Slug ও Meta Description তৈরি করুন">
@@ -1038,7 +1039,8 @@
                                 </div>
                                 <div style="display:flex;gap:6px;align-items:center;">
                                     <select id="bulk-item-lang-${idx}" class="bulk-inp" style="width:auto;padding:3px 7px;font-size:11px;font-weight:700;">
-                                        <option value="bn" selected>🇧🇩 বাংলা</option>
+                                        <option value="hybrid" selected>🌐 মিশ্র (ডিফল্ট)</option>
+                                        <option value="bn">🇧🇩 বাংলা</option>
                                         <option value="en">🇬🇧 English</option>
                                     </select>
                                     <button type="button" id="bulk-ai-btn-${idx}" onclick="bulkGenerateItemAISeo(${idx})" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(99,102,241,0.2);" title="এই প্রোডাক্টের বিবরণ অনুযায়ী AI দিয়ে SEO Title, Slug, Tags ও Meta Description পূরণ করুন">
@@ -1237,7 +1239,7 @@
         }
 
         var langSel = document.getElementById('bulk-item-lang-' + idx);
-        var lang = langSel ? langSel.value : 'bn';
+        var lang = langSel ? langSel.value : 'hybrid';
 
         var btn = document.getElementById('bulk-ai-btn-' + idx);
         var origBtnHtml = btn ? btn.innerHTML : '';
@@ -1310,7 +1312,7 @@
         }
 
         var langSel = document.getElementById('bulkAiSeoLang');
-        var lang = langSel ? langSel.value : 'bn';
+        var lang = langSel ? langSel.value : 'hybrid';
 
         var btn = document.getElementById('bulkBatchAiSeoBtn');
         var origBtnHtml = btn ? btn.innerHTML : '';

@@ -618,6 +618,9 @@
                 temperature: opts.temperature !== undefined ? opts.temperature : 0.7,
                 maxOutputTokens: opts.maxTokens || 1200
             };
+            if (opts.responseMimeType || opts.jsonMode) {
+                payload.generationConfig.responseMimeType = opts.responseMimeType || 'application/json';
+            }
 
             // Modern, verified active models ONLY
             var tryModels = [chosenModel, PRIMARY_REST_MODEL, ADVANCED_REST_MODEL, LITE_REST_MODEL];

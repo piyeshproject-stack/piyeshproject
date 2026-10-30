@@ -287,7 +287,8 @@
                             <div style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid #cbd5e1;border-radius:6px;padding:2px 7px;">
                                 <span style="font-size:11px;font-weight:700;color:#64748b;">🌐 AI Lang:</span>
                                 <select id="aiSeoLang" style="border:none;background:transparent;font-size:11.5px;font-weight:700;color:#1e293b;outline:none;cursor:pointer;">
-                                    <option value="bn" selected>🇧🇩 বাংলা (ডিফল্ট)</option>
+                                    <option value="hybrid" selected>🌐 মিশ্র (Eng Name + বাংলা বিবরণী) [ডিফল্ট]</option>
+                                    <option value="bn">🇧🇩 সম্পূর্ণ বাংলা</option>
                                     <option value="en">🇬🇧 English</option>
                                 </select>
                             </div>
@@ -1940,63 +1941,145 @@
         }
     }
 
-    // ── Universal AI SEO Metadata Generator (Tags, Title, Slug, Description) ──
+    // ── Robust JSON Parser & Fallback Extractor ──
+    function extractJsonFromAiText(rawText) {
+        if (!rawText) return null;
+        var text = String(rawText).trim();
+
+        // 1. Direct parse attempt
+        try { return JSON.parse(text); } catch (e) {}
+
+        // 2. Strip code fences
+        var cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+        try { return JSON.parse(cleaned); } catch (e) {}
+
+        // 3. Extract bracketed substring { ... }
+        var firstOpen = cleaned.indexOf('{');
+        var lastClose = cleaned.lastIndexOf('}');
+        if (firstOpen !== -1 && lastClose > firstOpen) {
+            var bracketed = cleaned.substring(firstOpen, lastClose + 1);
+            try { return JSON.parse(bracketed); } catch (e) {
+                try {
+                    // Relax trailing commas & fix unquoted keys
+                    var relaxed = bracketed
+                        .replace(/,\s*([\}\]])/g, '$1')
+                        .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":');
+                    return JSON.parse(relaxed);
+                } catch (e2) {}
+            }
+        }
+
+        // 4. Regex key-value line fallback
+        var fallback = {};
+        var tagsMatch = text.match(/(?:tags|keywords|focus tags)\s*[:=]\s*([^\n\r]+)/i);
+        var titleMatch = text.match(/(?:seo_title|title|seo title)\s*[:=]\s*([^\n\r]+)/i);
+        var slugMatch = text.match(/(?:slug|seo_slug|url)\s*[:=]\s*([^\n\r]+)/i);
+        var descMatch = text.match(/(?:seo_description|description|meta description)\s*[:=]\s*([\s\S]+?)(?=(?:tags|seo_title|slug|$))/i);
+
+        if (tagsMatch || titleMatch || slugMatch || descMatch) {
+            if (tagsMatch) fallback.tags = tagsMatch[1].replace(/["'{}]/g, '').trim();
+            if (titleMatch) fallback.seo_title = titleMatch[1].replace(/["'{}]/g, '').trim();
+            if (slugMatch) fallback.slug = slugMatch[1].replace(/["'{}]/g, '').trim();
+            if (descMatch) fallback.seo_description = descMatch[1].replace(/["'{}]/g, '').trim();
+            return fallback;
+        }
+
+        return null;
+    }
+
+    // ── Universal AI SEO Metadata Generator (Hybrid, Bangla, English) ──
     window.generateProductSeoMetadata = async function(opts) {
         opts = opts || {};
         var name = (opts.name || '').trim();
         if (!name) {
             throw new Error('Please enter a Product Name first');
         }
-        if (typeof AIConfig === 'undefined') {
-            throw new Error('AI Config module is not loaded.');
-        }
 
-        var lang = (opts.lang || 'bn') === 'en' ? 'en' : 'bn';
+        var mode = opts.lang || opts.mode || 'hybrid';
+        if (mode !== 'bn' && mode !== 'en') mode = 'hybrid';
+
         var desc = (opts.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 500);
         var categories = Array.isArray(opts.categories) ? opts.categories.join(', ') : (opts.categories || '');
 
         var prompt;
-        if (lang === 'bn') {
-            prompt = 'You are an elite e-commerce SEO specialist in Bangladesh. Analyze this product and create complete SEO metadata optimized for Google Search rankings and social sharing in Bangladesh.\n' +
+        if (mode === 'hybrid') {
+            prompt = 'You are an expert e-commerce SEO specialist in Bangladesh. Analyze this product and generate HYBRID SEO metadata for Google Search and Facebook sharing in Bangladesh.\n' +
                 'Product Name: "' + name + '"\n' +
                 (categories ? 'Categories: ' + categories + '\n' : '') +
                 (desc ? 'Description: ' + desc + '\n' : '') +
-                '\nRequirements:\n' +
-                '1. "tags": 8-12 high search-volume comma-separated keywords combining popular Bangla customer searches (e.g. ছেলেদের পাঞ্জাবি, পাঞ্জাবি কালেকশন) and popular English/Banglish terms (e.g. panjabi for men, stylish panjabi bd).\n' +
-                '2. "seo_title": High-converting Google Search Title in Bengali/English (under 65 chars) with buyer intent keywords (e.g. সেরা দামে কিনুন / নতুন কালেকশন).\n' +
-                '3. "slug": Clean URL slug strictly in LOWERCASE English/Latin letters and hyphens ONLY (e.g. "mens-cotton-panjabi-blue"). NEVER use Bengali script in slug so URLs stay short, clean, and shareable without percent-encoding!\n' +
-                '4. "seo_description": Engaging meta description in Bengali (140-160 chars) highlighting quality, comfort, and purchase CTA like সারা বাংলাদেশে ক্যাশ অন ডেলিভারি / দ্রুত ডেলিভারি।\n\n' +
+                '\nRequirements (HYBRID STRATEGY):\n' +
+                '1. "seo_title": English product brand name followed by high-converting Bengali phrase (e.g. "' + name + ' — সেরা দামে কিনুন BD", max 65 chars).\n' +
+                '2. "seo_description": Engaging meta description in BENGALI (বাংলা ভাষায়, 140-160 chars) explaining premium quality, comfort, and cash on delivery all over Bangladesh.\n' +
+                '3. "slug": Clean, URL-safe LOWERCASE English/Latin letters and hyphens ONLY (e.g. "' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '"). NEVER use Bengali script in the slug so URLs remain short and 100% shareable.\n' +
+                '4. "tags": 8-12 high-search-volume comma-separated keywords MIXING popular English and Bengali searches (e.g. ' + name.toLowerCase() + ', panjabi collection bd, ছেলেদের পাঞ্জাবি, প্রিমিয়াম কালেকশন).\n\n' +
+                'Return ONLY a valid JSON object in this schema without any markdown formatting:\n' +
+                '{"tags": "...", "seo_title": "...", "slug": "...", "seo_description": "..."}';
+        } else if (mode === 'bn') {
+            prompt = 'You are an expert e-commerce SEO specialist in Bangladesh. Analyze this product and generate full BENGALI SEO metadata.\n' +
+                'Product Name: "' + name + '"\n' +
+                (categories ? 'Categories: ' + categories + '\n' : '') +
+                (desc ? 'Description: ' + desc + '\n' : '') +
+                '\nRequirements (BENGALI MODE):\n' +
+                '1. "seo_title": High-converting Google Search Title in Bengali (max 65 chars) with buyer intent keywords.\n' +
+                '2. "seo_description": Engaging meta description in Bengali (140-160 chars) highlighting quality and cash on delivery.\n' +
+                '3. "slug": Clean URL slug strictly in LOWERCASE English/Latin letters and hyphens ONLY. NEVER use Bengali script in slug!\n' +
+                '4. "tags": 8-12 high search-volume comma-separated Bengali keywords.\n\n' +
                 'Return ONLY a valid JSON object in this schema without any markdown formatting:\n' +
                 '{"tags": "...", "seo_title": "...", "slug": "...", "seo_description": "..."}';
         } else {
-            prompt = 'You are an elite e-commerce SEO specialist. Analyze this product and create complete SEO metadata optimized for Google Search.\n' +
+            prompt = 'You are an expert e-commerce SEO specialist. Analyze this product and generate full ENGLISH SEO metadata.\n' +
                 'Product Name: "' + name + '"\n' +
                 (categories ? 'Categories: ' + categories + '\n' : '') +
                 (desc ? 'Description: ' + desc + '\n' : '') +
-                '\nRequirements:\n' +
-                '1. "tags": 8-12 high search-volume comma-separated English keywords.\n' +
-                '2. "seo_title": High-converting Google Search Title in English (under 65 chars).\n' +
-                '3. "slug": Clean URL slug strictly in LOWERCASE English/Latin letters and hyphens ONLY (e.g. "mens-leather-wallet-brown").\n' +
-                '4. "seo_description": Engaging meta description in English (140-160 chars) with a clear call-to-action.\n\n' +
+                '\nRequirements (ENGLISH MODE):\n' +
+                '1. "seo_title": High-converting Google Search Title in English (under 65 chars).\n' +
+                '2. "seo_description": Engaging meta description in English (140-160 chars) with a clear CTA.\n' +
+                '3. "slug": Clean URL slug strictly in LOWERCASE English letters and hyphens ONLY.\n' +
+                '4. "tags": 8-12 high search-volume comma-separated English keywords.\n\n' +
                 'Return ONLY a valid JSON object in this schema without any markdown formatting:\n' +
                 '{"tags": "...", "seo_title": "...", "slug": "...", "seo_description": "..."}';
         }
 
-        var res = await AIConfig.generateText({
-            isAdmin: true,
-            prompt: prompt,
-            systemInstruction: 'You are an elite e-commerce SEO specialist. You MUST return ONLY valid JSON format without markdown code fences or extra text.'
-        });
+        var parsed = null;
+        var modelUsed = 'Gemini AI';
 
-        var cleaned = (res.text || '').replace(/```json/gi, '').replace(/```/g, '').trim();
-        var jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            throw new Error('AI response did not contain valid JSON metadata.');
+        if (typeof AIConfig !== 'undefined') {
+            try {
+                var res = await AIConfig.generateText({
+                    isAdmin: true,
+                    prompt: prompt,
+                    jsonMode: true,
+                    responseMimeType: 'application/json',
+                    systemInstruction: 'You are an elite e-commerce SEO specialist. You MUST return ONLY a valid JSON object with keys: tags, seo_title, slug, seo_description. No markdown, no introductory words.'
+                });
+                modelUsed = res.modelUsed || 'Gemini AI';
+                parsed = extractJsonFromAiText(res.text);
+            } catch (aiErr) {
+                console.warn('AIConfig call failed, attempting fallback parsing:', aiErr);
+            }
         }
 
-        var parsed = JSON.parse(jsonMatch[0]);
+        // Smart Fallback if AI is offline, blocked, or returned non-JSON
+        if (!parsed) {
+            var latinClean = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 70) || 'product';
+            var catList = categories ? categories.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [];
+            var autoTags = [name.toLowerCase(), 'online shopping bd', 'best price bd'].concat(catList.map(function(c){ return c.toLowerCase(); }));
+            if (mode === 'hybrid' || mode === 'bn') {
+                autoTags.push('সেরা দাম', 'ক্যাশ অন ডেলিভারি');
+            }
 
-        // Clean slug ensuring 100% Latin URL safety
+            parsed = {
+                seo_title: (mode === 'en') ? (name + ' - Buy Online at Best Price BD') : (name + ' — সেরা দামে কিনুন BD'),
+                slug: latinClean,
+                seo_description: (mode === 'en')
+                    ? ('Buy ' + name + ' online at the best price in Bangladesh. High quality, premium finish, and cash on delivery nationwide!')
+                    : (name + ' কিনুন সবচেয়ে সাশ্রয়ী মূল্যে। ১০০% প্রিমিয়াম কোয়ালিটি ও আরামদায়ক অনুভূতি। সারা বাংলাদেশে দ্রুত ক্যাশ অন ডেলিভারি সুবিধা!'),
+                tags: autoTags.join(', ')
+            };
+            modelUsed = 'Smart Hybrid Engine';
+        }
+
+        // Ensure slug is 100% Latin alphanumeric and hyphen
         var safeSlug = (parsed.slug || '').toString().toLowerCase().trim()
             .replace(/[^a-z0-9]+/g, '-')
             .replace(/^-+|-+$/g, '')
@@ -2012,10 +2095,10 @@
 
         return {
             tags: (parsed.tags || '').trim(),
-            seo_title: (parsed.seo_title || '').trim(),
+            seo_title: (parsed.seo_title || name).trim(),
             slug: safeSlug,
             seo_description: (parsed.seo_description || '').trim(),
-            modelUsed: res.modelUsed || 'Gemini AI'
+            modelUsed: modelUsed
         };
     };
 
@@ -2030,7 +2113,7 @@
         }
 
         var langEl = document.getElementById('aiSeoLang');
-        var selectedLang = langEl ? langEl.value : 'bn';
+        var selectedLang = langEl ? langEl.value : 'hybrid';
 
         var pDescEl = document.getElementById('pDesc');
         var productDesc = pDescEl ? pDescEl.innerText.trim() : '';
@@ -2044,7 +2127,8 @@
             btn.innerHTML = '<span>⏳ Generating Full SEO...</span>';
         }
 
-        showToast('⏳ Generating complete SEO metadata with Gemini AI (' + (selectedLang === 'bn' ? 'বাংলা' : 'English') + ')...', 'info');
+        var modeLabel = (selectedLang === 'hybrid') ? 'মিশ্র (English Name + বাংলা বিবরণী)' : ((selectedLang === 'bn') ? 'বাংলা' : 'English');
+        showToast('⏳ Generating SEO with Gemini AI (' + modeLabel + ')...', 'info');
 
         try {
             var data = await window.generateProductSeoMetadata({
