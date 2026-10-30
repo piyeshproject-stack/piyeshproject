@@ -18,6 +18,7 @@
     <script src="../assets/js/piexif.js"></script>
     <script src="../assets/js/image-seo-injector.js?v=3.8.9"></script>
     <script src="../assets/js/ai-config.js?v=3.8.9"></script>
+    <script src="assets/js/bulk-product-studio.js?v=1.0.1"></script>
     <style>
         .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; }
         .product-card {
@@ -995,7 +996,8 @@
             // Fill all form fields from productData!
             var prodName = productData.name || productData.title || '';
             document.getElementById('pName').value = prodName;
-            document.getElementById('pSku').value = productData.sku || '';
+            var rawImpSku = (productData.sku || '').trim();
+            document.getElementById('pSku').value = (rawImpSku && !/^sku[-_]/i.test(rawImpSku) && !/^prod[-_]/i.test(rawImpSku)) ? rawImpSku : (typeof generateAutoSku === 'function' ? generateAutoSku(prodName) : rawImpSku);
 
             // Description
             var descHtml = productData.description || '';
@@ -1529,7 +1531,7 @@
 
         var payload = {
             name:             name,
-            sku:              document.getElementById('pSku').value.trim() || null,
+            sku:              document.getElementById('pSku').value.trim() || (typeof generateAutoSku === 'function' ? generateAutoSku(name) : null),
             description:      document.getElementById('pDesc').innerHTML.trim(),
             base_price:       parseInt(document.getElementById('pBasePrice').value) || 0,
             flash_sale_price: parseInt(document.getElementById('pFlashPrice').value) || 0,
