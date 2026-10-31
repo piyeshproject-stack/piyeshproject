@@ -95,6 +95,80 @@
     }
 
     /**
+     * Central Canonical Tag Merger for Bulk Studio
+     * Perfectly replicates the store's normal SEO rule:
+     * Combines:
+     * 1. Product AI / Manual Custom Tags
+     * 2. Product Name automatic keywords (words > 2 letters)
+     * 3. Selected Category Names
+     * 4. Store SEO Keywords (from site_settings.seo_keywords)
+     * 5. Store Name (from site_settings.store_name)
+     */
+    function computeFullMergedTags(item, extraTags) {
+        if (!item) return '';
+        var name = (item.name || '').trim();
+        var catIds = Array.isArray(item.category_ids) ? item.category_ids.map(String) : [];
+        var cats = (typeof allCategories !== 'undefined' && Array.isArray(allCategories)) ? allCategories : [];
+        var catNames = catIds.map(function(cid) {
+            var found = cats.find(function(c) { return String(c.id) === String(cid); });
+            return found ? found.name : '';
+        }).filter(Boolean);
+
+        var existingTags = (item.tags || '').trim();
+        var toMerge = extraTags ? (existingTags ? existingTags + ', ' + extraTags : extraTags) : existingTags;
+
+        if (typeof ImageSeoInjector !== 'undefined' && typeof ImageSeoInjector.buildMergedTags === 'function') {
+            var merged = ImageSeoInjector.buildMergedTags({
+                productName: name,
+                categoryNames: catNames,
+                productTags: toMerge
+            });
+            if (merged && merged.length > 0) {
+                return merged.join(', ');
+            }
+        }
+
+        // Native fallback merging
+        var tagSet = new Set();
+        if (toMerge) {
+            toMerge.split(',').forEach(function(t) {
+                var s = t.trim();
+                if (s && s.length > 1) tagSet.add(s);
+            });
+        }
+        if (name) {
+            tagSet.add(name);
+            name.split(/[\s,-]+/).forEach(function(w) {
+                var s = w.trim();
+                if (s && s.length > 2) tagSet.add(s);
+            });
+        }
+        catNames.forEach(function(c) {
+            var s = c.trim();
+            if (s) tagSet.add(s);
+        });
+
+        try {
+            var cached = localStorage.getItem('site_settings_cache');
+            if (cached) {
+                var st = JSON.parse(cached);
+                if (st.seo_keywords) {
+                    st.seo_keywords.split(',').forEach(function(k) {
+                        var s = k.trim();
+                        if (s && s.length > 1) tagSet.add(s);
+                    });
+                }
+                if (st.store_name) {
+                    var sn = st.store_name.trim();
+                    if (sn) tagSet.add(sn);
+                }
+            }
+        } catch(e) {}
+
+        return Array.from(tagSet).join(', ');
+    }
+
+    /**
      * Generate a unique SKU in format XX-1234 (2 letters from product name + '-' + 3 to 4 digits)
      */
     window.generateAutoSku = function(productName, extraUsedSkus) {
@@ -424,21 +498,14 @@
             rawSku = '';
         }
 
-        // Auto-generate initial tags from Name + Categories if missing
-        var initTags = (raw.tags || raw.seo_keywords || '').trim();
-        if (!initTags) {
-            var tagWords = prodName.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF\s]/g, ' ').split(/\s+/).filter(function(w){ return w.length > 2; });
-            var initSet = new Set(tagWords);
-            if (Array.isArray(matchedCatIds) && typeof allCategories !== 'undefined') {
-                var catSet = new Set(matchedCatIds.map(String));
-                allCategories.forEach(function(c) {
-                    if (catSet.has(String(c.id))) initSet.add(c.name.toLowerCase());
-                });
-            }
-            initSet.add('online shopping bd');
-            initSet.add('সেরা দাম');
-            initTags = Array.from(initSet).slice(0, 10).join(', ');
-        }
+        // Automatically generate complete tags: Product Tokens + Categories + Store SEO Keywords + Store Name
+        var initialRawTags = (raw.tags || raw.seo_keywords || '').trim();
+        var tempItem = {
+            name: prodName,
+            category_ids: Array.isArray(matchedCatIds) ? matchedCatIds : [],
+            tags: initialRawTags
+        };
+        var initTags = computeFullMergedTags(tempItem, initialRawTags);
 
         var initSlug = (raw.slug || '').trim();
         if (!initSlug) {
@@ -757,6 +824,7 @@
                 batchArr.forEach(function(id) { set.add(String(id)); });
                 item.category_ids = Array.from(set);
             }
+            item.tags = computeFullMergedTags(item, item.tags);
         });
         renderBulkStagingList();
         if (typeof showToast === 'function') showToast('✅ ' + count + 'টি প্রোডাক্টে ক্যাটাগরি আপডেট হয়েছে!', 'success');
@@ -1190,6 +1258,7 @@
         if (pos > -1) arr.splice(pos, 1);
         else arr.push(cid);
         item.category_ids = arr;
+        item.tags = computeFullMergedTags(item, item.tags);
         renderBulkStagingList();
     };
 
@@ -1226,56 +1295,29 @@
         if (typeof showToast === 'function') showToast('✅ SKU Generated: ' + item.sku, 'success');
     };
 
-    // ── Auto Generate Tags for Single Item (from Name + Categories) ──
+    // ── Auto Generate Tags for Single Item (Store SEO + Product Auto Tags) ──
     window.bulkAutoGenerateTags = function(idx) {
         var item = bulkStagedItems[idx];
         if (!item) return;
 
-        var cats = [];
-        if (Array.isArray(item.category_ids) && typeof allCategories !== 'undefined') {
-            var catSet = new Set(item.category_ids.map(String));
-            allCategories.forEach(function(c) {
-                if (catSet.has(String(c.id))) cats.push(c.name);
-            });
-        }
-
-        var words = item.name.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF\s]/g, ' ').split(/\s+/).filter(function(w){ return w.length > 2; });
-        var tagSet = new Set(words);
-        cats.forEach(function(c){ tagSet.add(c.toLowerCase()); });
-        tagSet.add('online shopping bd');
-        tagSet.add('সেরা দাম');
-
-        item.tags = Array.from(tagSet).slice(0, 10).join(', ');
+        item.tags = computeFullMergedTags(item, item.tags);
         var tagsInp = document.getElementById('bulk-tags-' + idx);
         if (tagsInp) tagsInp.value = item.tags;
 
         renderBulkStagingList();
-        if (typeof showToast === 'function') showToast('✅ #' + (idx + 1) + ' এর জন্য Auto SEO Tags জেনারেট হয়েছে!', 'success');
+        if (typeof showToast === 'function') showToast('✅ #' + (idx + 1) + ' এর জন্য Store ও Auto SEO Tags যুক্ত হয়েছে!', 'success');
     };
 
     // ── Batch Auto Generate Tags for All Items ──
     window.bulkBatchAutoGenerateTags = function() {
         var count = 0;
-        bulkStagedItems.forEach(function(item, idx) {
-            var cats = [];
-            if (Array.isArray(item.category_ids) && typeof allCategories !== 'undefined') {
-                var catSet = new Set(item.category_ids.map(String));
-                allCategories.forEach(function(c) {
-                    if (catSet.has(String(c.id))) cats.push(c.name);
-                });
-            }
-            var words = item.name.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF\s]/g, ' ').split(/\s+/).filter(function(w){ return w.length > 2; });
-            var tagSet = new Set(words);
-            cats.forEach(function(c){ tagSet.add(c.toLowerCase()); });
-            tagSet.add('online shopping bd');
-            tagSet.add('সেরা দাম');
-
-            item.tags = Array.from(tagSet).slice(0, 10).join(', ');
+        bulkStagedItems.forEach(function(item) {
+            item.tags = computeFullMergedTags(item, item.tags);
             count++;
         });
 
         renderBulkStagingList();
-        if (typeof showToast === 'function') showToast('✅ ' + count + 'টি প্রোডাক্টের সবগুলোতেই Auto SEO Tags তৈরি হয়েছে!', 'success');
+        if (typeof showToast === 'function') showToast('✅ ' + count + 'টি প্রোডাক্টেই Store ও Auto SEO Tags যুক্ত হয়েছে!', 'success');
     };
 
     /**
@@ -1388,14 +1430,16 @@
                 lang: lang
             });
 
-            item.tags = seo.tags;
+            // Merge AI tags with Product Name keywords + Category Names + Store SEO Settings
+            var fullMergedTags = computeFullMergedTags(item, seo.tags);
+            item.tags = fullMergedTags;
             item.seo_title = seo.seo_title;
             item.slug = seo.slug;
             item.seo_description = seo.seo_description;
 
             // Direct update inputs in DOM
             var tagsInp = document.getElementById('bulk-tags-' + idx);
-            if (tagsInp) tagsInp.value = seo.tags;
+            if (tagsInp) tagsInp.value = fullMergedTags;
 
             var titleInp = document.getElementById('bulk-seo-title-' + idx);
             if (titleInp) titleInp.value = seo.seo_title;
@@ -1406,8 +1450,9 @@
             var descInp = document.getElementById('bulk-seo-desc-' + idx);
             if (descInp) descInp.value = seo.seo_description;
 
+            renderBulkStagingList();
             if (typeof showToast === 'function') {
-                showToast('✅ #' + (idx + 1) + ' SEO জেনারেট সম্পন্ন (' + (lang === 'bn' ? 'বাংলা' : 'English') + ')!', 'success');
+                showToast('✅ #' + (idx + 1) + ' SEO জেনারেট সম্পন্ন (AI + Store Tags যুক্ত হয়েছে)!', 'success');
             }
         } catch (err) {
             console.error('AI SEO error:', err);
@@ -1473,14 +1518,16 @@
                     lang: lang
                 });
 
-                it.tags = seo.tags;
+                // Merge AI tags with Product Tokens + Category Names + Store SEO Keywords
+                var fullMergedTags = computeFullMergedTags(it, seo.tags);
+                it.tags = fullMergedTags;
                 it.seo_title = seo.seo_title;
                 it.slug = seo.slug;
                 it.seo_description = seo.seo_description;
 
                 // Sync DOM if open
                 var tagsInp = document.getElementById('bulk-tags-' + idx);
-                if (tagsInp) tagsInp.value = seo.tags;
+                if (tagsInp) tagsInp.value = fullMergedTags;
                 var titleInp = document.getElementById('bulk-seo-title-' + idx);
                 if (titleInp) titleInp.value = seo.seo_title;
                 var slugInp = document.getElementById('bulk-seo-slug-' + idx);
