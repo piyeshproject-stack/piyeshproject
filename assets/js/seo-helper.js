@@ -120,7 +120,7 @@ window.SEO = (function() {
             setMeta('google-site-verification', settings.google_site_verification);
         }
 
-        // 3. Canonical URL (Always normalize clean URL without .html)
+        // 3. Canonical URL
         var cleanPath = window.location.pathname
             .replace(/\/index\.html$/, '/')
             .replace(/\.html$/, '');
@@ -141,7 +141,14 @@ window.SEO = (function() {
         }
         if (imgUrl) {
             setMeta('og:image', imgUrl, true);
+            setMeta('og:image:secure_url', imgUrl, true);
+            var mime = imgUrl.toLowerCase().includes('.png') ? 'image/png' : (imgUrl.toLowerCase().includes('.webp') ? 'image/webp' : 'image/jpeg');
+            setMeta('og:image:type', mime, true);
+            setMeta('og:image:width', '1200', true);
+            setMeta('og:image:height', (opts.type === 'product' ? '1200' : '630'), true);
+            setMeta('og:image:alt', title, true);
             setMeta('twitter:image', imgUrl);
+            setMeta('twitter:image:alt', title);
         }
 
         // 5. Twitter Cards
@@ -244,21 +251,26 @@ window.SEO = (function() {
 
         // Collect all product images for Google Image Indexing
         var allImgs = [];
-        var gallery = Array.isArray(product.gallery_images) ? product.gallery_images : [];
-        gallery.forEach(function(u) {
-            if (u && typeof u === 'string') {
-                allImgs.push(u.startsWith('http') ? u : siteUrl + (u.startsWith('/') ? '' : '/') + u);
-            }
-        });
-        if (Array.isArray(product.variants)) {
-            product.variants.forEach(function(v) {
-                if (v && v.imageUrl) {
-                    var vu = v.imageUrl.startsWith('http') ? v.imageUrl : siteUrl + (v.imageUrl.startsWith('/') ? '' : '/') + v.imageUrl;
-                    if (!allImgs.includes(vu)) allImgs.push(vu);
-                }
-            });
+        function addImg(u) {
+            if (!u || typeof u !== 'string') return;
+            var s = u.trim();
+            if (!s || s.startsWith('data:')) return;
+            var full = s.startsWith('//') ? ('https:' + s) : (s.startsWith('http://') || s.startsWith('https://') ? s : (siteUrl + (s.startsWith('/') ? '' : '/') + s));
+            if (!allImgs.includes(full)) allImgs.push(full);
         }
 
+        var gallery = Array.isArray(product.gallery_images) ? product.gallery_images : [];
+        gallery.forEach(addImg);
+        if (Array.isArray(product.variants)) {
+            product.variants.forEach(function(v) {
+                if (v && (v.imageUrl || v.image)) addImg(v.imageUrl || v.image);
+            });
+        }
+        ['image', 'image_url', 'featured_image', 'thumbnail'].forEach(function(k) {
+            if (product[k]) addImg(product[k]);
+        });
+
+        // The product preview image MUST be the product's own photo
         var img = allImgs.length > 0 ? allImgs[0] : (settings.seo_og_image || settings.logo_url || '');
         if (img && !img.startsWith('http')) {
             img = siteUrl + (img.startsWith('/') ? '' : '/') + img;

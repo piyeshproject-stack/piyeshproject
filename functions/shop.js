@@ -54,6 +54,11 @@ export async function onRequestGet(context) {
         const keywords = settings?.seo_keywords || `${storeName}, shop, ecommerce, online shopping bangladesh`;
         const products = prodsRes?.results || [];
 
+        let imgUrl = settings?.seo_og_image || settings?.logo_url || '';
+        if (imgUrl && !imgUrl.startsWith('http')) {
+            imgUrl = origin + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
+        }
+
         let cardsHtml = '';
         if (products.length > 0) {
             cardsHtml = products.map(p => {
@@ -114,7 +119,36 @@ export async function onRequestGet(context) {
 
         let rewriter = new HTMLRewriter()
             .on('title', { element(e) { e.setInnerContent(title); } })
-            .on('meta[name="description"]', { element(e) { e.setAttribute('content', desc); } })
+            .on('meta[name="description"]', { element(e) { e.remove(); } })
+            .on('meta[name="keywords"]', { element(e) { e.remove(); } })
+            .on('meta[property^="og:"]', { element(e) { e.remove(); } })
+            .on('meta[name^="twitter:"]', { element(e) { e.remove(); } })
+            .on('link[rel="canonical"]', { element(e) { e.remove(); } })
+            .on('head', {
+                element(e) {
+                    let headTags = `\n    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="${escapeAttr(canonicalUrl)}">
+    <meta name="description" content="${escapeAttr(desc)}">
+    <meta name="keywords" content="${escapeAttr(keywords)}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="${escapeAttr(storeName)}">
+    <meta property="og:title" content="${escapeAttr(title)}">
+    <meta property="og:description" content="${escapeAttr(desc)}">
+    <meta property="og:url" content="${escapeAttr(canonicalUrl)}">`;
+                    if (imgUrl) {
+                        headTags += `\n    <meta property="og:image" content="${escapeAttr(imgUrl)}">
+    <meta property="og:image:secure_url" content="${escapeAttr(imgUrl)}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:image" content="${escapeAttr(imgUrl)}">`;
+                    }
+                    headTags += `\n    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${escapeAttr(title)}">
+    <meta name="twitter:description" content="${escapeAttr(desc)}">
+    <script type="application/ld+json">${JSON.stringify(shopJsonLd)}</script>\n`;
+                    e.prepend(headTags, { html: true });
+                }
+            })
             .on('#navBrand', { element(e) { e.setInnerContent(storeName); } })
             .on('#footerBrand', { element(e) { e.setInnerContent(storeName); } })
             .on('a[href]', {
@@ -129,20 +163,6 @@ export async function onRequestGet(context) {
                     else if (href === 'policies.html' || href === '/policies.html') e.setAttribute('href', '/policies');
                     else if (href === 'team.html' || href === '/team.html') e.setAttribute('href', '/team');
                     else if (href === 'track.html' || href === '/track.html') e.setAttribute('href', '/track');
-                }
-            })
-            .on('head', {
-                element(e) {
-                    let headTags = `\n    <meta name="robots" content="index, follow, max-image-preview:large">
-    <link rel="canonical" href="${escapeAttr(canonicalUrl)}">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="${escapeAttr(storeName)}">
-    <meta property="og:title" content="${escapeAttr(title)}">
-    <meta property="og:description" content="${escapeAttr(desc)}">
-    <meta name="keywords" content="${escapeAttr(keywords)}">
-    <meta property="og:url" content="${escapeAttr(canonicalUrl)}">
-    <script type="application/ld+json">${JSON.stringify(shopJsonLd)}</script>\n`;
-                    e.append(headTags, { html: true });
                 }
             });
 

@@ -8,22 +8,25 @@ export async function onRequestGet(context) {
         if (!env.DB) return response;
 
         const url = new URL(request.url);
-        const pid = url.searchParams.get('id');
+        const pid = (url.searchParams.get('id') || url.searchParams.get('sku') || url.searchParams.get('slug') || '').trim();
         if (!pid) return response;
 
-        const pProduct = env.DB.prepare("SELECT * FROM products WHERE id = ?").bind(pid).first();
-        const pSettings = env.DB.prepare("SELECT store_name, logo_url, seo_og_image, seo_description, seo_keywords, site_url FROM settings WHERE id = 1").first();
-        const pReviews = env.DB.prepare("SELECT rating, customer_name, comment, created_at FROM reviews WHERE product_id = ? AND is_approved = 1 ORDER BY created_at DESC LIMIT 20").bind(pid).all().catch(() => ({ results: [] }));
-        const pRelated = env.DB.prepare("SELECT id, name, base_price, flash_sale_price, gallery_images, variants FROM products WHERE is_active = 1 AND id != ? ORDER BY is_featured DESC, created_at DESC LIMIT 8").bind(pid).all().catch(() => ({ results: [] }));
+        // 1. Flexible lookup: match by numeric ID, UUID string, SKU (case-insensitive), or slug
+        const pProduct = env.DB.prepare(
+            "SELECT * FROM products WHERE id = ? OR sku = ? OR lower(sku) = lower(?) OR slug = ? OR lower(slug) = lower(?) LIMIT 1"
+        ).bind(pid, pid, pid, pid, pid).first();
+        const pSettings = env.DB.prepare(
+            "SELECT store_name, logo_url, seo_og_image, seo_description, seo_keywords, site_url FROM settings WHERE id = 1"
+        ).first();
 
-        const [product, settings, reviewsRes, relatedRes] = await Promise.all([pProduct, pSettings, pReviews, pRelated]);
+        const [product, settings] = await Promise.all([pProduct, pSettings]);
 
         if (!product) {
             const notFoundTransformed = new HTMLRewriter()
                 .on('title', { element(e) { e.setInnerContent('Product Not Found'); } })
                 .on('head', {
                     element(e) {
-                        e.append('\n    <meta name="robots" content="noindex, nofollow">\n', { html: true });
+                        e.prepend('\n    <meta name="robots" content="noindex, nofollow">\n', { html: true });
                     }
                 })
                 .transform(response);
@@ -34,6 +37,16 @@ export async function onRequestGet(context) {
                 headers: nfHeaders
             });
         }
+
+        // Fetch reviews and related products bound to the verified product.id
+        const pReviews = env.DB.prepare(
+            "SELECT rating, customer_name, comment, created_at FROM reviews WHERE product_id = ? AND is_approved = 1 ORDER BY created_at DESC LIMIT 20"
+        ).bind(product.id).all().catch(() => ({ results: [] }));
+        const pRelated = env.DB.prepare(
+            "SELECT id, name, base_price, flash_sale_price, gallery_images, variants FROM products WHERE is_active = 1 AND id != ? ORDER BY is_featured DESC, created_at DESC LIMIT 8"
+        ).bind(product.id).all().catch(() => ({ results: [] }));
+
+        const [reviewsRes, relatedRes] = await Promise.all([pReviews, pRelated]);
 
         let rawOrigin = (settings?.site_url || env.SITE_URL || url.origin).trim().replace(/\/+$/, '');
         if (rawOrigin && !rawOrigin.startsWith('http://') && !rawOrigin.startsWith('https://')) {
@@ -52,37 +65,77 @@ export async function onRequestGet(context) {
         const description = rawDesc || `Buy ${product.name} at best price from ${storeName}. Order online with Cash on Delivery!`;
         const keywords = [product.name, product.sku, product.tags, product.seo_keywords, settings?.seo_keywords].filter(Boolean).join(', ');
 
+        // --- Bulletproof Image Extraction ---
+        // Guaranteed to extract the product's own primary photo and never an unrelated site image
+        function normalizeImgUrl(u) {
+            if (!u || typeof u !== 'string') return null;
+            let s = u.trim();
+            if (!s || s.startsWith('data:')) return null; // Reject data URIs for Open Graph crawlers
+            if (s.startsWith('//')) return 'https:' + s;
+            if (s.startsWith('http://') || s.startsWith('https://')) return s;
+            return origin + (s.startsWith('/') ? '' : '/') + s;
+        }
+
         let allImages = [];
+
+        // A. Primary gallery images
         try {
             const gallery = typeof product.gallery_images === 'string' ? JSON.parse(product.gallery_images) : (product.gallery_images || []);
             if (Array.isArray(gallery)) {
                 gallery.forEach(u => {
-                    if (u && typeof u === 'string') {
-                        const full = u.startsWith('http') ? u : origin + (u.startsWith('/') ? '' : '/') + u;
-                        if (!allImages.includes(full)) allImages.push(full);
-                    }
+                    const clean = normalizeImgUrl(u);
+                    if (clean && !allImages.includes(clean)) allImages.push(clean);
                 });
             }
         } catch(e) {}
+
+        // B. Product variant images
         try {
             const variants = typeof product.variants === 'string' ? JSON.parse(product.variants) : (product.variants || []);
             if (Array.isArray(variants)) {
                 variants.forEach(v => {
-                    if (v && v.imageUrl) {
-                        const full = v.imageUrl.startsWith('http') ? v.imageUrl : origin + (v.imageUrl.startsWith('/') ? '' : '/') + v.imageUrl;
-                        if (!allImages.includes(full)) allImages.push(full);
-                    }
+                    const clean = normalizeImgUrl(v?.imageUrl || v?.image);
+                    if (clean && !allImages.includes(clean)) allImages.push(clean);
                 });
             }
         } catch(e) {}
 
-        let imgUrl = allImages.length > 0 ? allImages[0] : (settings?.seo_og_image || settings?.logo_url || "");
-        if (imgUrl && !imgUrl.startsWith('http')) imgUrl = origin + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
+        // C. Standalone image fields if present on product
+        ['image', 'image_url', 'featured_image', 'thumbnail'].forEach(col => {
+            if (product[col]) {
+                const clean = normalizeImgUrl(product[col]);
+                if (clean && !allImages.includes(clean)) allImages.push(clean);
+            }
+        });
 
-        const canonicalUrl = `${origin}/product?id=${encodeURIComponent(product.id)}`;
+        // The Open Graph / Social share image MUST be the product's own main photo
+        let imgUrl = allImages.length > 0 ? allImages[0] : (normalizeImgUrl(settings?.seo_og_image) || normalizeImgUrl(settings?.logo_url) || "");
+
+        // Infer MIME type
+        let imgMimeType = 'image/jpeg';
+        const imgLower = (imgUrl || '').toLowerCase();
+        if (imgLower.includes('.png')) imgMimeType = 'image/png';
+        else if (imgLower.includes('.webp')) imgMimeType = 'image/webp';
+        else if (imgLower.includes('.gif')) imgMimeType = 'image/gif';
+
+        const isHtmlPath = url.pathname.endsWith('.html');
+        // Keep canonical and og:url synchronized with how the link was shared to avoid crawler redirect issues
+        const canonicalUrl = `${origin}${isHtmlPath ? '/product.html' : '/product'}?id=${encodeURIComponent(product.id)}`;
         const finalPrice = product.flash_sale_price > 0 ? (product.base_price - product.flash_sale_price) : product.base_price;
         const reviews = reviewsRes?.results || [];
         const relatedProducts = relatedRes?.results || [];
+
+        // Additional og:image tags for secondary product photos (up to 3 extra images)
+        let additionalOgImages = '';
+        if (allImages.length > 1) {
+            additionalOgImages = allImages.slice(1, 4).map(extraUrl => {
+                let extraMime = 'image/jpeg';
+                const el = extraUrl.toLowerCase();
+                if (el.includes('.png')) extraMime = 'image/png';
+                else if (el.includes('.webp')) extraMime = 'image/webp';
+                return `\n    <meta property="og:image" content="${escapeAttr(extraUrl)}">\n    <meta property="og:image:secure_url" content="${escapeAttr(extraUrl)}">\n    <meta property="og:image:type" content="${escapeAttr(extraMime)}">\n    <meta property="og:image:width" content="1200">\n    <meta property="og:image:height" content="1200">\n    <meta property="og:image:alt" content="${escapeAttr(product.name)}">`;
+            }).join('');
+        }
 
         const productNode = {
             "@type": "Product",
@@ -176,9 +229,41 @@ export async function onRequestGet(context) {
             ? product.description
             : `<p>${escapeAttr(description)}</p>`;
 
+        // Prepend OpenGraph & Twitter tags at the TOP of <head> and strip pre-existing conflicting tags
         let rewriter = new HTMLRewriter()
             .on('title', { element(e) { e.setInnerContent(title); } })
-            .on('meta[name="description"]', { element(e) { e.setAttribute('content', description); } })
+            .on('meta[name="description"]', { element(e) { e.remove(); } })
+            .on('meta[name="keywords"]', { element(e) { e.remove(); } })
+            .on('meta[property^="og:"]', { element(e) { e.remove(); } })
+            .on('meta[name^="twitter:"]', { element(e) { e.remove(); } })
+            .on('link[rel="canonical"]', { element(e) { e.remove(); } })
+            .on('head', {
+                element(e) {
+                    e.prepend(`\n    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="${escapeAttr(canonicalUrl)}">
+    <meta name="description" content="${escapeAttr(description)}">
+    <meta name="keywords" content="${escapeAttr(keywords)}">
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="${escapeAttr(storeName)}">
+    <meta property="og:title" content="${escapeAttr(title)}">
+    <meta property="og:description" content="${escapeAttr(description)}">
+    <meta property="og:url" content="${escapeAttr(canonicalUrl)}">
+    <meta property="og:image" content="${escapeAttr(imgUrl)}">
+    <meta property="og:image:secure_url" content="${escapeAttr(imgUrl)}">
+    <meta property="og:image:type" content="${escapeAttr(imgMimeType)}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="1200">
+    <meta property="og:image:alt" content="${escapeAttr(product.name)}">${additionalOgImages}
+    <meta property="product:price:amount" content="${finalPrice}">
+    <meta property="product:price:currency" content="BDT">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${escapeAttr(title)}">
+    <meta name="twitter:description" content="${escapeAttr(description)}">
+    <meta name="twitter:image" content="${escapeAttr(imgUrl)}">
+    <meta name="twitter:image:alt" content="${escapeAttr(product.name)}">
+    <script type="application/ld+json">${JSON.stringify(prodSchema)}</script>\n`, { html: true });
+                }
+            })
             .on('#navBrand', { element(e) { e.setInnerContent(storeName); } })
             .on('#footerBrand', { element(e) { e.setInnerContent(storeName); } })
             .on('#productPage', {
@@ -229,6 +314,7 @@ export async function onRequestGet(context) {
                 element(e) {
                     if (imgUrl) e.setAttribute('src', imgUrl);
                     e.setAttribute('alt', product.name);
+                    e.setAttribute('loading', 'eager');
                 }
             })
             .on('#pDesc', {
@@ -248,26 +334,6 @@ export async function onRequestGet(context) {
                     else if (href === 'policies.html' || href === '/policies.html') e.setAttribute('href', '/policies');
                     else if (href === 'team.html' || href === '/team.html') e.setAttribute('href', '/team');
                     else if (href === 'track.html' || href === '/track.html') e.setAttribute('href', '/track');
-                }
-            })
-            .on('head', {
-                element(e) {
-                    e.append(`\n    <meta name="robots" content="index, follow, max-image-preview:large">
-    <link rel="canonical" href="${escapeAttr(canonicalUrl)}">
-    <meta property="og:type" content="product">
-    <meta property="og:site_name" content="${escapeAttr(storeName)}">
-    <meta property="og:title" content="${escapeAttr(title)}">
-    <meta property="og:description" content="${escapeAttr(description)}">
-    <meta name="keywords" content="${escapeAttr(keywords)}">
-    <meta property="og:image" content="${escapeAttr(imgUrl)}">
-    <meta property="og:url" content="${escapeAttr(canonicalUrl)}">
-    <meta property="product:price:amount" content="${finalPrice}">
-    <meta property="product:price:currency" content="BDT">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="${escapeAttr(title)}">
-    <meta name="twitter:description" content="${escapeAttr(description)}">
-    <meta name="twitter:image" content="${escapeAttr(imgUrl)}">
-    <script type="application/ld+json">${JSON.stringify(prodSchema)}</script>\n`, { html: true });
                 }
             });
 
