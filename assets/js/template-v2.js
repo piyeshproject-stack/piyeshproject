@@ -160,7 +160,7 @@ function renderFullV2Page(container, paramBanners, cats, homeSects) {
         var codeColor = isActive ? 'text-white' : 'text-secondary';
 
         return `
-        <a href="product.html?id=${p.id}" class="product-card-hover group shadow-md hover:shadow-lg rounded-lg transition-all duration-300 relative block bg-white overflow-hidden flex flex-col h-full border border-gray-100">
+        <a href="/product?id=${p.id}" class="product-card-hover group shadow-md hover:shadow-lg rounded-lg transition-all duration-300 relative block bg-white overflow-hidden flex flex-col h-full border border-gray-100">
             <div class="relative h-[160px] md:h-[250px] w-full overflow-hidden shrink-0">
                 <img src="${img}" alt="${p.name}" loading="lazy" decoding="async" width="300" height="300" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 
@@ -209,7 +209,7 @@ function renderFullV2Page(container, paramBanners, cats, homeSects) {
                 catImg = `<div class="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center shadow-sm mb-2 group-hover:scale-110 transition-transform" style="background:var(--bg-subtle); color:var(--primary);"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></div>`;
             }
             return `
-            <a href="shop.html?cat=${c.id}" class="flex flex-col items-center min-w-[70px] md:min-w-[100px] group flex-shrink-0">
+            <a href="/shop?cat=${c.id}" class="flex flex-col items-center min-w-[70px] md:min-w-[100px] group flex-shrink-0">
                 ${catImg}
                 <span class="text-[10px] md:text-sm font-bold text-center text-secondary group-hover:text-primary line-clamp-1">${c.name}</span>
             </a>
@@ -239,7 +239,7 @@ function renderFullV2Page(container, paramBanners, cats, homeSects) {
                 <div class="flex flex-wrap items-center justify-between gap-y-3">
                     
                     <!-- Logo & Store Name -->
-                    <a href="index.html" class="flex items-center gap-2 text-lg md:text-2xl font-bold font-josefin text-secondary shrink-0" style="max-width: 65%;">
+                    <a href="/" class="flex items-center gap-2 text-lg md:text-2xl font-bold font-josefin text-secondary shrink-0" style="max-width: 65%;">
                         ${sSettings.logo_url ? `<img src="${sSettings.logo_url}" alt="Logo" class="h-10 md:h-12 max-w-[140px] object-contain rounded">` : `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 md:h-10 md:w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>`}
                         <span class="whitespace-normal break-words leading-tight" style="font-size: clamp(14px, 4vw, 22px);">${storeName}</span>
                     </a>
@@ -254,13 +254,13 @@ function renderFullV2Page(container, paramBanners, cats, homeSects) {
 
                     <!-- Desktop & Mobile Icons (Profile, Track, Cart) -->
                     <div class="flex items-center gap-4 md:gap-6">
-                        <a href="profile.html" aria-label="Profile" class="text-secondary text-lg flex flex-col items-center group transition-colors" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color=''">
+                        <a href="/profile" aria-label="Profile" class="text-secondary text-lg flex flex-col items-center group transition-colors" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color=''">
                             <i data-lucide="user" class="lucide-icon group-hover:scale-110 transition-transform" style="width:24px;height:24px;"></i>
                         </a>
-                        <a href="track.html" aria-label="Track Order" class="text-secondary text-lg flex flex-col items-center group transition-colors" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color=''">
+                        <a href="/track" aria-label="Track Order" class="text-secondary text-lg flex flex-col items-center group transition-colors" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color=''">
                             <i data-lucide="package" class="lucide-icon icon-bounce group-hover:scale-110 transition-transform" style="width:24px;height:24px;"></i>
                         </a>
-                        <a href="cart.html" aria-label="Cart" class="text-secondary relative text-lg flex flex-col items-center group transition-colors" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color=''">
+                        <a href="/cart" aria-label="Cart" class="text-secondary relative text-lg flex flex-col items-center group transition-colors" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color=''">
                             <i data-lucide="shopping-cart" class="lucide-icon icon-bounce group-hover:scale-110 transition-transform" style="width:24px;height:24px;"></i>
                             <span class="cart-badge-v2 absolute -top-2 -right-2 text-dynamic text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center" style="background: var(--primary); display:${cartCount > 0 ? 'flex' : 'none'}">${cartCount}</span>
                         </a>
@@ -305,7 +305,7 @@ function renderFullV2Page(container, paramBanners, cats, homeSects) {
                     <h2 class="text-xl md:text-3xl font-bold font-josefin text-secondary flex items-center gap-2">
                         <i class="fa-solid fa-bolt text-yellow-500"></i> Flash Deals
                     </h2>
-                    <a href="shop.html?sale=true" class="text-primary text-sm md:text-base font-bold hover:underline">View All <i class="fa-solid fa-arrow-right ml-1"></i></a>
+                    <a href="/shop?sale=true" class="text-primary text-sm md:text-base font-bold hover:underline">View All <i class="fa-solid fa-arrow-right ml-1"></i></a>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
                     ${flashProdsHtml}
@@ -332,13 +332,13 @@ function renderFullV2Page(container, paramBanners, cats, homeSects) {
             <div class="container mx-auto px-4 lg:px-24">
                 <div class="flex justify-between items-center mb-6 md:mb-10">
                     <h2 class="text-xl md:text-3xl font-bold font-josefin text-secondary">All Products</h2>
-                    <a href="shop.html" class="text-primary text-sm md:text-base font-bold hover:underline">View All <i class="fa-solid fa-arrow-right ml-1"></i></a>
+                    <a href="/shop" class="text-primary text-sm md:text-base font-bold hover:underline">View All <i class="fa-solid fa-arrow-right ml-1"></i></a>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6">
                     ${allProdsHtml}
                 </div>
                 <div class="text-center mt-10">
-                    <a href="shop.html" class="inline-block bg-white font-bold py-3 px-8 rounded transition duration-300" style="color: var(--primary); border: 2px solid var(--primary);" onmouseover="this.style.backgroundColor='var(--primary)'; this.style.color='var(--primary-contrast)';" onmouseout="this.style.backgroundColor='white'; this.style.color='var(--primary)';">Browse All Products</a>
+                    <a href="/shop" class="inline-block bg-white font-bold py-3 px-8 rounded transition duration-300" style="color: var(--primary); border: 2px solid var(--primary);" onmouseover="this.style.backgroundColor='var(--primary)'; this.style.color='var(--primary-contrast)';" onmouseout="this.style.backgroundColor='white'; this.style.color='var(--primary)';">Browse All Products</a>
                 </div>
             </div>
         </section>` : ''}

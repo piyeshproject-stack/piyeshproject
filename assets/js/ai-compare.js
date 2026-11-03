@@ -161,7 +161,7 @@
             '  <div style="font-weight:700;font-size:13px;color:#1e293b;margin-bottom:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px;">' + (p.name || 'পণ্য') + '</div>',
             catBadge,
             priceHtml,
-            '  <a href="product.html?id=' + (p.id || '') + '" class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 10px;border-radius:6px;">View Product</a>',
+            '  <a href="/product?id=' + (p.id || '') + '" class="btn btn-outline btn-sm" style="font-size:11px;padding:4px 10px;border-radius:6px;">View Product</a>',
             '</div>'
         ].join('\n');
     }
@@ -293,11 +293,11 @@
         var pressTimer = null;
 
         function findProductCard(el) {
-            return el.closest('a[href*="product.html"], .product-card, .product-card-hover, [data-product-id]');
+            return el.closest('a[href*="product"], .product-card, .product-card-hover, [data-product-id]');
         }
 
         function extractProductFromCard(card) {
-            var href = card.getAttribute('href') || (card.querySelector('a[href*="product.html"]') ? card.querySelector('a[href*="product.html"]').getAttribute('href') : '') || '';
+            var href = card.getAttribute('href') || (card.querySelector('a[href*="product"]') ? card.querySelector('a[href*="product"]').getAttribute('href') : '') || '';
             var idMatch = href.match(/id=([^&]+)/);
             var id = idMatch ? decodeURIComponent(idMatch[1]) : (card.getAttribute('data-product-id') || ('prod_' + Math.random().toString(36).substring(7)));
 
@@ -333,7 +333,7 @@
                 }
             }
 
-            // 2. If currently on product.html and comparing current product
+            // 2. If currently on product and comparing current product
             if (window.currentProduct && String(window.currentProduct.id) === String(id)) {
                 return window.currentProduct;
             }

@@ -118,9 +118,11 @@ export async function onRequestGet(context) {
         else if (imgLower.includes('.webp')) imgMimeType = 'image/webp';
         else if (imgLower.includes('.gif')) imgMimeType = 'image/gif';
 
-        const isHtmlPath = url.pathname.endsWith('.html');
-        // Keep canonical and og:url synchronized with how the link was shared to avoid crawler redirect issues
-        const canonicalUrl = `${origin}${isHtmlPath ? '/product.html' : '/product'}?id=${encodeURIComponent(product.id)}`;
+        const logoUrl = normalizeImgUrl(settings?.logo_url);
+        const faviconUrl = normalizeImgUrl(settings?.favicon_url) || logoUrl || (origin + '/favicon.ico');
+
+        // Always use clean URL without .html
+        const canonicalUrl = `${origin}/product?id=${encodeURIComponent(product.id)}`;
         const finalPrice = product.flash_sale_price > 0 ? (product.base_price - product.flash_sale_price) : product.base_price;
         const reviews = reviewsRes?.results || [];
         const relatedProducts = relatedRes?.results || [];
@@ -237,10 +239,16 @@ export async function onRequestGet(context) {
             .on('meta[property^="og:"]', { element(e) { e.remove(); } })
             .on('meta[name^="twitter:"]', { element(e) { e.remove(); } })
             .on('link[rel="canonical"]', { element(e) { e.remove(); } })
+            .on('link[rel~="icon"]', { element(e) { e.remove(); } })
+            .on('link[rel="apple-touch-icon"]', { element(e) { e.remove(); } })
+            .on('link[rel="image_src"]', { element(e) { e.remove(); } })
             .on('head', {
                 element(e) {
                     e.prepend(`\n    <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="${escapeAttr(canonicalUrl)}">
+    <link rel="icon" type="image/png" href="${escapeAttr(faviconUrl)}">
+    <link rel="apple-touch-icon" href="${escapeAttr(faviconUrl)}">
+    <link rel="image_src" href="${escapeAttr(imgUrl)}">
     <meta name="description" content="${escapeAttr(description)}">
     <meta name="keywords" content="${escapeAttr(keywords)}">
     <meta property="og:type" content="product">

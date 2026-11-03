@@ -30,7 +30,8 @@ export async function onRequestGet(context) {
 
         // 1. Single product lookup (for product page direct access)
         if (singlePid) {
-            const found = allProducts.find(p => String(p.id) === String(singlePid));
+            const sPidLower = String(singlePid).trim().toLowerCase();
+            const found = allProducts.find(p => String(p.id) === String(singlePid) || (p.sku && String(p.sku).trim().toLowerCase() === sPidLower) || (p.slug && String(p.slug).trim().toLowerCase() === sPidLower));
             return new Response(JSON.stringify({
                 success: true,
                 product: found || null,

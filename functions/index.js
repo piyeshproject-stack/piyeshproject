@@ -28,10 +28,18 @@ export async function onRequestGet(context) {
         const products = prodsRes?.results || [];
         const categories = catsRes?.results || [];
 
-        let imgUrl = settings?.seo_og_image || settings?.logo_url || '';
-        if (imgUrl && !imgUrl.startsWith('http')) {
-            imgUrl = origin + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
+        function normalizeUrl(u) {
+            if (!u || typeof u !== 'string') return '';
+            let s = u.trim();
+            if (!s || s.startsWith('data:')) return '';
+            if (s.startsWith('//')) return 'https:' + s;
+            if (s.startsWith('http://') || s.startsWith('https://')) return s;
+            return origin + (s.startsWith('/') ? '' : '/') + s;
         }
+
+        const logoUrl = normalizeUrl(settings?.logo_url);
+        const faviconUrl = normalizeUrl(settings?.favicon_url) || logoUrl || (origin + '/favicon.ico');
+        let imgUrl = normalizeUrl(settings?.seo_og_image) || logoUrl;
 
         let catsHtml = '';
         if (categories.length > 0) {
@@ -53,9 +61,9 @@ export async function onRequestGet(context) {
                     finalPrice = p.base_price - p.flash_sale_price;
                     saleHtml = `<span class="product-old-price">৳${p.base_price}</span>`;
                 }
-                return `<a href="/product?id=${encodeURIComponent(p.id)}" class="product-card">
+                return `<a href="/product?id=${encodeURIComponent(p.id)}" class="product-card" data-nosnippet>
                     <div class="product-img-wrap">
-                        ${img ? `<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name)}" loading="lazy">` : '<div style="height:200px;background:#f0f0f5;"></div>'}
+                        ${img ? `<img src="${escapeAttr(img)}" alt="${escapeAttr(p.name)}" loading="lazy" data-nosnippet>` : '<div style="height:200px;background:#f0f0f5;"></div>'}
                         <div class="product-badges">
                             ${p.flash_sale_price > 0 ? `<span class="product-badge badge-sale">৳${p.flash_sale_price} ছাড় (-${p.base_price > 0 ? Math.round((p.flash_sale_price / p.base_price) * 100) : 0}%)</span>` : ''}
                         </div>
@@ -71,6 +79,7 @@ export async function onRequestGet(context) {
             }).join('');
         }
 
+        const primarySiteImage = imgUrl || logoUrl;
         const jsonLd = {
             "@context": "https://schema.org",
             "@graph": [
@@ -87,12 +96,33 @@ export async function onRequestGet(context) {
                     }
                 },
                 {
+                    "@type": "WebPage",
+                    "@id": origin + "/#webpage",
+                    "url": origin + "/",
+                    "name": title,
+                    "description": desc,
+                    ...(primarySiteImage ? {
+                        "primaryImageOfPage": {
+                            "@type": "ImageObject",
+                            "url": primarySiteImage,
+                            "caption": storeName
+                        }
+                    } : {})
+                },
+                {
                     "@type": "OnlineStore",
                     "@id": origin + "/#store",
                     "name": storeName,
                     "url": origin + "/",
                     "description": desc,
-                    ...(imgUrl ? { "image": imgUrl } : {}),
+                    ...(logoUrl ? {
+                        "logo": {
+                            "@type": "ImageObject",
+                            "url": logoUrl,
+                            "caption": storeName
+                        }
+                    } : {}),
+                    ...(primarySiteImage ? { "image": primarySiteImage } : {}),
                     "priceRange": "৳৳",
                     "currenciesAccepted": "BDT",
                     "paymentAccepted": "Cash on Delivery, bKash, Nagad",
@@ -108,6 +138,9 @@ export async function onRequestGet(context) {
             .on('meta[property^="og:"]', { element(e) { e.remove(); } })
             .on('meta[name^="twitter:"]', { element(e) { e.remove(); } })
             .on('link[rel="canonical"]', { element(e) { e.remove(); } })
+            .on('link[rel~="icon"]', { element(e) { e.remove(); } })
+            .on('link[rel="apple-touch-icon"]', { element(e) { e.remove(); } })
+            .on('link[rel="image_src"]', { element(e) { e.remove(); } })
             .on('#navBrand', { element(e) { e.setInnerContent(storeName); } })
             .on('#footerBrand', { element(e) { e.setInnerContent(storeName); } })
             .on('a[href]', {
@@ -128,6 +161,9 @@ export async function onRequestGet(context) {
                 element(e) {
                     let headTags = `\n    <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="${escapeAttr(origin)}/">
+    <link rel="icon" type="image/png" href="${escapeAttr(faviconUrl)}">
+    <link rel="apple-touch-icon" href="${escapeAttr(faviconUrl)}">
+    <link rel="image_src" href="${escapeAttr(primarySiteImage)}">
     <meta name="description" content="${escapeAttr(desc)}">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="${escapeAttr(storeName)}">
@@ -135,12 +171,12 @@ export async function onRequestGet(context) {
     <meta property="og:description" content="${escapeAttr(desc)}">
     <meta property="og:url" content="${escapeAttr(origin)}/">`;
                     if (keywords) headTags += `\n    <meta name="keywords" content="${escapeAttr(keywords)}">`;
-                    if (imgUrl) {
-                        headTags += `\n    <meta property="og:image" content="${escapeAttr(imgUrl)}">
-    <meta property="og:image:secure_url" content="${escapeAttr(imgUrl)}">
+                    if (primarySiteImage) {
+                        headTags += `\n    <meta property="og:image" content="${escapeAttr(primarySiteImage)}">
+    <meta property="og:image:secure_url" content="${escapeAttr(primarySiteImage)}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta name="twitter:image" content="${escapeAttr(imgUrl)}">`;
+    <meta name="twitter:image" content="${escapeAttr(primarySiteImage)}">`;
                     }
                     headTags += `\n    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="${escapeAttr(title)}">

@@ -173,8 +173,8 @@
 
 <nav class="navbar" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
     <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-        <a href="shop.html" class="nav-icon-btn" style="flex-shrink:0;" title="Back to Shop">←</a>
-        <a href="index.html" class="navbar-brand" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+        <a href="/shop" class="nav-icon-btn" style="flex-shrink:0;" title="Back to Shop">←</a>
+        <a href="/" class="navbar-brand" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
             <span id="navBrand">Shop</span>
         </a>
     </div>
@@ -182,13 +182,13 @@
     <!-- Desktop Search -->
     <div class="navbar-search" style="flex:1; max-width:420px; margin:0 12px;">
         <span class="search-icon"><i data-lucide="search" class="lucide-icon"></i></span>
-        <input type="text" placeholder="Search products..." onkeypress="if(event.key==='Enter' && this.value.trim()) window.location.href='shop.html?q='+encodeURIComponent(this.value.trim())">
+        <input type="text" placeholder="Search products..." onkeypress="if(event.key==='Enter' && this.value.trim()) window.location.href='/shop?q='+encodeURIComponent(this.value.trim())">
     </div>
 
     <!-- Right Corner Actions: Track Order & Cart -->
     <div class="navbar-actions" style="margin-left:auto; display:flex; align-items:center; gap:8px; flex-shrink:0;">
-        <a href="track.html" class="nav-icon-btn" title="Track Order"><i data-lucide="package" class="lucide-icon icon-bounce"></i></a>
-        <a href="cart.html" class="nav-icon-btn" id="cartBtn" title="Cart">
+        <a href="/track" class="nav-icon-btn" title="Track Order"><i data-lucide="package" class="lucide-icon icon-bounce"></i></a>
+        <a href="/cart" class="nav-icon-btn" id="cartBtn" title="Cart">
             <i data-lucide="shopping-cart" class="lucide-icon icon-bounce"></i>
             <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
         </a>
@@ -199,8 +199,8 @@
 <div class="product-mobile-search" style="padding: 8px 14px; background: #fff; border-bottom: 1px solid var(--border-light);">
     <div style="position: relative; width: 100%; display: flex; align-items: center;">
         <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none;"><i data-lucide="search" class="lucide-icon"></i></span>
-        <input type="text" id="mobileSearchInput" placeholder="Search products..." style="width: 100%; padding: 8px 38px 8px 36px; border-radius: 20px; border: 1.5px solid var(--border); outline: none; font-size: 13px; background: var(--bg-subtle); color: var(--text-dark);" onkeypress="if(event.key==='Enter' && this.value.trim()) window.location.href='shop.html?q='+encodeURIComponent(this.value.trim())">
-        <button type="button" onclick="var q=document.getElementById('mobileSearchInput').value; if(q.trim()) window.location.href='shop.html?q='+encodeURIComponent(q.trim());" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: var(--primary); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+        <input type="text" id="mobileSearchInput" placeholder="Search products..." style="width: 100%; padding: 8px 38px 8px 36px; border-radius: 20px; border: 1.5px solid var(--border); outline: none; font-size: 13px; background: var(--bg-subtle); color: var(--text-dark);" onkeypress="if(event.key==='Enter' && this.value.trim()) window.location.href='/shop?q='+encodeURIComponent(this.value.trim())">
+        <button type="button" onclick="var q=document.getElementById('mobileSearchInput').value; if(q.trim()) window.location.href='/shop?q='+encodeURIComponent(q.trim());" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: var(--primary); color: #fff; border: none; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
             <i data-lucide="arrow-right" class="lucide-icon" style="width: 13px; height: 13px;"></i>
         </button>
     </div>
@@ -434,10 +434,10 @@ function showCartToast(name) {
         </div>
         <div>
             <div class="footer-title">Pages</div>
-            <a href="index.html">Home</a>
-            <a href="shop.html">Shop</a>
-            <a href="track.html">Track Order</a>
-            <a href="cart.html">Cart</a>
+            <a href="/">Home</a>
+            <a href="/shop">Shop</a>
+            <a href="/track">Track Order</a>
+            <a href="/cart">Cart</a>
         </div>
         <div>
             <div class="footer-title">Social</div>
@@ -448,8 +448,8 @@ function showCartToast(name) {
         <div>
             <div class="footer-title">Support</div>
             <a href="#" id="footerWa">WhatsApp</a>
-            <a href="track.html">Track Order</a>
-            <a href="policies.html">Policies & Terms</a>
+            <a href="/track">Track Order</a>
+            <a href="/policies">Policies & Terms</a>
             <a href="#" id="footerStoreLocBtn" target="_blank" style="color:#34C759;font-weight:600;"><i data-lucide="map-pin" class="lucide-icon icon-sm"></i> Store Location</a>
         </div>
     </div>
@@ -472,7 +472,7 @@ var REVIEWS_PAGE_SIZE = 5;
 document.addEventListener('DOMContentLoaded', function() {
     updateCartBadge();
     setTimeout(function() { var pl = document.getElementById('pageLoader'); if (pl) pl.style.display = 'none'; }, 4000);
-    var id = new URLSearchParams(window.location.search).get('id');
+    var id = (new URLSearchParams(window.location.search).get('id') || new URLSearchParams(window.location.search).get('sku') || new URLSearchParams(window.location.search).get('slug') || '').trim();
     if (!id) { window.location.href = '404.html'; return; }
 
     var p1, p2, p3, p4, p5, p6, p7;
@@ -545,7 +545,8 @@ document.addEventListener('DOMContentLoaded', function() {
             };
         });
         p2 = p4.then(async res => {
-            let found = res.data.find(x => String(x.id) === String(id));
+            let idLower = String(id).toLowerCase();
+            let found = res.data.find(x => String(x.id) === String(id) || (x.sku && String(x.sku).toLowerCase() === idLower) || (x.slug && String(x.slug).toLowerCase() === idLower));
             if (!found) {
                 try {
                     const spRes = await fetch((CONFIG.HF_API_BASE||"")+"/api/public-data?product_id="+encodeURIComponent(id)).then(r => r.json());
@@ -722,7 +723,7 @@ function productCardHtml(p) {
     var origPrice = p.flash_sale_price > 0 ? '<del style="font-size:12px;color:#999;">৳' + p.base_price + '</del>' : '';
     var pct = (p.base_price > 0 && p.flash_sale_price > 0) ? Math.round((p.flash_sale_price / p.base_price) * 100) : 0;
     var badge = p.flash_sale_price > 0 ? '<div style="position:absolute;top:8px;left:8px;background:var(--primary,#ff4444);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.15);letter-spacing:0.2px;">৳' + p.flash_sale_price + ' ছাড় (-' + pct + '%)</div>' : '';
-    return '<a href="product.html?id=' + p.id + '" style="text-decoration:none;color:inherit;">' +
+    return '<a href="/product?id=' + p.id + '" style="text-decoration:none;color:inherit;">' +
         '<div class="product-card" style="cursor:pointer;">' +
             '<div class="product-img-wrap" style="position:relative;">' +
                 '<img class="product-img" src="' + (imgUrl || '') + '" alt="' + escHtmlP(p.name) + '" loading="lazy" onerror="this.src=\'\'">' +

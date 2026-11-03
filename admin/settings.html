@@ -1090,7 +1090,7 @@
                     imgXml += '\n    <image:image><image:loc>' + escXml(iu) + '</image:loc><image:title>' + escXml(p.name) + '</image:title></image:image>';
                 });
 
-                xml += '  <url><loc>' + siteUrl + '/product.html?id=' + encodeURIComponent(pid) + '</loc><lastmod>' + prodDate + '</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>' + imgXml + '\n  </url>\n';
+                xml += '  <url><loc>' + siteUrl + '/product?id=' + encodeURIComponent(pid) + '</loc><lastmod>' + prodDate + '</lastmod><changefreq>weekly</changefreq><priority>0.8</priority>' + imgXml + '\n  </url>\n';
             });
 
             xml += '</urlset>';

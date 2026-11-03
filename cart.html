@@ -73,8 +73,8 @@
 </div>
 
 <nav class="navbar">
-    <a href="shop.html" class="nav-icon-btn">←</a>
-    <a href="index.html" class="navbar-brand"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> <span id="navBrand">Cart</span></a>
+    <a href="/shop" class="nav-icon-btn">←</a>
+    <a href="/" class="navbar-brand"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> <span id="navBrand">Cart</span></a>
     <div style="margin-left:auto;font-size:13px;color:#888;" id="cartCountLabel"></div>
 </nav>
 
@@ -95,7 +95,7 @@
                 <div class="summary-row"><span style="color:#888;font-size:13px;">Delivery</span><span style="color:#888;font-size:13px;">Calculated at checkout</span></div>
                 <div class="summary-row summary-total"><span>Subtotal</span><span id="sumTotal" style="color:var(--primary);">৳0</span></div>
 
-                <a href="checkout.html" class="btn btn-primary btn-full btn-lg" id="checkoutBtn" style="margin-top:16px;">
+                <a href="/checkout" class="btn btn-primary btn-full btn-lg" id="checkoutBtn" style="margin-top:16px;">
                     <i data-lucide="rocket" class="lucide-icon icon-bounce"></i> Proceed to Checkout
                 </a>
 
@@ -105,7 +105,7 @@
                     💬 Order by Message
                 </button>
 
-                <a href="shop.html" style="display:block;text-align:center;margin-top:12px;font-size:13px;color:#888;font-weight:600;">← Continue Shopping</a>
+                <a href="/shop" style="display:block;text-align:center;margin-top:12px;font-size:13px;color:#888;font-weight:600;">← Continue Shopping</a>
             </div>
 
             <!-- Trust badges -->
@@ -221,7 +221,7 @@ function renderCart() {
             '<div style="font-size:64px;margin-bottom:16px;"><i data-lucide="shopping-cart" class="lucide-icon icon-bounce"></i></div>' +
             '<div style="font-size:20px;font-weight:800;color:var(--text-dark);margin-bottom:8px;">Cart is empty</div>' +
             '<div style="color:#999;margin-bottom:20px;">Add some products to get started</div>' +
-            '<a href="shop.html" class="btn btn-primary btn-lg"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> Start Shopping</a>' +
+            '<a href="/shop" class="btn btn-primary btn-lg"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> Start Shopping</a>' +
             '</div>';
         updateSummary(cart);
         if (typeof lucide !== 'undefined') lucide.createIcons();

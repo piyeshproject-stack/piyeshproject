@@ -3,6 +3,21 @@
 // Fully dynamic, multi-tenant & client-agnostic
 // ============================================================
 
+// Immediately clean up any .html from address bar across the site
+(function() {
+    if (typeof window !== 'undefined' && window.location && window.location.pathname) {
+        var p = window.location.pathname;
+        if (p.endsWith('.html')) {
+            var clean = p.replace(/\/index\.html$/, '/').replace(/\.html$/, '');
+            if (!clean) clean = '/';
+            var newUrl = clean + (window.location.search || '') + (window.location.hash || '');
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState(null, '', newUrl);
+            }
+        }
+    }
+})();
+
 window.SEO = (function() {
     // Determine the base site URL (dynamic fallback to current origin)
     function getSiteUrl(settings) {

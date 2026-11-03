@@ -55,8 +55,8 @@
 
 <!-- Navbar -->
 <nav class="navbar">
-    <a href="index.html" class="nav-icon-btn">←</a>
-    <a href="index.html" class="navbar-brand">
+    <a href="/" class="nav-icon-btn">←</a>
+    <a href="/" class="navbar-brand">
         <i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i> 
         <span id="navBrand">My Profile</span>
     </a>
@@ -176,7 +176,7 @@
                         <div style="background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;position:relative;padding:10px;text-align:center;">
                             <button onclick="removeFav('${f}')" style="position:absolute;top:8px;right:8px;background:#f5f5f5;border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:red;cursor:pointer;"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
                             <div style="font-size:13px;font-weight:700;color:var(--text-dark);margin-top:20px;">Product ID: ${f}</div>
-                            <a href="product.html?id=${f}" class="auth-btn" style="display:block;text-align:center;padding:6px;font-size:12px;margin-top:8px;text-decoration:none;">View</a>
+                            <a href="/product?id=${f}" class="auth-btn" style="display:block;text-align:center;padding:6px;font-size:12px;margin-top:8px;text-decoration:none;">View</a>
                         </div>
                     `;
                 } else {
@@ -187,7 +187,7 @@
                             <div style="padding:10px;">
                                 <div style="font-size:13px;font-weight:700;color:var(--text-dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.name}</div>
                                 <div style="font-size:13px;color:var(--primary);font-weight:800;margin-top:4px;">৳${f.price}</div>
-                                <a href="product.html?id=${f.id}" class="auth-btn" style="display:block;text-align:center;padding:6px;font-size:12px;margin-top:8px;text-decoration:none;">View</a>
+                                <a href="/product?id=${f.id}" class="auth-btn" style="display:block;text-align:center;padding:6px;font-size:12px;margin-top:8px;text-decoration:none;">View</a>
                             </div>
                         </div>
                     `;
@@ -349,7 +349,7 @@
                         <i data-lucide="shopping-cart"></i>
                         <h3>No orders yet</h3>
                         <p style="color:var(--text-muted);font-size:14px;margin-top:8px;">Looks like you haven't made your first order.</p>
-                        <a href="index.html" class="auth-btn" style="display:inline-flex;width:auto;margin-top:20px;padding:10px 24px;">Start Shopping</a>
+                        <a href="/" class="auth-btn" style="display:inline-flex;width:auto;margin-top:20px;padding:10px 24px;">Start Shopping</a>
                     </div>
                 `;
                 lucide.createIcons();

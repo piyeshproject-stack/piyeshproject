@@ -54,6 +54,15 @@ export async function onRequestGet(context) {
         const keywords = settings?.seo_keywords || `${storeName}, shop, ecommerce, online shopping bangladesh`;
         const products = prodsRes?.results || [];
 
+        let logoUrl = settings?.logo_url || '';
+        if (logoUrl && !logoUrl.startsWith('http')) {
+            logoUrl = origin + (logoUrl.startsWith('/') ? '' : '/') + logoUrl;
+        }
+        let faviconUrl = settings?.favicon_url || settings?.logo_url || '/favicon.ico';
+        if (faviconUrl && !faviconUrl.startsWith('http') && !faviconUrl.startsWith('/')) {
+            faviconUrl = origin + '/' + faviconUrl;
+        }
+
         let imgUrl = settings?.seo_og_image || settings?.logo_url || '';
         if (imgUrl && !imgUrl.startsWith('http')) {
             imgUrl = origin + (imgUrl.startsWith('/') ? '' : '/') + imgUrl;
@@ -124,10 +133,16 @@ export async function onRequestGet(context) {
             .on('meta[property^="og:"]', { element(e) { e.remove(); } })
             .on('meta[name^="twitter:"]', { element(e) { e.remove(); } })
             .on('link[rel="canonical"]', { element(e) { e.remove(); } })
+            .on('link[rel~="icon"]', { element(e) { e.remove(); } })
+            .on('link[rel="apple-touch-icon"]', { element(e) { e.remove(); } })
+            .on('link[rel="image_src"]', { element(e) { e.remove(); } })
             .on('head', {
                 element(e) {
                     let headTags = `\n    <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="${escapeAttr(canonicalUrl)}">
+    <link rel="icon" type="image/png" href="${escapeAttr(faviconUrl)}">
+    <link rel="apple-touch-icon" href="${escapeAttr(faviconUrl)}">
+    <link rel="image_src" href="${escapeAttr(imgUrl || logoUrl)}">
     <meta name="description" content="${escapeAttr(desc)}">
     <meta name="keywords" content="${escapeAttr(keywords)}">
     <meta property="og:type" content="website">
