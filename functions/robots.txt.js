@@ -17,12 +17,24 @@ export async function onRequestGet(context) {
         siteUrl = 'https://' + siteUrl;
     }
 
-    const txt = `User-agent: *
+    const txt = `User-agent: Googlebot
+Allow: /
+Allow: /api/
+
+User-agent: *
+Allow: /
+Allow: /shop
+Allow: /product
+Allow: /policies
+Allow: /team
+Allow: /track
+
+Allow: /api/
+Allow: /api/public-data
+Allow: /api/public-reviews
+Allow: /api/get-products-list
+
 Disallow: /admin/
-Disallow: /api/
-Disallow: /*.json$
-Disallow: /*.json?
-Disallow: /public_data.json
 Disallow: /cart
 Disallow: /checkout
 Disallow: /invoice
@@ -39,7 +51,7 @@ Sitemap: ${siteUrl}/sitemap.xml
     return new Response(txt, {
         headers: {
             'Content-Type': 'text/plain; charset=utf-8',
-            'Cache-Control': 'public, max-age=3600, s-maxage=3600'
+            'Cache-Control': 'public, max-age=60, s-maxage=60'
         }
     });
 }
