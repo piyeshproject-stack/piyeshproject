@@ -193,7 +193,7 @@ function renderFullV2Page(container, paramBanners, cats, homeSects) {
 
     var flashProdsHtml = flashSaleProds.slice(0, 4).map(p => makeCard(p, false)).join('');
     var featuredProdsHtml = otherProds.slice(0, 4).map((p, i) => makeCard(p, i === 1)).join('');
-    var allProdsHtml = activeProds.slice(0, 20).map(p => makeCard(p, false)).join('');
+    var allProdsHtml = activeProds.map(p => makeCard(p, false)).join('');
 
     // --- Categories ---
     var catsHtml = '';

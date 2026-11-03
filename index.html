@@ -372,6 +372,15 @@ function loadSiteData() {
                             return p;
                         });
                         allProducts = allProducts.concat(newProds);
+                        if (isV2) {
+                            initV2Theme(banners, cats, homeSects);
+                        } else {
+                            if (!homeSects || !homeSects.length) {
+                                renderProducts(allProducts);
+                            } else {
+                                renderHomeSections(homeSects);
+                            }
+                        }
                     }
                 } catch(e) {}
             }, 1800);
@@ -780,7 +789,7 @@ function renderProducts(products) {
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px;color:#999;"><div style="font-size:48px;margin-bottom:12px;"><i data-lucide="shopping-bag" class="lucide-icon icon-pulse"></i></div><div>No products yet. Check back soon!</div></div>';
         return;
     }
-    grid.innerHTML = products.slice(0, 12).map(productCardHtml).join('');
+    grid.innerHTML = products.map(productCardHtml).join('');
     if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 

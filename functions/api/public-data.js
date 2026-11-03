@@ -20,8 +20,8 @@ export async function onRequestGet(context) {
         const brandColors = env.BRAND_COLORS || env.THEME_COLORS || env.THEME_CSS || null;
 
         const allProducts = products.results || [];
-        const INITIAL_LIMIT = 20;
-        const CHUNK_SIZE = 100;
+        const INITIAL_LIMIT = 200;
+        const CHUNK_SIZE = 200;
 
         const url = new URL(context.request.url);
         const chunkParam = url.searchParams.get("chunk");
@@ -41,7 +41,8 @@ export async function onRequestGet(context) {
             }), {
                 headers: {
                     "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*"
+                    "Access-Control-Allow-Origin": "*",
+                    "X-Robots-Tag": "noindex, nofollow, noarchive"
                 }
             });
         }
@@ -65,7 +66,8 @@ export async function onRequestGet(context) {
             }), {
                 headers: {
                     "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*"
+                    "Access-Control-Allow-Origin": "*",
+                    "X-Robots-Tag": "noindex, nofollow, noarchive"
                 }
             });
         }
@@ -97,7 +99,8 @@ export async function onRequestGet(context) {
         return new Response(JSON.stringify({ success: true, data }), {
             headers: {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*"
+                "Access-Control-Allow-Origin": "*",
+                "X-Robots-Tag": "noindex, nofollow, noarchive"
             }
         });
     } catch(e) {

@@ -17,37 +17,21 @@ export async function onRequestGet(context) {
         siteUrl = 'https://' + siteUrl;
     }
 
-    const txt = `User-agent: Googlebot
-Allow: /
-Allow: /api/
-
-User-agent: *
-Allow: /
-Allow: /index.html
-Allow: /shop
-Allow: /shop.html
-Allow: /product
-Allow: /product.html
-Allow: /policies
-Allow: /policies.html
-Allow: /team
-Allow: /team.html
-Allow: /track
-Allow: /track.html
-
-Allow: /api/public-data
-Allow: /api/public-reviews
-Allow: /api/get-products-list
-
+    const txt = `User-agent: *
 Disallow: /admin/
-Disallow: /cart.html
-Disallow: /checkout.html
-Disallow: /invoice.html
-Disallow: /success.html
-Disallow: /login.html
-Disallow: /register.html
-Disallow: /forgot-password.html
-Disallow: /fraud-chack.html
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /*.json?
+Disallow: /public_data.json
+Disallow: /cart
+Disallow: /checkout
+Disallow: /invoice
+Disallow: /success
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /fraud-chack
+Disallow: /profile
 
 Sitemap: ${siteUrl}/sitemap.xml
 `;
@@ -55,7 +39,7 @@ Sitemap: ${siteUrl}/sitemap.xml
     return new Response(txt, {
         headers: {
             'Content-Type': 'text/plain; charset=utf-8',
-            'Cache-Control': 'public, max-age=60, s-maxage=60'
+            'Cache-Control': 'public, max-age=3600, s-maxage=3600'
         }
     });
 }

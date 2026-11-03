@@ -1,33 +1,17 @@
-User-agent: Googlebot
-Allow: /
-Allow: /api/
-
 User-agent: *
-Allow: /
-Allow: /index.html
-Allow: /shop
-Allow: /shop.html
-Allow: /product
-Allow: /product.html
-Allow: /policies
-Allow: /policies.html
-Allow: /team
-Allow: /team.html
-Allow: /track
-Allow: /track.html
-
-Allow: /api/public-data
-Allow: /api/public-reviews
-Allow: /api/get-products-list
-
 Disallow: /admin/
-Disallow: /cart.html
-Disallow: /checkout.html
-Disallow: /invoice.html
-Disallow: /success.html
-Disallow: /login.html
-Disallow: /register.html
-Disallow: /forgot-password.html
-Disallow: /fraud-chack.html
+Disallow: /api/
+Disallow: /*.json$
+Disallow: /*.json?
+Disallow: /public_data.json
+Disallow: /cart
+Disallow: /checkout
+Disallow: /invoice
+Disallow: /success
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /fraud-chack
+Disallow: /profile
 
-Sitemap: /sitemap.xml
+Sitemap: https://ranonex.shop/sitemap.xml
