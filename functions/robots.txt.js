@@ -20,6 +20,7 @@ export async function onRequestGet(context) {
     const txt = `User-agent: Googlebot
 Allow: /
 Allow: /api/
+Allow: /*.json
 
 User-agent: *
 Allow: /
@@ -33,6 +34,8 @@ Allow: /api/
 Allow: /api/public-data
 Allow: /api/public-reviews
 Allow: /api/get-products-list
+Allow: /public_data.json
+Allow: /*.json
 
 Disallow: /admin/
 Disallow: /cart

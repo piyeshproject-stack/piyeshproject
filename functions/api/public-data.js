@@ -41,8 +41,7 @@ export async function onRequestGet(context) {
             }), {
                 headers: {
                     "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
-                    "X-Robots-Tag": "noindex, nofollow, noarchive"
+                    "Access-Control-Allow-Origin": "*"
                 }
             });
         }
@@ -66,8 +65,7 @@ export async function onRequestGet(context) {
             }), {
                 headers: {
                     "Content-Type": "application/json",
-                    "Access-Control-Allow-Origin": "*",
-                    "X-Robots-Tag": "noindex, nofollow, noarchive"
+                    "Access-Control-Allow-Origin": "*"
                 }
             });
         }
@@ -99,8 +97,7 @@ export async function onRequestGet(context) {
         return new Response(JSON.stringify({ success: true, data }), {
             headers: {
                 "Content-Type": "application/json",
-                "Access-Control-Allow-Origin": "*",
-                "X-Robots-Tag": "noindex, nofollow, noarchive"
+                "Access-Control-Allow-Origin": "*"
             }
         });
     } catch(e) {
